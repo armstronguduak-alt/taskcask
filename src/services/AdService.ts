@@ -11,8 +11,60 @@ export interface AdFormatResult {
 export const AdService = {
   // Check if SDK is available
   checkSdkAvailability: (): boolean => {
-    // In our client build, the SDK script is included in the window
-    return typeof (window as any).Telegram !== 'undefined';
+    return typeof (window as any).show_11343654 === 'function' || typeof (window as any).Telegram !== 'undefined';
+  },
+
+  // Initialize In-App Interstitial (capping: 0.1 hrs, interval: 30s, timeout: 5s)
+  initInAppInterstitial: () => {
+    const showAdFn = (window as any).show_11343654;
+    if (typeof showAdFn === 'function') {
+      try {
+        showAdFn({
+          type: 'inApp',
+          inAppSettings: {
+            frequency: 2,
+            capping: 0.1,
+            interval: 30,
+            timeout: 5,
+            everyPage: false
+          }
+        });
+        AdService.logSdkAction('ad_inapp_default', 'INAPP_INIT_SUCCESS', { format: 'inApp' });
+      } catch (e) {
+        console.warn('In-App Interstitial initialization error:', e);
+      }
+    } else {
+      console.log('Ad SDK show_11343654 not available yet for In-App Interstitial.');
+    }
+  },
+
+  // Trigger Rewarded Interstitial or Rewarded Popup using LibTL SDK
+  showSdkAd: async (format: 'interstitial' | 'pop'): Promise<boolean> => {
+    const showAdFn = (window as any).show_11343654;
+    if (typeof showAdFn !== 'function') {
+      return false; // SDK not loaded, fallback to simulation
+    }
+
+    return new Promise((resolve) => {
+      try {
+        const adPromise = format === 'pop' ? showAdFn('pop') : showAdFn();
+        if (adPromise && typeof adPromise.then === 'function') {
+          adPromise
+            .then(() => {
+              resolve(true);
+            })
+            .catch((e: any) => {
+              console.warn('Ad playback stopped or error encountered:', e);
+              resolve(false);
+            });
+        } else {
+          resolve(true);
+        }
+      } catch (e) {
+        console.warn('Error invoking ad SDK:', e);
+        resolve(false);
+      }
+    });
   },
 
   // Log SDK action

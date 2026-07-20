@@ -88,8 +88,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentWallet = dbState.wallets.find(w => w.user_id === 'usr_willie') || null;
   const userTransactions = dbState.transactions.filter(t => t.wallet_id === 'wall_willie');
   
-  // Synchronize Telegram SDK Data
+  // Synchronize Telegram & Ad Monetization SDK Data
   useEffect(() => {
+    // Initialize In-App Interstitial Ads from LibTL SDK
+    AdService.initInAppInterstitial();
+
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
       tg.ready();
@@ -162,8 +165,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('Dashboard');
   };
 
-  // Play Rewarded Ad simulator
-  const playAd = (ad: RewardedAd) => {
+  // Play Rewarded Ad (via LibTL SDK or local simulator fallback)
+  const playAd = async (ad: RewardedAd) => {
     if (adPlaying) return;
     
     // Log start of SDK ad play
@@ -173,6 +176,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAdPlaying(true);
     setAdProgress(0);
 
+    // Check if LibTL ad monetization SDK is loaded & ready
+    const hasRealSdk = typeof (window as any).show_11343654 === 'function';
+
+    if (hasRealSdk) {
+      setAdProgress(50);
+      const sdkFormat = ad.type === 'Popup' ? 'pop' : 'interstitial';
+      const sdkSuccess = await AdService.showSdkAd(sdkFormat);
+
+      if (sdkSuccess) {
+        setAdProgress(100);
+        AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, format: sdkFormat });
+        const result = await AdService.validateAndCreditReward('usr_willie', ad);
+        
+        setActiveAd(null);
+        setAdPlaying(false);
+        setAdProgress(0);
+        setDbState(loadDB());
+        
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg && tg.showAlert) {
+          tg.HapticFeedback?.notificationOccurred('success');
+          tg.showAlert(result.message);
+        } else {
+          alert(result.message);
+        }
+        return;
+      }
+    }
+
+    // Fallback timer simulation when SDK script is not loaded locally / blocked
     const intervalTime = 100; // tick every 100ms
     const totalTicks = (ad.watch_time_sec * 1000) / intervalTime;
     let ticks = 0;
@@ -184,10 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (ticks >= totalTicks) {
         clearInterval(timer);
         
-        // Log SDK trigger success
-        AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true });
-        
-        // Run verification and reward
+        AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, simulated: true });
         const result = await AdService.validateAndCreditReward('usr_willie', ad);
         
         setActiveAd(null);
@@ -196,7 +226,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setDbState(loadDB());
         
         const tg = (window as any).Telegram?.WebApp;
-        if (tg) {
+        if (tg && tg.showAlert) {
           tg.HapticFeedback?.notificationOccurred('success');
           tg.showAlert(result.message);
         } else {
