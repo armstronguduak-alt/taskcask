@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    -webkit-tap-highlight-color: transparent;
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9ff;
+    color: #0b1c30;
+    overflow-x: hidden;
+  }
+
+  body.dark {
+    background-color: #09090b;
+    color: #f8f9ff;
+  }
+}
+
+/* Glassmorphism card utility */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass-card {
+  background: rgba(9, 9, 11, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glass effect generic */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Animations */
+.floating-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-16px); }
+}
+
+.bounce-subtle {
+  animation: bounceSubtle 2s infinite;
+}
+
+@keyframes bounceSubtle {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-4px); }
+  60% { transform: translateY(-2px); }
+}
+
+.progress-circle {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Hide scrollbars but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Interactive elements press scale */
+.ripple-active {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ripple-active:active {
+  transform: scale(0.96);
+}
+
+/* Form element base */
+input, select, textarea {
+  outline: none;
+}
+
+/* Telegram Mini App Desktop Wrapper */
+.tma-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.03);
+}
+
+.dark .tma-container {
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+}
