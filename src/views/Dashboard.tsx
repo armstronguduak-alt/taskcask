@@ -11,8 +11,7 @@ export const Dashboard: React.FC = () => {
     setTab, 
     claimDailyBonus,
     claimWelcomeBonus,
-    claimCommunityBonus,
-    sdkLogs
+    claimCommunityBonus
   } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];

@@ -10,17 +10,10 @@ export const UserProfile: React.FC = () => {
     toggleDarkMode, 
     verifyEmail,
     verifyPhone,
-    resetDatabase,
     setTab
   } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
-
-  const handleReset = () => {
-    if (window.confirm('WARNING: This will wipe your simulated balance, history, and level stats, and return to onboarding. Continue?')) {
-      resetDatabase();
-    }
-  };
 
   return (
     <div className="flex-grow pb-32">

@@ -11,7 +11,6 @@ export const WithdrawFunds: React.FC = () => {
   const [accountNum, setAccountNum] = useState('');
   const [accountName, setAccountName] = useState('');
   const [amount, setAmount] = useState('');
-  const isSubmitting = false; // We use a local variable to prevent re-renders, but since we are modifying useState we should keep it. Wait, I will keep setIsSubmitting.
   const [isSubmittingState, setIsSubmitting] = useState(false);
 
   const isEmailVerified = user?.email_verified || false;

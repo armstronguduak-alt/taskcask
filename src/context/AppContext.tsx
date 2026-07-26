@@ -22,7 +22,7 @@ import type {
 } from '../db/mockDb';
 import { AdService } from '../services/AdService';
 
-export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Upgrade' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
+export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Premium' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
 interface AppContextProps {
   user: User | null;
