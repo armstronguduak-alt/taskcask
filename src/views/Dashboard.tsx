@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export const Dashboard: React.FC = () => {
@@ -10,22 +10,35 @@ export const Dashboard: React.FC = () => {
     notifications,
     setTab, 
     claimDailyBonus,
+    claimWelcomeBonus,
+    claimCommunityBonus,
     sdkLogs
   } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
 
-  // Calculate limits progress
-  const today = new Date().toDateString();
-  
-  // To get watched ads today, inspect sdkLogs for successful ad claims today
-  const adsWatchedToday = sdkLogs.filter(
-    log => new Date(log.timestamp).toDateString() === today && log.action === 'AD_PLAY_COMPLETE_SUCCESS'
-  ).length;
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [isCommunityJoined, setIsCommunityJoined] = useState(false);
 
-  const tasksCompletedToday = transactions.filter(
-    t => t.type === 'TaskReward' && new Date(t.timestamp).toDateString() === today && t.status === 'Success'
-  ).length;
+  useEffect(() => {
+    if (!localStorage.getItem('welcome_bonus_claimed')) {
+      setShowWelcomeModal(true);
+    }
+    if (localStorage.getItem('community_bonus_claimed')) {
+      setIsCommunityJoined(true);
+    }
+  }, []);
+
+  const handleClaimWelcome = () => {
+    claimWelcomeBonus();
+    setShowWelcomeModal(false);
+  };
+
+  const handleJoinCommunity = () => {
+    claimCommunityBonus();
+    setIsCommunityJoined(true);
+    window.open('https://t.me/taskcash_official', '_blank');
+  };
 
   const handleWithdrawClick = () => {
     setTab('Withdraw');
@@ -142,42 +155,26 @@ export const Dashboard: React.FC = () => {
           </button>
         </section>
 
-        {/* Daily Limits Tracking */}
-        <section className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Daily Earning Limits</h3>
-          <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-            {/* Ads limit */}
-            <div>
-              <div className="flex justify-between items-center text-xs mb-1.5">
-                <span className="font-bold text-on-surface dark:text-gray-300">Rewarded Ads Watched</span>
-                <span className="font-semibold text-primary dark:text-[#62df7d]">{adsWatchedToday} / {userLevel.max_daily_ads}</span>
-              </div>
-              <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(100, (adsWatchedToday / userLevel.max_daily_ads) * 100)}%` }}
-                />
-              </div>
+        {/* Telegram Community Bonus Section */}
+        <section className="bg-gradient-to-r from-[#0088cc] to-[#00a2f5] border border-[#0088cc] rounded-3xl p-5 shadow-lg flex items-center justify-between gap-4 text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 glass-effect flex items-center justify-center">
+              <span className="material-symbols-outlined text-[28px]">send</span>
             </div>
-
-            {/* Social Tasks limit */}
             <div>
-              <div className="flex justify-between items-center text-xs mb-1.5">
-                <span className="font-bold text-on-surface dark:text-gray-300">Social Tasks Completed</span>
-                <span className="font-semibold text-[#0051d5] dark:text-[#b4c5ff]">{tasksCompletedToday} / {userLevel.max_daily_tasks}</span>
-              </div>
-              <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#0051d5] to-secondary rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(100, (tasksCompletedToday / userLevel.max_daily_tasks) * 100)}%` }}
-                />
-              </div>
+              <h3 className="font-bold text-sm">Join our Community</h3>
+              <p className="text-[10px] text-white/80 mt-0.5">Earn ₦500 instantly for joining</p>
             </div>
-            
-            <p className="text-[10px] text-on-surface-variant dark:text-gray-400 text-center italic mt-1">
-              Limits refresh every day at midnight. Upgrade level to unlock more daily limits.
-            </p>
           </div>
+          <button 
+            disabled={isCommunityJoined}
+            onClick={handleJoinCommunity}
+            className={`px-4 py-2 font-bold text-xs rounded-full shadow-md active:scale-95 transition-all duration-150 ${
+              isCommunityJoined ? 'bg-white/20 text-white cursor-not-allowed shadow-none' : 'bg-white text-[#0088cc]'
+            }`}
+          >
+            {isCommunityJoined ? 'Joined' : 'Join'}
+          </button>
         </section>
 
         {/* Quick Actions Shortcuts */}
@@ -279,6 +276,29 @@ export const Dashboard: React.FC = () => {
         </section>
 
       </div>
+
+      {/* Welcome Bonus Modal */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-3xl p-6 text-center space-y-5 animate-scale-up shadow-2xl">
+            <div className="w-20 h-20 mx-auto bg-green-500/10 text-green-500 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-[40px]">redeem</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-on-surface dark:text-white">Welcome to TaskCash!</h2>
+              <p className="text-sm text-on-surface-variant dark:text-gray-400 mt-2">
+                Here is your ₦500 welcome bonus to get you started on your earning journey.
+              </p>
+            </div>
+            <button 
+              onClick={handleClaimWelcome}
+              className="w-full py-3.5 bg-primary text-white font-bold text-sm rounded-2xl shadow-lg shadow-primary/25 active:scale-95 transition-all"
+            >
+              Claim ₦500 Bonus
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

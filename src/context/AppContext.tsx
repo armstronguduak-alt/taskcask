@@ -56,6 +56,8 @@ interface AppContextProps {
   triggerInAppAd: (onComplete: () => void) => void;
   submitTaskProof: (taskId: string, username: string) => Promise<{ success: boolean; message: string }>;
   claimDailyBonus: () => void;
+  claimWelcomeBonus: () => void;
+  claimCommunityBonus: () => void;
   upgradeTier: (levelId: string) => { success: boolean; message: string };
   requestWithdrawal: (bankId: string, accountNum: string, accountName: string, amount: number) => { success: boolean; message: string };
   toggleDarkMode: () => void;
@@ -373,6 +375,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbState(loadDB());
   };
 
+  const claimWelcomeBonus = () => {
+    if (localStorage.getItem('welcome_bonus_claimed')) return;
+    localStorage.setItem('welcome_bonus_claimed', 'true');
+    addTransaction('usr_willie', 'DailyReward', 500, 'Welcome Bonus');
+    setDbState(loadDB());
+  };
+
+  const claimCommunityBonus = () => {
+    if (localStorage.getItem('community_bonus_claimed')) return;
+    localStorage.setItem('community_bonus_claimed', 'true');
+    addTransaction('usr_willie', 'TaskReward', 500, 'Telegram Community Bonus');
+    setDbState(loadDB());
+  };
+
   // Purchase Level Upgrades
   const upgradeTier = (levelId: string): { success: boolean; message: string } => {
     const db = loadDB();
@@ -621,6 +637,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         triggerInAppAd,
         submitTaskProof,
         claimDailyBonus,
+        claimWelcomeBonus,
+        claimCommunityBonus,
         upgradeTier,
         requestWithdrawal,
         toggleDarkMode,
