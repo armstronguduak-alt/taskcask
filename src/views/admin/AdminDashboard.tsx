@@ -79,7 +79,8 @@ export const AdminDashboard: React.FC = () => {
           { key: 'Withdrawals', label: 'Withdraw Queue', icon: 'payments' },
           { key: 'Fraud', label: 'Fraud Shield', icon: 'gpp_maybe' },
           { key: 'Postbacks', label: 'SDK logs', icon: 'dns' },
-          { key: 'Inspector', label: 'Table Inspector', icon: 'table_rows' }
+          { key: 'Inspector', label: 'Table Inspector', icon: 'table_rows' },
+          { key: 'Settings', label: 'Settings', icon: 'settings' }
         ] as { key: AdminTab; label: string; icon: string }[]).map((tab) => (
           <button
             key={tab.key}
@@ -314,6 +315,42 @@ export const AdminDashboard: React.FC = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeAdminTab === 'Settings' && (
+          <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
+            <h3 className="text-xs font-bold text-on-surface dark:text-white uppercase tracking-wider">System Settings</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Daily Welcome Bonus Amount (₦)</label>
+                <input type="number" defaultValue={500} className="mt-1 w-full px-3 py-2 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-on-surface dark:text-gray-200" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Community Join Bonus Amount (₦)</label>
+                <input type="number" defaultValue={500} className="mt-1 w-full px-3 py-2 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-on-surface dark:text-gray-200" />
+              </div>
+              <button onClick={() => alert('Settings saved successfully!')} className="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-md active:scale-95 transition-all">
+                Save Settings
+              </button>
+            </div>
+            
+            <div className="border-t border-gray-100 dark:border-zinc-800 pt-4 space-y-4">
+              <h3 className="text-xs font-bold text-on-surface dark:text-white uppercase tracking-wider">Level Thresholds</h3>
+              <div className="space-y-2">
+                <div className="bg-gray-50 dark:bg-zinc-800/40 p-3 rounded-xl border border-gray-100 dark:border-zinc-800/30 text-[10px] space-y-1">
+                  <p><span className="font-bold">Lvl 1 (Explorer):</span> 0 requirements</p>
+                  <p><span className="font-bold">Lvl 2 (Active):</span> 3 days streak, 10 ads, 2 tasks</p>
+                  <p><span className="font-bold">Lvl 3 (Pro):</span> 7 days streak, 50 ads, 10 tasks</p>
+                  <p><span className="font-bold">Lvl 4 (Elite):</span> 30 days streak, 200 ads, 50 tasks</p>
+                </div>
+                <button onClick={() => alert('Editing thresholds would open a modal.')} className="w-full py-2 bg-gray-200 dark:bg-zinc-800 text-on-surface dark:text-white font-bold text-xs rounded-xl active:scale-95 transition-all">
+                  Edit Thresholds
+                </button>
+              </div>
             </div>
           </div>
         )}

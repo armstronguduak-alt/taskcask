@@ -58,7 +58,9 @@ interface AppContextProps {
   claimDailyBonus: () => void;
   claimWelcomeBonus: () => void;
   claimCommunityBonus: () => void;
-  upgradeTier: (levelId: string) => { success: boolean; message: string };
+  togglePremium: () => void;
+  verifyEmail: () => void;
+  verifyPhone: () => void;
   requestWithdrawal: (bankId: string, accountNum: string, accountName: string, amount: number) => { success: boolean; message: string };
   toggleDarkMode: () => void;
   
@@ -89,6 +91,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const currentUser = dbState.users.find(u => u.id === 'usr_willie') || null;
   const currentWallet = dbState.wallets.find(w => w.user_id === 'usr_willie') || null;
   const userTransactions = dbState.transactions.filter(t => t.wallet_id === 'wall_willie');
+
+  const checkAutoLevelUp = () => {
+    updateDB((db) => {
+      const user = db.users.find(u => u.id === 'usr_willie');
+      if (!user) return;
+      
+      const streak = user.login_streak || 0;
+      const ads = user.total_ads_watched || 0;
+      const tasks = user.total_tasks_completed || 0;
+      
+      // Determine highest eligible level (levels are assumed sorted 1 to 4)
+      const eligibleLevel = db.levels.slice().reverse().find(l => 
+        streak >= l.req_streak && ads >= l.req_ads && tasks >= l.req_tasks
+      );
+      
+      if (eligibleLevel && eligibleLevel.id !== user.level_id) {
+        user.level_id = eligibleLevel.id;
+        db.notifications.unshift({
+          id: 'nt_up_' + Math.random().toString(36).substr(2, 9),
+          user_id: 'usr_willie',
+          title: 'Account Level Upgraded!',
+          message: `Congratulations! Your activity has earned you a promotion to ${eligibleLevel.name}. Earning multiplier set to ${eligibleLevel.earning_multiplier}x.`,
+          read: false,
+          type: 'System',
+          created_at: new Date().toISOString()
+        });
+        
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg && tg.showAlert) {
+          tg.showAlert(`Level Up! You are now a ${eligibleLevel.name}!`);
+        }
+      }
+    });
+  };
   
   // Synchronize Telegram & Ad Monetization SDK Data
   useEffect(() => {
@@ -184,6 +220,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (sdkSuccess) {
         setAdProgress(100);
         AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, format: sdkFormat });
+        
+        updateDB((db) => {
+          const user = db.users.find(u => u.id === 'usr_willie');
+          if (user) {
+            user.total_ads_watched = (user.total_ads_watched || 0) + 1;
+          }
+        });
+        checkAutoLevelUp();
+        
         const result = await AdService.validateAndCreditReward('usr_willie', ad);
         
         setActiveAd(null);
@@ -215,6 +260,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clearInterval(timer);
         
         AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, simulated: true });
+        
+        updateDB((db) => {
+          const user = db.users.find(u => u.id === 'usr_willie');
+          if (user) {
+            user.total_ads_watched = (user.total_ads_watched || 0) + 1;
+          }
+        });
+        checkAutoLevelUp();
+
         const result = await AdService.validateAndCreditReward('usr_willie', ad);
         
         setActiveAd(null);
@@ -316,6 +370,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 
     updateDB((db) => {
+      const u = db.users.find(u => u.id === 'usr_willie');
+      if (u) {
+        u.total_tasks_completed = (u.total_tasks_completed || 0) + 1;
+      }
       db.notifications.unshift({
         id: 'nt_t_' + Math.random().toString(36).substr(2, 9),
         user_id: 'usr_willie',
@@ -326,6 +384,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         created_at: new Date().toISOString()
       });
     });
+    checkAutoLevelUp();
 
     setDbState(loadDB());
     return { success: true, message: `Task submitted! ₦${rewardAmount.toFixed(2)} added to balance.` };
@@ -346,7 +405,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const claimDay = (dbState.daily_rewards.length % 7) + 1;
     const bonusAmount = claimDay * 50; // Daily streak scaling: Day 1 = ₦50, Day 2 = ₦100, etc.
 
-    // Record daily claim table
     updateDB((db) => {
       db.daily_rewards.unshift({
         id: 'dr_' + Math.random().toString(36).substr(2, 9),
@@ -355,7 +413,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         amount: bonusAmount,
         claimed_at: new Date().toISOString()
       });
+      const u = db.users.find(user => user.id === 'usr_willie');
+      if (u) {
+        u.login_streak = (u.login_streak || 0) + 1;
+      }
     });
+    checkAutoLevelUp();
 
     // Credit Balance
     addTransaction('usr_willie', 'DailyReward', bonusAmount, `Day ${claimDay} Login Reward Streak`);
@@ -389,38 +452,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbState(loadDB());
   };
 
-  // Purchase Level Upgrades
-  const upgradeTier = (levelId: string): { success: boolean; message: string } => {
-    const db = loadDB();
-    const targetLevel = db.levels.find(l => l.id === levelId);
-    if (!targetLevel) return { success: false, message: 'Level not found' };
-
-    const wallet = db.wallets.find(w => w.user_id === 'usr_willie');
-    if (!wallet || wallet.active_balance < targetLevel.cost) {
-      return { success: false, message: `Insufficient active balance. You need ₦${targetLevel.cost.toLocaleString()} to upgrade.` };
-    }
-
-    // Deduct cost and upgrade level
-    addTransaction('usr_willie', 'LevelUpgrade', targetLevel.cost, `Upgraded account tier to ${targetLevel.name}`);
-    
+  const verifyEmail = () => {
     updateDB((db) => {
       const user = db.users.find(u => u.id === 'usr_willie');
-      if (user) {
-        user.level_id = levelId;
-      }
-      db.notifications.unshift({
-        id: 'nt_up_' + Math.random().toString(36).substr(2, 9),
-        user_id: 'usr_willie',
-        title: 'Account Level Upgraded!',
-        message: `Congratulations! Your account is now active on ${targetLevel.name}. Earning multiplier set to ${targetLevel.earning_multiplier}x.`,
-        read: false,
-        type: 'System',
-        created_at: new Date().toISOString()
-      });
+      if (user) user.email_verified = true;
     });
-
     setDbState(loadDB());
-    return { success: true, message: `Successfully upgraded to ${targetLevel.name}!` };
+  };
+
+  const verifyPhone = () => {
+    updateDB((db) => {
+      const user = db.users.find(u => u.id === 'usr_willie');
+      if (user) user.phone_verified = true;
+    });
+    setDbState(loadDB());
+  };
+
+  const togglePremium = () => {
+    updateDB((db) => {
+      const user = db.users.find(u => u.id === 'usr_willie');
+      if (user) user.is_premium = !user.is_premium;
+    });
+    setDbState(loadDB());
   };
 
   // Submit Withdrawal payouts request
@@ -435,11 +488,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const user = db.users.find(u => u.id === 'usr_willie');
     const userLevel = db.levels.find(l => l.id === user?.level_id) || db.levels[0];
     
-    // Check level-based withdrawal floor limits
-    const minWithdraw = userLevel.id === 'lvl_1' ? 2000 : userLevel.id === 'lvl_2' ? 1000 : userLevel.id === 'lvl_3' ? 500 : 100;
+    const minWithdraw = userLevel.min_withdrawal;
 
     if (amount < minWithdraw) {
-      return { success: false, message: `Minimum withdrawal amount for ${userLevel.name} is ₦${minWithdraw}.` };
+      return { success: false, message: `Minimum withdrawal amount for ${userLevel.name} is ₦${minWithdraw.toLocaleString()}.` };
     }
 
     if (!wallet || wallet.active_balance < amount) {
@@ -639,7 +691,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         claimDailyBonus,
         claimWelcomeBonus,
         claimCommunityBonus,
-        upgradeTier,
+        togglePremium,
+        verifyEmail,
+        verifyPhone,
         requestWithdrawal,
         toggleDarkMode,
         

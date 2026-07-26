@@ -45,8 +45,14 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleUpgradeClick = () => {
-    setTab('Upgrade');
+    setTab('Premium');
   };
+
+  const nextLevel = levels.find(l => 
+    l.req_streak > (user?.login_streak || 0) || 
+    l.req_ads > (user?.total_ads_watched || 0) || 
+    l.req_tasks > (user?.total_tasks_completed || 0)
+  );
 
   return (
     <div className="flex-grow pb-32">
@@ -127,9 +133,63 @@ export const Dashboard: React.FC = () => {
                 onClick={handleUpgradeClick}
                 className="flex-1 py-3 px-4 bg-white/20 glass-effect text-white font-bold rounded-2xl border border-white/30 active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 text-xs"
               >
-                <span className="material-symbols-outlined text-[18px]">upgrade</span>
-                Upgrade
+                <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+                Premium
               </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Level Progress Card */}
+        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-sm text-on-surface dark:text-white uppercase tracking-wider">Level Progress</h3>
+              <p className="text-[10px] text-on-surface-variant dark:text-gray-400 mt-0.5">Reach requirements to auto-level up</p>
+            </div>
+            {nextLevel ? (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-extrabold uppercase tracking-wider">
+                Next: {nextLevel.name}
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[9px] font-extrabold uppercase tracking-wider">
+                Max Level
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {/* Streak Progress */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold">
+                <span className="text-gray-500">Login Streak</span>
+                <span className="text-on-surface dark:text-gray-300">{user?.login_streak || 0} / {nextLevel ? nextLevel.req_streak : (user?.login_streak || 0)}</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_streak > 0 ? Math.min(100, ((user?.login_streak || 0) / nextLevel.req_streak) * 100) : 100}%` }} />
+              </div>
+            </div>
+
+            {/* Ads Progress */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold">
+                <span className="text-gray-500">Videos Watched</span>
+                <span className="text-on-surface dark:text-gray-300">{user?.total_ads_watched || 0} / {nextLevel ? nextLevel.req_ads : (user?.total_ads_watched || 0)}</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_ads > 0 ? Math.min(100, ((user?.total_ads_watched || 0) / nextLevel.req_ads) * 100) : 100}%` }} />
+              </div>
+            </div>
+
+            {/* Tasks Progress */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold">
+                <span className="text-gray-500">Tasks Completed</span>
+                <span className="text-on-surface dark:text-gray-300">{user?.total_tasks_completed || 0} / {nextLevel ? nextLevel.req_tasks : (user?.total_tasks_completed || 0)}</span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-secondary transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_tasks > 0 ? Math.min(100, ((user?.total_tasks_completed || 0) / nextLevel.req_tasks) * 100) : 100}%` }} />
+              </div>
             </div>
           </div>
         </section>

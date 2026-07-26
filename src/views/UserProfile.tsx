@@ -8,6 +8,8 @@ export const UserProfile: React.FC = () => {
     levels, 
     darkMode, 
     toggleDarkMode, 
+    verifyEmail,
+    verifyPhone,
     resetDatabase,
     setTab
   } = useApp();
@@ -45,8 +47,9 @@ export const UserProfile: React.FC = () => {
             />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-on-surface dark:text-white leading-tight">
+            <h2 className="text-lg font-bold text-on-surface dark:text-white leading-tight flex items-center justify-center gap-1">
               {user?.first_name} {user?.last_name}
+              {user?.is_premium && <span className="material-symbols-outlined text-[16px] text-amber-500" title="Premium Member">workspace_premium</span>}
             </h2>
             <p className="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">@{user?.username}</p>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
@@ -64,6 +67,33 @@ export const UserProfile: React.FC = () => {
           <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm space-y-1">
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Cumulative Earnings</p>
             <p className="font-extrabold text-[16px] text-on-surface dark:text-white">₦{(wallet?.lifetime_earnings || 0).toLocaleString()}</p>
+          </div>
+        </section>
+
+        {/* Verification Status */}
+        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Verifications</h3>
+          <div className="flex justify-between items-center py-1">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-gray-400">mail</span>
+              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Email Address</span>
+            </div>
+            {user?.email_verified ? (
+              <span className="text-xs font-bold text-green-500">Verified</span>
+            ) : (
+              <button onClick={verifyEmail} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full hover:bg-primary/20">Verify Now</button>
+            )}
+          </div>
+          <div className="flex justify-between items-center py-1">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-gray-400">phone_iphone</span>
+              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Phone Number</span>
+            </div>
+            {user?.phone_verified ? (
+              <span className="text-xs font-bold text-green-500">Verified</span>
+            ) : (
+              <button onClick={verifyPhone} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full hover:bg-primary/20">Verify Now</button>
+            )}
           </div>
         </section>
 
@@ -103,14 +133,14 @@ export const UserProfile: React.FC = () => {
             <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
           </button>
 
-          {/* Upgrade Entry */}
+          {/* Premium Entry */}
           <button 
-            onClick={() => setTab('Upgrade')}
+            onClick={() => setTab('Premium')}
             className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-orange-500">upgrade</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Upgrade Campaign Tier</span>
+              <span className="material-symbols-outlined text-amber-500">workspace_premium</span>
+              <span className="text-xs font-bold text-on-surface dark:text-gray-200">TaskCash Premium</span>
             </div>
             <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
           </button>

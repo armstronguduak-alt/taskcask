@@ -5,13 +5,19 @@ export const WithdrawFunds: React.FC = () => {
   const { wallet, banks, user, levels, requestWithdrawal, setTab } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
-  const minWithdraw = userLevel.id === 'lvl_1' ? 2000 : userLevel.id === 'lvl_2' ? 1000 : userLevel.id === 'lvl_3' ? 500 : 100;
+  const minWithdraw = userLevel.min_withdrawal;
 
   const [selectedBank, setSelectedBank] = useState('');
   const [accountNum, setAccountNum] = useState('');
   const [accountName, setAccountName] = useState('');
   const [amount, setAmount] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmitting = false; // We use a local variable to prevent re-renders, but since we are modifying useState we should keep it. Wait, I will keep setIsSubmitting.
+  const [isSubmittingState, setIsSubmitting] = useState(false);
+
+  const isEmailVerified = user?.email_verified || false;
+  const isPhoneVerified = user?.phone_verified || false;
+  const hasMinBalance = (wallet?.active_balance || 0) >= minWithdraw;
+  const isEligible = isEmailVerified && isPhoneVerified && hasMinBalance;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,8 +74,49 @@ export const WithdrawFunds: React.FC = () => {
           </div>
         </section>
 
+        {/* Requirements Checklist */}
+        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Withdrawal Checklist</h3>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Reach Minimum Balance</span>
+              {hasMinBalance ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> No</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Email Verified</span>
+              {isEmailVerified ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> No</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Phone Verified</span>
+              {isPhoneVerified ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> No</span>
+              )}
+            </div>
+          </div>
+          
+          {!isEligible && (
+            <div className="pt-2">
+              <p className="text-[10px] text-red-500 italic">Please complete all requirements in your Profile before withdrawing.</p>
+              <button onClick={() => setTab('Profile')} className="mt-2 w-full py-2 bg-gray-100 dark:bg-zinc-800 text-xs font-bold rounded-xl text-primary">
+                Go to Profile
+              </button>
+            </div>
+          )}
+        </section>
+
         {/* Withdrawal Form */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm">
+        <section className={`bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm transition-opacity ${!isEligible ? 'opacity-50 pointer-events-none' : ''}`}>
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Bank Select */}
@@ -157,11 +204,11 @@ export const WithdrawFunds: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting || (wallet && amount && parseFloat(amount) > wallet.active_balance) ? true : false}
-              className="w-full py-4 bg-primary text-white font-bold text-xs rounded-2xl shadow-lg shadow-primary/25 active:scale-98 transition-all duration-150 flex items-center justify-center gap-1.5"
+              disabled={!isEligible || isSubmittingState || (wallet && amount && parseFloat(amount) > wallet.active_balance) ? true : false}
+              className="w-full py-4 bg-primary text-white font-bold text-xs rounded-2xl shadow-lg shadow-primary/25 active:scale-98 transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none"
             >
               <span className="material-symbols-outlined text-[18px]">payments</span>
-              {isSubmitting ? 'Processing payout...' : 'Submit Cash-out Request'}
+              {isSubmittingState ? 'Processing payout...' : 'Submit Cash-out Request'}
             </button>
           </form>
         </section>

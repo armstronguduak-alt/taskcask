@@ -25,6 +25,8 @@ export const InviteEarn: React.FC = () => {
   ];
 
   const totalReferralEarnings = referrals.length * 500; // ₦500 per referral
+  const activeReferrals = mockReferredUsers.filter(r => r.status === 'Active').length;
+  const pendingReferrals = mockReferredUsers.filter(r => r.status === 'Pending').length;
 
   return (
     <div className="flex-grow pb-32">
@@ -56,12 +58,20 @@ export const InviteEarn: React.FC = () => {
             
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
-                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Friends Invited</p>
+                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Total Invited</p>
                 <p className="font-bold text-[18px] mt-0.5">{referrals.length}</p>
               </div>
               <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Referral Income</p>
                 <p className="font-bold text-[18px] mt-0.5">₦{totalReferralEarnings.toLocaleString()}</p>
+              </div>
+              <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
+                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Active Referrals</p>
+                <p className="font-bold text-[18px] mt-0.5">{activeReferrals}</p>
+              </div>
+              <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
+                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Pending Referrals</p>
+                <p className="font-bold text-[18px] mt-0.5">{pendingReferrals}</p>
               </div>
             </div>
           </div>
@@ -69,7 +79,14 @@ export const InviteEarn: React.FC = () => {
 
         {/* Share Section */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-          <h3 className="font-bold text-xs text-on-surface dark:text-gray-200">Your Referral link</h3>
+          <div className="flex flex-col items-center justify-center space-y-3 pb-2 border-b border-gray-100 dark:border-zinc-800/80">
+            <h3 className="font-bold text-xs text-on-surface dark:text-gray-200 uppercase tracking-wider">Scan to Join</h3>
+            <div className="w-32 h-32 bg-white rounded-2xl p-2 shadow-sm border border-gray-100 flex items-center justify-center">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(refLink)}`} alt="Referral QR" className="w-full h-full object-contain" />
+            </div>
+          </div>
+
+          <h3 className="font-bold text-xs text-on-surface dark:text-gray-200 pt-2">Your Referral link</h3>
           
           <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 p-3.5 rounded-2xl border border-gray-100 dark:border-zinc-800/80">
             <span className="material-symbols-outlined text-primary text-[20px]">link</span>

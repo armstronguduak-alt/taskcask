@@ -27,7 +27,7 @@ export const BottomNav: React.FC = () => {
         {items.map((item) => {
           const isActive = activeTab === item.tab || 
             (item.tab === 'Tasks' && activeTab === 'Admin') || 
-            (item.tab === 'Profile' && (activeTab === 'Upgrade' || activeTab === 'Withdraw' || activeTab === 'History'));
+            (item.tab === 'Profile' && (activeTab === 'Premium' || activeTab === 'Withdraw' || activeTab === 'History'));
             
           return (
             <button

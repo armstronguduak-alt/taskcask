@@ -10,6 +10,12 @@ export interface User {
   referrer_id: string | null;
   status: 'Active' | 'Banned';
   level_id: string; // foreign key
+  is_premium?: boolean;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  login_streak?: number;
+  total_ads_watched?: number;
+  total_tasks_completed?: number;
 }
 
 export interface Wallet {
@@ -36,6 +42,10 @@ export interface Level {
   earning_multiplier: number;
   max_daily_ads: number;
   max_daily_tasks: number;
+  min_withdrawal: number;
+  req_streak: number;
+  req_ads: number;
+  req_tasks: number;
   benefits: string[];
 }
 
@@ -216,11 +226,10 @@ const STORAGE_KEY = 'taskcash_mock_db';
 
 // Hardcoded Default Data
 const DEFAULT_LEVELS: Level[] = [
-  { id: 'lvl_1', name: 'Level 1 Free', cost: 0, earning_multiplier: 1.0, max_daily_ads: 20, max_daily_tasks: 30, benefits: ['Standard support', 'Minimum withdrawal: ₦2,000', '1.0x Earning factor'] },
-  { id: 'lvl_2', name: 'Level 2 Premium', cost: 5000, earning_multiplier: 1.5, max_daily_ads: 35, max_daily_tasks: 45, benefits: ['Priority support', 'Minimum withdrawal: ₦1,000', '1.5x Earning factor', 'Unlocked High-Yield ads'] },
-  { id: 'lvl_3', name: 'Level 3 Pro', cost: 10000, earning_multiplier: 2.0, max_daily_ads: 50, max_daily_tasks: 60, benefits: ['Vanguard support', 'Minimum withdrawal: ₦500', '2.0x Earning factor', 'Zero withdrawal fees'] },
-  { id: 'lvl_4', name: 'Level 4 Elite', cost: 20000, earning_multiplier: 2.5, max_daily_ads: 70, max_daily_tasks: 80, benefits: ['Executive support', 'Instant bank settlement', '2.5x Earning factor', 'Exclusive social tasks'] },
-  { id: 'lvl_vip', name: 'VIP Legend', cost: 50000, earning_multiplier: 4.0, max_daily_ads: 100, max_daily_tasks: 100, benefits: ['Personal accounts manager', 'Instant settlement', '4.0x Earning factor', 'No withdrawal limits'] }
+  { id: 'lvl_1', name: 'Explorer', cost: 0, earning_multiplier: 1.0, max_daily_ads: 10, max_daily_tasks: 10, min_withdrawal: 30000, req_streak: 0, req_ads: 0, req_tasks: 0, benefits: ['Welcome bonus', '10 rewarded videos/day', '10 tasks/day'] },
+  { id: 'lvl_2', name: 'Active', cost: 0, earning_multiplier: 1.2, max_daily_ads: 15, max_daily_tasks: 15, min_withdrawal: 25000, req_streak: 15, req_ads: 150, req_tasks: 50, benefits: ['15 rewarded videos/day', '15 tasks/day'] },
+  { id: 'lvl_3', name: 'Pro', cost: 0, earning_multiplier: 1.5, max_daily_ads: 20, max_daily_tasks: 20, min_withdrawal: 20000, req_streak: 30, req_ads: 400, req_tasks: 150, benefits: ['20 rewarded videos/day', '20 tasks/day'] },
+  { id: 'lvl_4', name: 'Elite', cost: 0, earning_multiplier: 2.0, max_daily_ads: 30, max_daily_tasks: 30, min_withdrawal: 15000, req_streak: 60, req_ads: 1000, req_tasks: 300, benefits: ['30 rewarded videos/day', 'Highest earning rate'] }
 ];
 
 const DEFAULT_BANKS: Bank[] = [
@@ -277,7 +286,13 @@ export const loadDB = (): TaskCashDB => {
         registered_at: new Date().toISOString(),
         referrer_id: null,
         status: 'Active',
-        level_id: 'lvl_1' // New user is Level 1 Free
+        level_id: 'lvl_1', // New user is Level 1 Free
+        is_premium: false,
+        email_verified: false,
+        phone_verified: false,
+        login_streak: 1,
+        total_ads_watched: 0,
+        total_tasks_completed: 0
       }
     ],
     wallets: [
