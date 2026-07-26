@@ -274,46 +274,35 @@ export const loadDB = (): TaskCashDB => {
         first_name: 'Willie',
         last_name: 'Obi',
         avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCVTKlyggqz5sCXesavqzKPCSJ4KXoCGlgCc8lz_jaPYv_5AQRavF-pvfr6PwucqaXWhwc6Cpw4vfXffqz_cXEk6H0CTtrwG1Kntsj-GR9YG9PNUuq320uFZxButjHsDwLSNPGeUJ2tTsOrGMkV6eDMkbdzqGzC10Ot2XT6vYjQHIJfnbizlg0JjUhc8GgrTm3h3YH68e4e3H_Tr_JAKMrVndxN_nktv37HXYWp6FOKBaHnR5WKMV8q',
-        registered_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        registered_at: new Date().toISOString(),
         referrer_id: null,
         status: 'Active',
-        level_id: 'lvl_4' // Willie is Level 4 Elite in mock designs
+        level_id: 'lvl_1' // New user is Level 1 Free
       }
     ],
     wallets: [
       {
         id: 'wall_willie',
         user_id: 'usr_willie',
-        active_balance: 25450,
-        lifetime_earnings: 150000
+        active_balance: 0,
+        lifetime_earnings: 0
       }
     ],
-    transactions: [
-      { id: 'tx_init_1', wallet_id: 'wall_willie', type: 'DailyReward', amount: 50, status: 'Success', description: 'Daily login bonus', timestamp: new Date(Date.now() - 3600000).toISOString() },
-      { id: 'tx_init_2', wallet_id: 'wall_willie', type: 'WatchReward', amount: 35, status: 'Success', description: 'Watched Crypto Gaming App Launch ad', timestamp: new Date(Date.now() - 7200000).toISOString() },
-      { id: 'tx_init_3', wallet_id: 'wall_willie', type: 'TaskReward', amount: 300, status: 'Success', description: 'Completed Telegram group share task', timestamp: new Date(Date.now() - 86400000).toISOString() },
-      { id: 'tx_init_4', wallet_id: 'wall_willie', type: 'Withdrawal', amount: 5000, status: 'Success', description: 'Settled to OPay Digital Bank (999992)', timestamp: new Date(Date.now() - 172800000).toISOString() }
-    ],
+    transactions: [],
     levels: DEFAULT_LEVELS,
     tasks: DEFAULT_TASKS,
     task_categories: DEFAULT_TASK_CATEGORIES,
     rewarded_ads: DEFAULT_ADS,
     ad_views: [],
     daily_rewards: [],
-    withdrawal_requests: [
-      { id: 'wdr_1', user_id: 'usr_willie', bank_id: 'bank_opay', account_number: '9999923821', account_name: 'Willie Obi', amount: 5000, status: 'Approved', created_at: new Date(Date.now() - 172800000).toISOString() }
-    ],
+    withdrawal_requests: [],
     banks: DEFAULT_BANKS,
     notifications: [
-      { id: 'nt_1', user_id: 'usr_willie', title: 'Withdrawal Successful', message: 'Your cashout request of ₦5,000.00 has been paid to OPay Account 999992***.', read: false, type: 'Wallet', created_at: new Date(Date.now() - 172800000).toISOString() },
-      { id: 'nt_2', user_id: 'usr_willie', title: 'Welcome to TaskCash!', message: 'Start earning today by watching ads and completing easy social tasks!', read: false, type: 'System', created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() }
+      { id: 'nt_2', user_id: 'usr_willie', title: 'Welcome to TaskCash!', message: 'Start earning today by watching ads and completing easy social tasks!', read: false, type: 'System', created_at: new Date().toISOString() }
     ],
     referrals: [],
     referral_earnings: [],
-    achievements: [
-      { id: 'ach_1', user_id: 'usr_willie', title: 'First Steps', description: 'Sign up and create an account', unlocked_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'ach_2', user_id: 'usr_willie', title: 'Elite Earners Club', description: 'Reach ₦100,000 in lifetime earnings', unlocked_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() }
-    ],
+    achievements: [],
     activity_logs: [
       { id: 'log_1', user_id: 'usr_willie', action: 'User logged in', ip: '102.89.44.11', user_agent: 'TelegramMobile/10.9 (iPhone)', timestamp: new Date().toISOString() }
     ],
@@ -333,25 +322,6 @@ export const loadDB = (): TaskCashDB => {
     postback_logs: [],
     fraud_logs: []
   };
-
-  // Seed standard referrals
-  const mockReferralUsers = [
-    { id: 'ref_1', username: 'obi_alex', first_name: 'Alex', last_name: 'Obi', avatar: '', registered_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), referrer_id: 'usr_willie', status: 'Active' as const, level_id: 'lvl_1' },
-    { id: 'ref_2', username: 'favour_chidi', first_name: 'Favour', last_name: 'Chidi', avatar: '', registered_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), referrer_id: 'usr_willie', status: 'Active' as const, level_id: 'lvl_2' }
-  ];
-
-  db.users.push(...mockReferralUsers);
-
-  // Add referrals list
-  db.referrals.push(
-    { id: 'r_1', referrer_id: 'usr_willie', referred_id: 'ref_1', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 'r_2', referrer_id: 'usr_willie', referred_id: 'ref_2', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }
-  );
-
-  db.referral_earnings.push(
-    { id: 're_1', referrer_id: 'usr_willie', referral_id: 'ref_1', amount: 500, created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
-    { id: 're_2', referrer_id: 'usr_willie', referral_id: 'ref_2', amount: 1000, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }
-  );
 
   saveDB(db);
   return db;
