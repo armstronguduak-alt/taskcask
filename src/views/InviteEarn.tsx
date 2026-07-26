@@ -79,14 +79,7 @@ export const InviteEarn: React.FC = () => {
 
         {/* Share Section */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-          <div className="flex flex-col items-center justify-center space-y-3 pb-2 border-b border-gray-100 dark:border-zinc-800/80">
-            <h3 className="font-bold text-xs text-on-surface dark:text-gray-200 uppercase tracking-wider">Scan to Join</h3>
-            <div className="w-32 h-32 bg-white rounded-2xl p-2 shadow-sm border border-gray-100 flex items-center justify-center">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(refLink)}`} alt="Referral QR" className="w-full h-full object-contain" />
-            </div>
-          </div>
-
-          <h3 className="font-bold text-xs text-on-surface dark:text-gray-200 pt-2">Your Referral link</h3>
+          <h3 className="font-bold text-xs text-on-surface dark:text-gray-200">Your Referral link</h3>
           
           <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 p-3.5 rounded-2xl border border-gray-100 dark:border-zinc-800/80">
             <span className="material-symbols-outlined text-primary text-[20px]">link</span>
