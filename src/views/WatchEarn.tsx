@@ -62,8 +62,8 @@ export const WatchEarn: React.FC = () => {
         {/* Daily limit alert */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-2">
           <div className="flex justify-between items-center text-xs">
-            <span className="font-bold text-on-surface dark:text-gray-300">Today's Progress</span>
-            <span className="font-bold text-primary dark:text-[#62df7d]">{adsWatchedToday} / {userLevel.max_daily_ads} watched</span>
+            <span className="font-bold text-on-surface dark:text-gray-300">Daily Task Progress</span>
+            <span className="font-bold text-primary dark:text-[#62df7d]">{adsWatchedToday}/{userLevel.max_daily_ads}</span>
           </div>
           <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div 
@@ -96,10 +96,10 @@ export const WatchEarn: React.FC = () => {
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">{ad.name}</h4>
+                      <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">Watch a video</h4>
                       <p className="text-[10px] text-on-surface-variant dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[12px]">schedule</span>
-                        {ad.watch_time_sec}s watch time
+                        <span className="material-symbols-outlined text-[12px]">task_alt</span>
+                        Progress: {adsWatchedToday}/{userLevel.max_daily_ads}
                       </p>
                       <span className="inline-block px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8px] font-extrabold uppercase rounded-md mt-1">
                         ₦{multipliedReward.toFixed(2)} reward
@@ -118,7 +118,7 @@ export const WatchEarn: React.FC = () => {
                           : 'bg-amber-500 text-white shadow-amber-500/20'
                     }`}
                   >
-                    <span>Watch</span>
+                    <span>{limitReached ? 'Completed' : 'Watch'}</span>
                     <span className="material-symbols-outlined text-[14px]">play_arrow</span>
                   </button>
                 </div>

@@ -151,12 +151,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [activeTab]);
 
   const setTab = (tab: TabName) => {
-    // Show in-app monetization interstitial randomly (25% chance when navigating)
-    if (tab !== activeTab && Math.random() < 0.25 && tab !== 'Onboarding' && tab !== 'Admin') {
-      triggerInAppAd(() => setActiveTab(tab));
-    } else {
-      setActiveTab(tab);
-    }
+    setActiveTab(tab);
   };
 
   const skipOnboarding = () => {

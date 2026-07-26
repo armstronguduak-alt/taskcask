@@ -128,27 +128,6 @@ export const UserProfile: React.FC = () => {
           </button>
         </section>
 
-        {/* Administrative & Sandbox access */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Security & Sandboxes</h3>
-          
-          <button 
-            onClick={() => setTab('Admin')}
-            className="w-full py-3.5 bg-gradient-to-r from-[#0051d5] to-secondary text-white font-bold text-xs rounded-2xl shadow-md shadow-secondary/10 active:scale-95 transition-all duration-150 flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-            Launch Admin Dashboard
-          </button>
-
-          <button 
-            onClick={handleReset}
-            className="w-full py-3.5 border border-red-200 dark:border-red-950 text-red-500 font-bold text-xs rounded-2xl hover:bg-red-50/20 active:scale-95 transition-all duration-150 flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">restart_alt</span>
-            Reset Simulator Database
-          </button>
-        </section>
-
       </div>
     </div>
   );

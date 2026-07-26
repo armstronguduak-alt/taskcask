@@ -5,7 +5,7 @@ export const InviteEarn: React.FC = () => {
   const { wallet, referrals, user } = useApp();
 
   const refCode = user ? user.username.toUpperCase() : 'TASKCASH';
-  const refLink = `https://t.me/taskcash_bot?start=${refCode}`;
+  const refLink = `https://t.me/taskcashbox_bot?start=${refCode}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(refLink);
