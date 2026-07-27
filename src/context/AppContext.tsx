@@ -50,8 +50,6 @@ interface AppContextProps {
   onboardingCompleted: boolean;
   activeTab: TabName;
   activeAd: RewardedAd | null;
-  adProgress: number;
-  adPlaying: boolean;
   
   // Settings
   darkMode: boolean;
@@ -89,7 +87,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   
   const [activeAd, setActiveAd] = useState<RewardedAd | null>(null);
-  const [adProgress, setAdProgress] = useState(0);
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('taskcash_theme') === 'dark';
   });
@@ -288,33 +285,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     AdService.logSdkAction(inAppAd.id, 'INAPP_PLAY_START', {});
     setActiveAd(inAppAd);
-    setAdProgress(0);
 
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setAdProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        AdService.logSdkAction(inAppAd.id, 'INAPP_PLAY_COMPLETE', {});
-        
-        // Add impression log
-        updateDB((db) => {
-          db.ad_views.unshift({
-            id: 'view_inapp_' + Math.random().toString(36).substr(2, 9),
-            user_id: 'usr_willie',
-            ad_id: inAppAd.id,
-            timestamp: new Date().toISOString(),
-            rewarded: false
-          });
+    setTimeout(() => {
+      AdService.logSdkAction(inAppAd.id, 'INAPP_PLAY_COMPLETE', {});
+      
+      // Add impression log
+      updateDB((db) => {
+        db.ad_views.unshift({
+          id: 'view_inapp_' + Math.random().toString(36).substr(2, 9),
+          user_id: 'usr_willie',
+          ad_id: inAppAd.id,
+          timestamp: new Date().toISOString(),
+          rewarded: false
         });
+      });
 
-        setActiveAd(null);
-        setAdProgress(0);
-        setDbState(loadDB());
-        onComplete();
-      }
-    }, 300);
+      setActiveAd(null);
+      setDbState(loadDB());
+      onComplete();
+    }, 3000);
   };
 
   // Submit Social Task Proof
@@ -682,7 +671,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         onboardingCompleted,
         activeTab,
         activeAd,
-        adProgress,
         darkMode,
         
         setTab,
