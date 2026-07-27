@@ -6,18 +6,20 @@ export const WatchEarn: React.FC = () => {
     wallet, 
     rewardedAds, 
     playAd, 
-    levels, 
+    levels,
     user,
-    sdkLogs
+    sdkLogs,
+    systemSettings
   } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
 
-  // Calculate daily progress
+  // Calculate daily progress across all categories
   const today = new Date().toDateString();
   const adsWatchedToday = sdkLogs.filter(
     log => new Date(log.timestamp).toDateString() === today && log.action === 'AD_PLAY_COMPLETE_SUCCESS'
   ).length;
+  const maxDailyAds = userLevel.max_daily_ads_cat_a + userLevel.max_daily_ads_cat_b + userLevel.max_daily_ads_cat_c;
 
   return (
     <div className="flex-grow pb-32">
@@ -63,12 +65,12 @@ export const WatchEarn: React.FC = () => {
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-2">
           <div className="flex justify-between items-center text-xs">
             <span className="font-bold text-on-surface dark:text-gray-300">Daily Task Progress</span>
-            <span className="font-bold text-primary dark:text-[#62df7d]">{adsWatchedToday}/{userLevel.max_daily_ads}</span>
+            <span className="font-bold text-primary dark:text-[#62df7d]">{adsWatchedToday}/{maxDailyAds}</span>
           </div>
           <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" 
-              style={{ width: `${Math.min(100, (adsWatchedToday / userLevel.max_daily_ads) * 100)}%` }}
+              style={{ width: `${Math.min(100, (adsWatchedToday / maxDailyAds) * 100)}%` }}
             />
           </div>
         </section>
@@ -78,9 +80,25 @@ export const WatchEarn: React.FC = () => {
           <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Available Ad Campaigns</h3>
           
           <div className="space-y-4">
-            {rewardedAds.filter(a => a.type !== 'InAppInterstitial').map((ad) => {
-              const multipliedReward = Math.round(ad.reward_amount * userLevel.earning_multiplier);
-              const limitReached = adsWatchedToday >= userLevel.max_daily_ads;
+            {rewardedAds.filter(a => a.type !== 'InAppInterstitial').filter((ad) => {
+              const enabledSetting = systemSettings.find(s => s.key === `enabled_cat_${ad.category}`)?.value;
+              return enabledSetting !== 'false';
+            }).map((ad) => {
+              const rewardSetting = systemSettings.find(s => s.key === `reward_cat_${ad.category}`)?.value;
+              const baseReward = rewardSetting ? parseFloat(rewardSetting) : ad.reward_amount;
+              const multipliedReward = Math.round(baseReward * userLevel.earning_multiplier);
+              
+              const catLimit = ad.category === 'A' ? userLevel.max_daily_ads_cat_a :
+                               ad.category === 'B' ? userLevel.max_daily_ads_cat_b :
+                               userLevel.max_daily_ads_cat_c;
+              
+              const catWatched = sdkLogs.filter(
+                log => new Date(log.timestamp).toDateString() === today && 
+                       log.action === 'AD_PLAY_COMPLETE_SUCCESS' &&
+                       rewardedAds.find(a => a.id === log.ad_id)?.category === ad.category
+              ).length;
+
+              const limitReached = catWatched >= catLimit;
 
               return (
                 <div 
@@ -96,10 +114,10 @@ export const WatchEarn: React.FC = () => {
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">Watch a video</h4>
+                      <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">Watch a video (Cat {ad.category})</h4>
                       <p className="text-[10px] text-on-surface-variant dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[12px]">task_alt</span>
-                        Progress: {adsWatchedToday}/{userLevel.max_daily_ads}
+                        Progress: {catWatched}/{catLimit}
                       </p>
                       <span className="inline-block px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8px] font-extrabold uppercase rounded-md mt-1">
                         ₦{multipliedReward.toFixed(2)} reward

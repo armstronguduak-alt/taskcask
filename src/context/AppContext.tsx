@@ -17,12 +17,14 @@ import type {
   Referral, 
   FraudLog,
   PostbackLog,
-  SdkLog,
-  TaskCategory
+  TaskCategory,
+  UserBankDetail,
+  ReferralMilestone,
+  SystemSetting
 } from '../db/mockDb';
 import { AdService } from '../services/AdService';
 
-export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Premium' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
+export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
 interface AppContextProps {
   user: User | null;
@@ -39,6 +41,9 @@ interface AppContextProps {
   fraudLogs: FraudLog[];
   postbackLogs: PostbackLog[];
   sdkLogs: SdkLog[];
+  userBankDetails: UserBankDetail[];
+  referralMilestones: ReferralMilestone[];
+  systemSettings: SystemSetting[];
   
   onboardingCompleted: boolean;
   activeTab: TabName;
@@ -58,9 +63,9 @@ interface AppContextProps {
   claimDailyBonus: () => void;
   claimWelcomeBonus: () => void;
   claimCommunityBonus: () => void;
-  togglePremium: () => void;
   verifyEmail: () => void;
   verifyPhone: () => void;
+  saveBankDetails: (bankId: string, accountNum: string, accountName: string) => void;
   requestWithdrawal: (bankId: string, accountNum: string, accountName: string, amount: number) => { success: boolean; message: string };
   toggleDarkMode: () => void;
   
@@ -101,9 +106,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const ads = user.total_ads_watched || 0;
       const tasks = user.total_tasks_completed || 0;
       
+      const referralReqSetting = db.system_settings.find(s => s.key === 'referral_active_ads_req')?.value;
+      const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
+      
+      const activeReferralsCount = db.users.filter(
+        u => u.referrer_id === user.id && (u.total_ads_watched || 0) >= activeAdsReq
+      ).length;
+      
       // Determine highest eligible level (levels are assumed sorted 1 to 4)
       const eligibleLevel = db.levels.slice().reverse().find(l => 
-        streak >= l.req_streak && ads >= l.req_ads && tasks >= l.req_tasks
+        streak >= l.req_streak && ads >= l.req_ads && tasks >= l.req_tasks && activeReferralsCount >= l.req_referrals
       );
       
       if (eligibleLevel && eligibleLevel.id !== user.level_id) {
@@ -201,6 +213,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Play Rewarded Ad (via LibTL SDK or local simulator fallback)
   const playAd = async (ad: RewardedAd) => {
     if (adPlaying) return;
+
+    // Daily Limit Check by category
+    const userLevel = dbState.levels.find(l => l.id === currentUser?.level_id) || dbState.levels[0];
+    const today = new Date().toDateString();
+    const adsWatchedToday = dbState.sdkLogs.filter(
+      log => new Date(log.timestamp).toDateString() === today && 
+             log.action === 'AD_PLAY_COMPLETE_SUCCESS' && 
+             dbState.rewardedAds.find(a => a.id === log.ad_id)?.category === ad.category
+    ).length;
+
+    let limit = 0;
+    if (ad.category === 'A') limit = userLevel.max_daily_ads_cat_a;
+    else if (ad.category === 'B') limit = userLevel.max_daily_ads_cat_b;
+    else if (ad.category === 'C') limit = userLevel.max_daily_ads_cat_c;
+    else limit = 999;
+
+    if (adsWatchedToday >= limit) {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.showAlert) tg.showAlert(`Daily limit reached for this ad category.`);
+      else alert(`Daily limit reached for this ad category.`);
+      return;
+    }
     
     // Log start of SDK ad play
     AdService.logSdkAction(ad.id, 'AD_PLAY_START', { type: ad.type, time: ad.watch_time_sec });
@@ -468,10 +502,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbState(loadDB());
   };
 
-  const togglePremium = () => {
+  const saveBankDetails = (bankId: string, accountNum: string, accountName: string) => {
     updateDB((db) => {
-      const user = db.users.find(u => u.id === 'usr_willie');
-      if (user) user.is_premium = !user.is_premium;
+      const existing = db.user_bank_details.find(b => b.user_id === 'usr_willie');
+      if (existing) {
+        existing.bank_id = bankId;
+        existing.account_number = accountNum;
+        existing.account_name = accountName;
+      } else {
+        db.user_bank_details.push({
+          id: 'ubd_' + Math.random().toString(36).substr(2, 9),
+          user_id: 'usr_willie',
+          bank_id: bankId,
+          account_number: accountNum,
+          account_name: accountName,
+          is_default: true
+        });
+      }
     });
     setDbState(loadDB());
   };
@@ -675,6 +722,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fraudLogs: dbState.fraud_logs,
         postbackLogs: dbState.postback_logs,
         sdkLogs: dbState.sdk_logs,
+        userBankDetails: dbState.user_bank_details,
+        referralMilestones: dbState.referral_milestones,
+        systemSettings: dbState.system_settings,
         
         onboardingCompleted,
         activeTab,
@@ -691,9 +741,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         claimDailyBonus,
         claimWelcomeBonus,
         claimCommunityBonus,
-        togglePremium,
         verifyEmail,
         verifyPhone,
+        saveBankDetails,
         requestWithdrawal,
         toggleDarkMode,
         

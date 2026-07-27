@@ -21,6 +21,11 @@ export const TaskCenter: React.FC = () => {
   const [proofUsername, setProofUsername] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const today = new Date().toDateString();
+  const tasksCompletedToday = transactions.filter(
+    t => t.type === 'TaskReward' && new Date(t.timestamp).toDateString() === today && t.status === 'Success'
+  ).length;
+
   // Filter tasks based on Category & Search Query
   const filteredTasks = tasks.filter((task) => {
     const matchesCategory = selectedCategory === 'All' || task.category_id === selectedCategory;
@@ -99,6 +104,20 @@ export const TaskCenter: React.FC = () => {
               {cat.name}
             </button>
           ))}
+        </section>
+
+        {/* Daily limit alert */}
+        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-2">
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-bold text-on-surface dark:text-gray-300">Daily Task Progress</span>
+            <span className="font-bold text-secondary">{tasksCompletedToday}/{userLevel.max_daily_tasks}</span>
+          </div>
+          <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-secondary to-blue-400 rounded-full transition-all duration-500" 
+              style={{ width: `${Math.min(100, (tasksCompletedToday / userLevel.max_daily_tasks) * 100)}%` }}
+            />
+          </div>
         </section>
 
         {/* Tasks List */}

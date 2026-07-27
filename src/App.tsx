@@ -6,7 +6,6 @@ import Dashboard from './views/Dashboard';
 import WatchEarn from './views/WatchEarn';
 import TaskCenter from './views/TaskCenter';
 import InviteEarn from './views/InviteEarn';
-import Premium from './views/Premium';
 import WithdrawFunds from './views/WithdrawFunds';
 import TransactionHistory from './views/TransactionHistory';
 import UserProfile from './views/UserProfile';
@@ -29,8 +28,6 @@ const AppContent: React.FC = () => {
         return <InviteEarn />;
       case 'Profile':
         return <UserProfile />;
-      case 'Premium':
-        return <Premium />;
       case 'Withdraw':
         return <WithdrawFunds />;
       case 'History':

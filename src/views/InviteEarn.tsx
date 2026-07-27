@@ -21,7 +21,8 @@ export const InviteEarn: React.FC = () => {
   // Mock list of referred users details
   const mockReferredUsers = [
     { username: '@obi_alex', registered: '5 days ago', earned: 500, status: 'Active' },
-    { username: '@favour_chidi', registered: '3 days ago', earned: 1000, status: 'Active' }
+    { username: '@favour_chidi', registered: '3 days ago', earned: 1000, status: 'Active' },
+    { username: '@samuel_123', registered: '1 day ago', earned: 0, status: 'Pending' }
   ];
 
   const totalReferralEarnings = referrals.length * 500; // ₦500 per referral
@@ -130,34 +131,65 @@ export const InviteEarn: React.FC = () => {
         </section>
 
         {/* Invited Friends list */}
-        <section className="space-y-3">
+        <section className="space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Referred Friends</h3>
-          <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-            {mockReferredUsers.length === 0 ? (
-              <div className="text-center py-6 text-xs text-gray-400 italic">
-                You haven't referred any friends yet.
-              </div>
-            ) : (
-              mockReferredUsers.map((ref, idx) => (
-                <div key={idx} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500">
-                      <span className="material-symbols-outlined text-[20px]">person</span>
+          
+          <div className="space-y-4">
+            {/* Active Referrals */}
+            <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
+              <h4 className="font-bold text-xs text-primary">Active ({activeReferrals})</h4>
+              {mockReferredUsers.filter(r => r.status === 'Active').length === 0 ? (
+                <div className="text-center py-4 text-[10px] text-gray-400 italic">No active referrals yet.</div>
+              ) : (
+                mockReferredUsers.filter(r => r.status === 'Active').map((ref, idx) => (
+                  <div key={idx} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500">
+                        <span className="material-symbols-outlined text-[20px]">person</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-on-surface dark:text-gray-200">{ref.username}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Joined {ref.registered}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-xs text-on-surface dark:text-gray-200">{ref.username}</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">Joined {ref.registered}</p>
+                    <div className="text-right">
+                      <p className="font-bold text-xs text-primary dark:text-[#62df7d]">+₦{ref.earned.toLocaleString()}</p>
+                      <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-green-500/10 text-green-600">
+                        Active
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-xs text-primary dark:text-[#62df7d]">+₦{ref.earned.toLocaleString()}</p>
-                    <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-green-500/10 text-green-600">
-                      {ref.status}
-                    </span>
+                ))
+              )}
+            </div>
+
+            {/* Pending Referrals */}
+            <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
+              <h4 className="font-bold text-xs text-amber-500">Pending ({pendingReferrals})</h4>
+              {mockReferredUsers.filter(r => r.status === 'Pending').length === 0 ? (
+                <div className="text-center py-4 text-[10px] text-gray-400 italic">No pending referrals.</div>
+              ) : (
+                mockReferredUsers.filter(r => r.status === 'Pending').map((ref, idx) => (
+                  <div key={idx} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500">
+                        <span className="material-symbols-outlined text-[20px]">hourglass_empty</span>
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-on-surface dark:text-gray-200">{ref.username}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Joined {ref.registered}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-xs text-gray-400">Incomplete</p>
+                      <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-amber-500/10 text-amber-600">
+                        Pending
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </section>
 

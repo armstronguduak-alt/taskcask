@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export const WithdrawFunds: React.FC = () => {
-  const { wallet, banks, user, levels, requestWithdrawal, setTab } = useApp();
+  const { wallet, banks, user, levels, requestWithdrawal, setTab, referrals, systemSettings } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
   const minWithdraw = userLevel.min_withdrawal;
@@ -16,7 +16,22 @@ export const WithdrawFunds: React.FC = () => {
   const isEmailVerified = user?.email_verified || false;
   const isPhoneVerified = user?.phone_verified || false;
   const hasMinBalance = (wallet?.active_balance || 0) >= minWithdraw;
-  const isEligible = isEmailVerified && isPhoneVerified && hasMinBalance;
+  
+  const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.created_at || new Date()).getTime()) / (1000 * 3600 * 24));
+  const hasAccountAge = accountAgeDays >= userLevel.req_account_age;
+  
+  const hasStreak = (user?.login_streak || 0) >= userLevel.req_streak;
+  const hasTasks = (user?.total_tasks_completed || 0) >= userLevel.req_tasks;
+  const hasAds = (user?.total_ads_watched || 0) >= userLevel.req_ads;
+  
+  const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
+  const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
+  const activeReferralsCount = referrals.filter(
+    u => (u.total_ads_watched || 0) >= activeAdsReq
+  ).length;
+  const hasReferrals = activeReferralsCount >= userLevel.req_referrals;
+
+  const isEligible = isEmailVerified && isPhoneVerified && hasMinBalance && hasAccountAge && hasStreak && hasTasks && hasAds && hasReferrals;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,18 +90,50 @@ export const WithdrawFunds: React.FC = () => {
 
         {/* Requirements Checklist */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Withdrawal Checklist</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Eligibility Checklist</h3>
           
           <div className="space-y-2">
             <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Reach Minimum Balance</span>
-              {hasMinBalance ? (
-                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
+              <span className="text-on-surface dark:text-gray-200">Account Age</span>
+              {hasAccountAge ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
               ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> No</span>
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {accountAgeDays}/{userLevel.req_account_age} days</span>
               )}
             </div>
             <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Login Streak</span>
+              {hasStreak ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {user?.login_streak || 0}/{userLevel.req_streak} days</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Completed Tasks</span>
+              {hasTasks ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {user?.total_tasks_completed || 0}/{userLevel.req_tasks}</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Rewarded Videos</span>
+              {hasAds ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {user?.total_ads_watched || 0}/{userLevel.req_ads}</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">Active Referrals</span>
+              {hasReferrals ? (
+                <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
+              ) : (
+                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {activeReferralsCount}/{userLevel.req_referrals}</span>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold border-t border-gray-100 dark:border-zinc-800 pt-2">
               <span className="text-on-surface dark:text-gray-200">Email Verified</span>
               {isEmailVerified ? (
                 <span className="text-green-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
@@ -106,10 +153,12 @@ export const WithdrawFunds: React.FC = () => {
           
           {!isEligible && (
             <div className="pt-2">
-              <p className="text-[10px] text-red-500 italic">Please complete all requirements in your Profile before withdrawing.</p>
-              <button onClick={() => setTab('Profile')} className="mt-2 w-full py-2 bg-gray-100 dark:bg-zinc-800 text-xs font-bold rounded-xl text-primary">
-                Go to Profile
-              </button>
+              <p className="text-[10px] text-red-500 italic">You must meet all requirements to unlock cash-outs.</p>
+              {(!isEmailVerified || !isPhoneVerified) && (
+                <button onClick={() => setTab('Profile')} className="mt-2 w-full py-2 bg-gray-100 dark:bg-zinc-800 text-xs font-bold rounded-xl text-primary">
+                  Go to Profile to Verify
+                </button>
+              )}
             </div>
           )}
         </section>

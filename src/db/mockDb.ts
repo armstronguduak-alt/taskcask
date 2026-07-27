@@ -40,12 +40,16 @@ export interface Level {
   name: string;
   cost: number;
   earning_multiplier: number;
-  max_daily_ads: number;
+  max_daily_ads_cat_a: number;
+  max_daily_ads_cat_b: number;
+  max_daily_ads_cat_c: number;
   max_daily_tasks: number;
   min_withdrawal: number;
+  req_account_age: number;
   req_streak: number;
   req_ads: number;
   req_tasks: number;
+  req_referrals: number;
   benefits: string[];
 }
 
@@ -69,6 +73,7 @@ export interface RewardedAd {
   id: string;
   name: string;
   type: 'Interstitial' | 'Popup' | 'InAppInterstitial';
+  category: 'A' | 'B' | 'C' | 'None';
   reward_amount: number;
   watch_time_sec: number;
   remaining_views: number;
@@ -107,6 +112,15 @@ export interface Bank {
   code: string;
 }
 
+export interface UserBankDetail {
+  id: string;
+  user_id: string;
+  bank_id: string;
+  account_number: string;
+  account_name: string;
+  is_default: boolean;
+}
+
 export interface Notification {
   id: string;
   user_id: string;
@@ -130,6 +144,13 @@ export interface ReferralEarning {
   referral_id: string;
   amount: number;
   created_at: string;
+}
+
+export interface ReferralMilestone {
+  id: string;
+  required_referrals: number;
+  reward_amount: number;
+  title: string;
 }
 
 export interface Achievement {
@@ -220,16 +241,18 @@ export interface TaskCashDB {
   sdk_logs: SdkLog[];
   postback_logs: PostbackLog[];
   fraud_logs: FraudLog[];
+  user_bank_details: UserBankDetail[];
+  referral_milestones: ReferralMilestone[];
 }
 
 const STORAGE_KEY = 'taskcash_mock_db';
 
 // Hardcoded Default Data
 const DEFAULT_LEVELS: Level[] = [
-  { id: 'lvl_1', name: 'Explorer', cost: 0, earning_multiplier: 1.0, max_daily_ads: 10, max_daily_tasks: 10, min_withdrawal: 30000, req_streak: 0, req_ads: 0, req_tasks: 0, benefits: ['Welcome bonus', '10 rewarded videos/day', '10 tasks/day'] },
-  { id: 'lvl_2', name: 'Active', cost: 0, earning_multiplier: 1.2, max_daily_ads: 15, max_daily_tasks: 15, min_withdrawal: 25000, req_streak: 15, req_ads: 150, req_tasks: 50, benefits: ['15 rewarded videos/day', '15 tasks/day'] },
-  { id: 'lvl_3', name: 'Pro', cost: 0, earning_multiplier: 1.5, max_daily_ads: 20, max_daily_tasks: 20, min_withdrawal: 20000, req_streak: 30, req_ads: 400, req_tasks: 150, benefits: ['20 rewarded videos/day', '20 tasks/day'] },
-  { id: 'lvl_4', name: 'Elite', cost: 0, earning_multiplier: 2.0, max_daily_ads: 30, max_daily_tasks: 30, min_withdrawal: 15000, req_streak: 60, req_ads: 1000, req_tasks: 300, benefits: ['30 rewarded videos/day', 'Highest earning rate'] }
+  { id: 'lvl_1', name: 'Explorer', cost: 0, earning_multiplier: 1.0, max_daily_ads_cat_a: 10, max_daily_ads_cat_b: 5, max_daily_ads_cat_c: 5, max_daily_tasks: 10, min_withdrawal: 30000, req_account_age: 30, req_streak: 20, req_ads: 300, req_tasks: 100, req_referrals: 0, benefits: ['Withdrawal: ₦30,000', '20 rewarded videos/day', '10 normal tasks/day', 'Standard earning rate'] },
+  { id: 'lvl_2', name: 'Active', cost: 0, earning_multiplier: 1.2, max_daily_ads_cat_a: 15, max_daily_ads_cat_b: 8, max_daily_ads_cat_c: 7, max_daily_tasks: 15, min_withdrawal: 25000, req_account_age: 30, req_streak: 15, req_ads: 150, req_tasks: 50, req_referrals: 5, benefits: ['Withdrawal: ₦25,000', '30 rewarded videos/day', '15 tasks/day', 'Higher daily earning limit', '5% referral commission'] },
+  { id: 'lvl_3', name: 'Pro', cost: 0, earning_multiplier: 1.5, max_daily_ads_cat_a: 20, max_daily_ads_cat_b: 10, max_daily_ads_cat_c: 10, max_daily_tasks: 20, min_withdrawal: 20000, req_account_age: 30, req_streak: 30, req_ads: 400, req_tasks: 150, req_referrals: 20, benefits: ['Withdrawal: ₦20,000', '40 rewarded videos/day', '20 tasks/day', 'Higher referral commission', 'Exclusive campaigns'] },
+  { id: 'lvl_4', name: 'Elite', cost: 0, earning_multiplier: 2.0, max_daily_ads_cat_a: 30, max_daily_ads_cat_b: 15, max_daily_ads_cat_c: 15, max_daily_tasks: 30, min_withdrawal: 15000, req_account_age: 30, req_streak: 60, req_ads: 1000, req_tasks: 300, req_referrals: 50, benefits: ['Withdrawal: ₦15,000', '60 rewarded videos/day', '30 tasks/day', 'Highest earning rate', 'Priority withdrawal review', 'VIP campaigns', 'Highest referral commission'] }
 ];
 
 const DEFAULT_BANKS: Bank[] = [
@@ -257,10 +280,10 @@ const DEFAULT_TASKS: Task[] = [
 ];
 
 const DEFAULT_ADS: RewardedAd[] = [
-  { id: 'ad_inter_1', name: 'Premium Fintech Ad 1', type: 'Interstitial', reward_amount: 20, watch_time_sec: 15, remaining_views: 15 },
-  { id: 'ad_inter_2', name: 'Crypto Gaming App Launch', type: 'Interstitial', reward_amount: 35, watch_time_sec: 30, remaining_views: 10 },
-  { id: 'ad_pop_1', name: 'Survey Rewards Offer', type: 'Popup', reward_amount: 100, watch_time_sec: 45, remaining_views: 5 },
-  { id: 'ad_inapp_1', name: 'Background Monetization Ad', type: 'InAppInterstitial', reward_amount: 0, watch_time_sec: 5, remaining_views: 999 }
+  { id: 'ad_inter_1', name: 'Premium Fintech Ad 1', type: 'Interstitial', category: 'A', reward_amount: 20, watch_time_sec: 15, remaining_views: 15 },
+  { id: 'ad_inter_2', name: 'Crypto Gaming App Launch', type: 'Interstitial', category: 'B', reward_amount: 35, watch_time_sec: 30, remaining_views: 10 },
+  { id: 'ad_pop_1', name: 'Survey Rewards Offer', type: 'Popup', category: 'C', reward_amount: 100, watch_time_sec: 45, remaining_views: 5 },
+  { id: 'ad_inapp_1', name: 'Background Monetization Ad', type: 'InAppInterstitial', category: 'None', reward_amount: 0, watch_time_sec: 5, remaining_views: 999 }
 ];
 
 // Helper to load database
@@ -328,14 +351,34 @@ export const loadDB = (): TaskCashDB => {
       { id: 'st_1', key: 'min_withdrawal_l1', value: '2000' },
       { id: 'st_2', key: 'withdrawal_fee_percent', value: '5' },
       { id: 'st_3', key: 'maintenance_mode', value: 'false' },
-      { id: 'st_4', key: 'fraud_detection_level', value: 'High' }
+      { id: 'st_4', key: 'fraud_detection_level', value: 'High' },
+      { id: 'st_5', key: 'reward_cat_A', value: '20' },
+      { id: 'st_6', key: 'enabled_cat_A', value: 'true' },
+      { id: 'st_7', key: 'cooldown_cat_A', value: '15' },
+      { id: 'st_8', key: 'reward_cat_B', value: '35' },
+      { id: 'st_9', key: 'enabled_cat_B', value: 'true' },
+      { id: 'st_10', key: 'cooldown_cat_B', value: '30' },
+      { id: 'st_11', key: 'reward_cat_C', value: '100' },
+      { id: 'st_12', key: 'enabled_cat_C', value: 'true' },
+      { id: 'st_13', key: 'cooldown_cat_C', value: '45' },
+      { id: 'st_14', key: 'referral_active_ads_req', value: '10' },
+      { id: 'st_15', key: 'referral_commission_l1', value: '0' },
+      { id: 'st_16', key: 'referral_commission_l2', value: '5' },
+      { id: 'st_17', key: 'referral_commission_l3', value: '10' },
+      { id: 'st_18', key: 'referral_commission_l4', value: '15' }
     ],
     advertisements: [
       { id: 'adv_1', title: 'Vite Sponsor Banner', type: 'Banner', link: 'https://vitejs.dev', budget: 150000, status: 'Active' }
     ],
     sdk_logs: [],
     postback_logs: [],
-    fraud_logs: []
+    fraud_logs: [],
+    user_bank_details: [],
+    referral_milestones: [
+      { id: 'milestone_1', required_referrals: 5, reward_amount: 1000, title: '5 Active Referrals' },
+      { id: 'milestone_2', required_referrals: 20, reward_amount: 5000, title: '20 Active Referrals' },
+      { id: 'milestone_3', required_referrals: 50, reward_amount: 15000, title: '50 Active Referrals' }
+    ]
   };
 
   saveDB(db);
