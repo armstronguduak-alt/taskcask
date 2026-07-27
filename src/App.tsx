@@ -1,7 +1,6 @@
 import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import BottomNav from './components/BottomNav';
-import Onboarding from './views/Onboarding';
 import Dashboard from './views/Dashboard';
 import WatchEarn from './views/WatchEarn';
 import TaskCenter from './views/TaskCenter';
@@ -16,8 +15,6 @@ const AppContent: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
-      case 'Onboarding':
-        return <Onboarding />;
       case 'Dashboard':
         return <Dashboard />;
       case 'WatchEarn':
@@ -47,7 +44,7 @@ const AppContent: React.FC = () => {
       </div>
 
       {/* Floating Bottom Nav */}
-      {activeTab !== 'Onboarding' && <BottomNav />}
+      <BottomNav />
 
     </div>
   );

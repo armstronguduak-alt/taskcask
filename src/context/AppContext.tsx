@@ -81,10 +81,8 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [dbState, setDbState] = useState(() => loadDB());
-  const [activeTab, setActiveTab] = useState<TabName>('Onboarding');
-  const [onboardingCompleted, setOnboardingCompleted] = useState(() => {
-    return localStorage.getItem('taskcash_onboarding_done') === 'true';
-  });
+  const [activeTab, setActiveTab] = useState<TabName>('Dashboard');
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
   
   const [activeAd, setActiveAd] = useState<RewardedAd | null>(null);
   const [darkMode, setDarkMode] = useState(() => {

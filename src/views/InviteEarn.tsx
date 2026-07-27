@@ -4,7 +4,8 @@ import { useApp } from '../context/AppContext';
 export const InviteEarn: React.FC = () => {
   const { wallet, referrals, user, users, systemSettings } = useApp();
 
-  const refCode = user ? user.username.toUpperCase() : 'TASKCASH';
+  const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+  const refCode = tgUser?.id ? tgUser.id.toString() : (user ? user.username.toUpperCase() : 'TASKCASH');
   const refLink = `https://t.me/taskcashbox_bot?start=${refCode}`;
 
   const handleCopyLink = () => {
