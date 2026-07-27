@@ -126,17 +126,6 @@ export const UserProfile: React.FC = () => {
             <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
           </button>
 
-          {/* Premium Entry */}
-          <button 
-            onClick={() => setTab('Premium')}
-            className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
-          >
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-amber-500">workspace_premium</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">TaskCash Premium</span>
-            </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
-          </button>
 
           {/* History Entry */}
           <button 

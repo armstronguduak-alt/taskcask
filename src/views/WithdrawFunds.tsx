@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 
 export const WithdrawFunds: React.FC = () => {
-  const { wallet, banks, user, levels, requestWithdrawal, setTab, referrals, systemSettings } = useApp();
+  const { wallet, banks, user, levels, requestWithdrawal, setTab, users, systemSettings } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
   const minWithdraw = userLevel.min_withdrawal;
@@ -17,7 +17,7 @@ export const WithdrawFunds: React.FC = () => {
   const isPhoneVerified = user?.phone_verified || false;
   const hasMinBalance = (wallet?.active_balance || 0) >= minWithdraw;
   
-  const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.created_at || new Date()).getTime()) / (1000 * 3600 * 24));
+  const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.registered_at || new Date()).getTime()) / (1000 * 3600 * 24));
   const hasAccountAge = accountAgeDays >= userLevel.req_account_age;
   
   const hasStreak = (user?.login_streak || 0) >= userLevel.req_streak;
@@ -26,8 +26,8 @@ export const WithdrawFunds: React.FC = () => {
   
   const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
   const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
-  const activeReferralsCount = referrals.filter(
-    u => (u.total_ads_watched || 0) >= activeAdsReq
+  const activeReferralsCount = users.filter(
+    u => u.referrer_id === user?.id && (u.total_ads_watched || 0) >= activeAdsReq
   ).length;
   const hasReferrals = activeReferralsCount >= userLevel.req_referrals;
 

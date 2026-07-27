@@ -44,12 +44,6 @@ export const Dashboard: React.FC = () => {
     setTab('Withdraw');
   };
 
-  const nextLevel = levels.find(l => 
-    l.req_streak > (user?.login_streak || 0) || 
-    l.req_ads > (user?.total_ads_watched || 0) || 
-    l.req_tasks > (user?.total_tasks_completed || 0)
-  );
-
   return (
     <div className="flex-grow pb-32">
       {/* Top App Bar */}

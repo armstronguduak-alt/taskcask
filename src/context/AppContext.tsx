@@ -20,7 +20,8 @@ import type {
   TaskCategory,
   UserBankDetail,
   ReferralMilestone,
-  SystemSetting
+  SystemSetting,
+  SdkLog
 } from '../db/mockDb';
 import { AdService } from '../services/AdService';
 
@@ -44,6 +45,7 @@ interface AppContextProps {
   userBankDetails: UserBankDetail[];
   referralMilestones: ReferralMilestone[];
   systemSettings: SystemSetting[];
+  users: User[];
   
   onboardingCompleted: boolean;
   activeTab: TabName;
@@ -217,10 +219,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Daily Limit Check by category
     const userLevel = dbState.levels.find(l => l.id === currentUser?.level_id) || dbState.levels[0];
     const today = new Date().toDateString();
-    const adsWatchedToday = dbState.sdkLogs.filter(
-      log => new Date(log.timestamp).toDateString() === today && 
+    const adsWatchedToday = dbState.sdk_logs.filter(
+      (log: SdkLog) => new Date(log.timestamp).toDateString() === today && 
              log.action === 'AD_PLAY_COMPLETE_SUCCESS' && 
-             dbState.rewardedAds.find(a => a.id === log.ad_id)?.category === ad.category
+             dbState.rewarded_ads.find((a: RewardedAd) => a.id === log.ad_id)?.category === ad.category
     ).length;
 
     let limit = 0;
@@ -725,6 +727,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         userBankDetails: dbState.user_bank_details,
         referralMilestones: dbState.referral_milestones,
         systemSettings: dbState.system_settings,
+        users: dbState.users,
         
         onboardingCompleted,
         activeTab,

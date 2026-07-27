@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const MembershipCard: React.FC = () => {
-  const { user, levels, sdkLogs, transactions, referrals, wallet, systemSettings } = useApp();
+  const { user, levels, sdkLogs, transactions, users, wallet, systemSettings } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
   const nextLevel = levels.find(l => l.cost > userLevel.cost) || levels.find(l => 
@@ -25,15 +25,14 @@ export const MembershipCard: React.FC = () => {
   ).length;
   const dailyTasksRemaining = Math.max(0, userLevel.max_daily_tasks - tasksCompletedToday);
 
-  // Active Referrals
   const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
   const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
   
-  const activeReferralsCount = referrals.filter(
-    u => (u.total_ads_watched || 0) >= activeAdsReq
+  const activeReferralsCount = users.filter(
+    u => u.referrer_id === user?.id && (u.total_ads_watched || 0) >= activeAdsReq
   ).length; // Filter by active ads
 
-  const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.created_at || new Date()).getTime()) / (1000 * 3600 * 24));
+  const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.registered_at || new Date()).getTime()) / (1000 * 3600 * 24));
   const minWithdrawal = userLevel.min_withdrawal;
 
   return (

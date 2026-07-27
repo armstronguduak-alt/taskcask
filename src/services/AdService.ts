@@ -143,8 +143,9 @@ export const AdService = {
     const todayViews = db.ad_views.filter(
       v => v.user_id === userId && new Date(v.timestamp).toDateString() === today && v.rewarded
     );
-    if (todayViews.length >= userLevel.max_daily_ads) {
-      return { success: false, rewardClaimed: false, message: `Daily ad limit reached (${userLevel.max_daily_ads}/${userLevel.max_daily_ads} ads)` };
+    const maxDailyAds = userLevel.max_daily_ads_cat_a + userLevel.max_daily_ads_cat_b + userLevel.max_daily_ads_cat_c;
+    if (todayViews.length >= maxDailyAds) {
+      return { success: false, rewardClaimed: false, message: `Daily ad limit reached (${maxDailyAds}/${maxDailyAds} ads)` };
     }
 
     // Simulate Server-Side Postback verification
