@@ -90,7 +90,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const [activeAd, setActiveAd] = useState<RewardedAd | null>(null);
   const [adProgress, setAdProgress] = useState(0);
-  const [adPlaying, setAdPlaying] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('taskcash_theme') === 'dark';
   });
@@ -212,10 +211,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('Dashboard');
   };
 
-  // Play Rewarded Ad (via LibTL SDK or local simulator fallback)
+  // Play Rewarded Ad directly via LibTL SDK
   const playAd = async (ad: RewardedAd) => {
-    if (adPlaying) return;
-
     // Daily Limit Check by category
     const userLevel = dbState.levels.find(l => l.id === currentUser?.level_id) || dbState.levels[0];
     const today = new Date().toDateString();
@@ -242,85 +239,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     AdService.logSdkAction(ad.id, 'AD_PLAY_START', { type: ad.type, time: ad.watch_time_sec });
     
     setActiveAd(ad);
-    setAdPlaying(true);
-    setAdProgress(0);
 
-    // Check if LibTL ad monetization SDK is loaded & ready
-    const hasRealSdk = typeof (window as any).show_11343654 === 'function';
+    const sdkFormat = ad.type === 'Popup' ? 'pop' : 'interstitial';
+    const sdkSuccess = await AdService.showSdkAd(sdkFormat);
 
-    if (hasRealSdk) {
-      setAdProgress(50);
-      const sdkFormat = ad.type === 'Popup' ? 'pop' : 'interstitial';
-      const sdkSuccess = await AdService.showSdkAd(sdkFormat);
-
-      if (sdkSuccess) {
-        setAdProgress(100);
-        AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, format: sdkFormat });
-        
-        updateDB((db) => {
-          const user = db.users.find(u => u.id === 'usr_willie');
-          if (user) {
-            user.total_ads_watched = (user.total_ads_watched || 0) + 1;
-          }
-        });
-        checkAutoLevelUp();
-        
-        const result = await AdService.validateAndCreditReward('usr_willie', ad);
-        
-        setActiveAd(null);
-        setAdPlaying(false);
-        setAdProgress(0);
-        setDbState(loadDB());
-        
-        const tg = (window as any).Telegram?.WebApp;
-        if (tg && tg.showAlert) {
-          tg.HapticFeedback?.notificationOccurred('success');
-          tg.showAlert(result.message);
-        } else {
-          alert(result.message);
+    if (sdkSuccess) {
+      AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, format: sdkFormat });
+      
+      updateDB((db) => {
+        const user = db.users.find(u => u.id === 'usr_willie');
+        if (user) {
+          user.total_ads_watched = (user.total_ads_watched || 0) + 1;
         }
-        return;
+      });
+      checkAutoLevelUp();
+      
+      const result = await AdService.validateAndCreditReward('usr_willie', ad);
+      
+      setActiveAd(null);
+      setDbState(loadDB());
+      
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.showAlert) {
+        tg.HapticFeedback?.notificationOccurred('success');
+        tg.showAlert(result.message);
+      } else {
+        alert(result.message);
       }
+    } else {
+      AdService.logSdkAction(ad.id, 'AD_PLAY_FAILED', { reason: 'SDK returned false or errored' });
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.showAlert) tg.showAlert('Ad playback failed or was closed early.');
+      else alert('Ad playback failed or was closed early.');
+      setActiveAd(null);
     }
-
-    // Fallback timer simulation when SDK script is not loaded locally / blocked
-    const intervalTime = 100; // tick every 100ms
-    const totalTicks = (ad.watch_time_sec * 1000) / intervalTime;
-    let ticks = 0;
-
-    const timer = setInterval(async () => {
-      ticks++;
-      setAdProgress(Math.floor((ticks / totalTicks) * 100));
-
-      if (ticks >= totalTicks) {
-        clearInterval(timer);
-        
-        AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, simulated: true });
-        
-        updateDB((db) => {
-          const user = db.users.find(u => u.id === 'usr_willie');
-          if (user) {
-            user.total_ads_watched = (user.total_ads_watched || 0) + 1;
-          }
-        });
-        checkAutoLevelUp();
-
-        const result = await AdService.validateAndCreditReward('usr_willie', ad);
-        
-        setActiveAd(null);
-        setAdPlaying(false);
-        setAdProgress(0);
-        setDbState(loadDB());
-        
-        const tg = (window as any).Telegram?.WebApp;
-        if (tg && tg.showAlert) {
-          tg.HapticFeedback?.notificationOccurred('success');
-          tg.showAlert(result.message);
-        } else {
-          alert(result.message);
-        }
-      }
-    }, intervalTime);
   };
 
   // Play Non-rewarded In-App interstitial
@@ -336,7 +288,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     AdService.logSdkAction(inAppAd.id, 'INAPP_PLAY_START', {});
     setActiveAd(inAppAd);
-    setAdPlaying(true);
     setAdProgress(0);
 
     let progress = 0;
@@ -359,7 +310,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
 
         setActiveAd(null);
-        setAdPlaying(false);
         setAdProgress(0);
         setDbState(loadDB());
         onComplete();
@@ -733,7 +683,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeTab,
         activeAd,
         adProgress,
-        adPlaying,
         darkMode,
         
         setTab,

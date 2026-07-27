@@ -140,50 +140,37 @@ export const TaskCenter: React.FC = () => {
               return (
                 <div 
                   key={task.id} 
-                  className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4"
+                  className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm"
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[20px]">{category?.icon || 'work'}</span>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/10 text-primary">
+                        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          {category?.icon || 'work'}
+                        </span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">{task.title}</h4>
-                        <span className="inline-block text-[8px] font-extrabold text-primary dark:text-[#62df7d] uppercase tracking-wide mt-0.5">
-                          {category?.name} GIG
+                        <h4 className="font-bold text-xs text-on-surface dark:text-gray-200 line-clamp-1">{task.title}</h4>
+                        <p className="text-[10px] text-on-surface-variant dark:text-gray-400 mt-0.5 line-clamp-1">
+                          {task.description}
+                        </p>
+                        <span className="inline-block px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8px] font-extrabold uppercase rounded-md mt-1">
+                          ₦{multipliedReward.toFixed(2)} reward
                         </span>
                       </div>
                     </div>
-                    <span className="font-bold text-xs text-primary dark:text-[#62df7d]">
-                      ₦{multipliedReward.toFixed(2)}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-on-surface-variant dark:text-gray-400 leading-relaxed">
-                    {task.description}
-                  </p>
-
-                  <div className="flex justify-between items-center gap-3">
-                    <a 
-                      href={task.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-2 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200/60 dark:hover:bg-zinc-700 text-on-surface dark:text-gray-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">link</span>
-                      Link
-                    </a>
-
+                    
                     <button 
                       disabled={isCompleted}
                       onClick={() => setActiveTaskDetail(task)}
-                      className={`px-4.5 py-2.5 rounded-xl font-bold text-xs active:scale-95 transition-all duration-150 ${
+                      className={`flex-shrink-0 px-4 py-2.5 rounded-full font-bold text-xs shadow-md active:scale-95 transition-all duration-150 flex items-center gap-1.5 ${
                         isCompleted
-                          ? 'bg-green-500/10 text-green-600 dark:text-[#62df7d] cursor-not-allowed font-semibold'
-                          : 'bg-primary text-white shadow-md shadow-primary/10'
+                          ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-not-allowed shadow-none'
+                          : 'bg-primary text-white shadow-primary/20'
                       }`}
                     >
-                      {isCompleted ? 'Completed ✓' : 'Submit Proof'}
+                      <span>{isCompleted ? 'Done' : 'Do Task'}</span>
+                      {!isCompleted && <span className="material-symbols-outlined text-[14px]">arrow_forward</span>}
                     </button>
                   </div>
                 </div>

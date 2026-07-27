@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const InviteEarn: React.FC = () => {
-  const { wallet, referrals, user } = useApp();
+  const { wallet, referrals, user, users, systemSettings } = useApp();
 
   const refCode = user ? user.username.toUpperCase() : 'TASKCASH';
   const refLink = `https://t.me/taskcashbox_bot?start=${refCode}`;
@@ -18,16 +18,28 @@ export const InviteEarn: React.FC = () => {
     window.open(url, '_blank');
   };
 
-  // Mock list of referred users details
-  const mockReferredUsers = [
-    { username: '@obi_alex', registered: '5 days ago', earned: 500, status: 'Active' },
-    { username: '@favour_chidi', registered: '3 days ago', earned: 1000, status: 'Active' },
-    { username: '@samuel_123', registered: '1 day ago', earned: 0, status: 'Pending' }
-  ];
+  const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
+  const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
+  
+  const myReferrals = users.filter(u => u.referrer_id === user?.id);
 
-  const totalReferralEarnings = referrals.length * 500; // ₦500 per referral
-  const activeReferrals = mockReferredUsers.filter(r => r.status === 'Active').length;
-  const pendingReferrals = mockReferredUsers.filter(r => r.status === 'Pending').length;
+  const activeReferredUsers = myReferrals.filter(u => (u.total_ads_watched || 0) >= activeAdsReq).map(u => ({
+    username: `@${u.username}`,
+    registered: new Date(u.registered_at || new Date()).toLocaleDateString(),
+    earned: 500,
+    status: 'Active'
+  }));
+
+  const pendingReferredUsers = myReferrals.filter(u => (u.total_ads_watched || 0) < activeAdsReq).map(u => ({
+    username: `@${u.username}`,
+    registered: new Date(u.registered_at || new Date()).toLocaleDateString(),
+    earned: 0,
+    status: 'Pending'
+  }));
+
+  const totalReferralEarnings = activeReferredUsers.length * 500; // ₦500 per active referral
+  const activeReferralsCount = activeReferredUsers.length;
+  const pendingReferralsCount = pendingReferredUsers.length;
 
   return (
     <div className="flex-grow pb-32">
@@ -60,7 +72,7 @@ export const InviteEarn: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Total Invited</p>
-                <p className="font-bold text-[18px] mt-0.5">{referrals.length}</p>
+                <p className="font-bold text-[18px] mt-0.5">{myReferrals.length}</p>
               </div>
               <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Referral Income</p>
@@ -68,11 +80,11 @@ export const InviteEarn: React.FC = () => {
               </div>
               <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Active Referrals</p>
-                <p className="font-bold text-[18px] mt-0.5">{activeReferrals}</p>
+                <p className="font-bold text-[18px] mt-0.5">{activeReferralsCount}</p>
               </div>
               <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Pending Referrals</p>
-                <p className="font-bold text-[18px] mt-0.5">{pendingReferrals}</p>
+                <p className="font-bold text-[18px] mt-0.5">{pendingReferralsCount}</p>
               </div>
             </div>
           </div>
@@ -137,11 +149,11 @@ export const InviteEarn: React.FC = () => {
           <div className="space-y-4">
             {/* Active Referrals */}
             <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-              <h4 className="font-bold text-xs text-primary">Active ({activeReferrals})</h4>
-              {mockReferredUsers.filter(r => r.status === 'Active').length === 0 ? (
+              <h4 className="font-bold text-xs text-primary">Active ({activeReferralsCount})</h4>
+              {activeReferredUsers.length === 0 ? (
                 <div className="text-center py-4 text-[10px] text-gray-400 italic">No active referrals yet.</div>
               ) : (
-                mockReferredUsers.filter(r => r.status === 'Active').map((ref, idx) => (
+                activeReferredUsers.map((ref, idx) => (
                   <div key={idx} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500">
@@ -165,11 +177,11 @@ export const InviteEarn: React.FC = () => {
 
             {/* Pending Referrals */}
             <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-              <h4 className="font-bold text-xs text-amber-500">Pending ({pendingReferrals})</h4>
-              {mockReferredUsers.filter(r => r.status === 'Pending').length === 0 ? (
+              <h4 className="font-bold text-xs text-amber-500">Pending ({pendingReferralsCount})</h4>
+              {pendingReferredUsers.length === 0 ? (
                 <div className="text-center py-4 text-[10px] text-gray-400 italic">No pending referrals.</div>
               ) : (
-                mockReferredUsers.filter(r => r.status === 'Pending').map((ref, idx) => (
+                pendingReferredUsers.map((ref, idx) => (
                   <div key={idx} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500">
