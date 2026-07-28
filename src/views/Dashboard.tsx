@@ -180,8 +180,8 @@ export const Dashboard: React.FC = () => {
         <section className="space-y-3 mt-6">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 text-center">Verified Task Partners</h3>
           <div className="flex justify-center items-center gap-8 opacity-70">
-            <img src="https://logo.clearbit.com/swagbucks.com" alt="Swagbucks" className="h-5 grayscale hover:grayscale-0 transition-all duration-300 object-contain" />
-            <img src="https://logo.clearbit.com/clickworker.com" alt="Clickworker" className="h-5 grayscale hover:grayscale-0 transition-all duration-300 object-contain" />
+            <img src="/swagbucks-logo.png" alt="Swagbucks" className="h-6 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/clickworker-logo.png" alt="Clickworker" className="h-6 hover:opacity-100 transition-all duration-300 object-contain" />
           </div>
         </section>
 
