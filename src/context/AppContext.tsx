@@ -54,6 +54,10 @@ interface AppContextProps {
   // Settings
   darkMode: boolean;
   
+  // Daily Bonus
+  hasClaimedDailyBonus: boolean;
+  dailyStreakDay: number;
+  
   // Methods
   setTab: (tab: TabName) => void;
   skipOnboarding: () => void;
@@ -674,6 +678,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbState(loadDB());
   };
 
+  const hasClaimedDailyBonus = (() => {
+    const today = new Date().toDateString();
+    const lastClaim = dbState.daily_rewards.find(r => r.user_id === 'usr_willie');
+    return !!(lastClaim && new Date(lastClaim.claimed_at).toDateString() === today);
+  })();
+
+  const dailyStreakDay = (dbState.daily_rewards.length % 7) + 1;
+
   return (
     <AppContext.Provider
       value={{
@@ -700,6 +712,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeTab,
         activeAd,
         darkMode,
+
+        hasClaimedDailyBonus,
+        dailyStreakDay,
         
         setTab,
         skipOnboarding,

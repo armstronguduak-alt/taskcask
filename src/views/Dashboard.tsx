@@ -12,12 +12,15 @@ export const Dashboard: React.FC = () => {
     setTab, 
     claimDailyBonus,
     claimWelcomeBonus,
-    claimCommunityBonus
+    claimCommunityBonus,
+    hasClaimedDailyBonus,
+    dailyStreakDay
   } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showDailyModal, setShowDailyModal] = useState(false);
   const [isCommunityJoined, setIsCommunityJoined] = useState(false);
   const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
 
@@ -147,10 +150,13 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           <button 
-            onClick={claimDailyBonus}
-            className="px-4 py-2 bg-amber-500 text-white font-bold text-xs rounded-full shadow-md shadow-amber-500/25 active:scale-95 transition-all duration-150"
+            disabled={hasClaimedDailyBonus}
+            onClick={() => setShowDailyModal(true)}
+            className={`px-4 py-2 font-bold text-xs rounded-full shadow-md active:scale-95 transition-all duration-150 ${
+              hasClaimedDailyBonus ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-amber-500 text-white shadow-amber-500/25'
+            }`}
           >
-            Claim
+            {hasClaimedDailyBonus ? 'Claimed' : 'Claim'}
           </button>
         </section>
 
@@ -303,6 +309,51 @@ export const Dashboard: React.FC = () => {
               className="w-full py-3.5 bg-primary text-white font-bold text-sm rounded-2xl shadow-lg shadow-primary/25 active:scale-95 transition-all"
             >
               Claim ₦500 Bonus
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Daily Bonus Modal */}
+      {showDailyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-slide-up relative p-6">
+            <button 
+              onClick={() => setShowDailyModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mb-3">
+                <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+              </div>
+              <h2 className="text-xl font-bold">Daily Rewards Streak</h2>
+              <p className="text-sm text-gray-500 mt-1">Login consecutively to earn bigger rewards!</p>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-2 mb-6">
+              {[1, 2, 3, 4, 5, 6, 7].map(day => (
+                <div key={day} className={`flex flex-col items-center p-2 rounded-xl border ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'bg-amber-50 border-amber-500 dark:bg-amber-500/10 dark:border-amber-500' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'bg-green-50 border-green-500 dark:bg-green-500/10 dark:border-green-500' : 'bg-gray-50 border-gray-100 dark:bg-zinc-800 dark:border-zinc-700'}`}>
+                  <span className="text-[10px] font-bold text-gray-400">Day {day}</span>
+                  <span className={`text-xs font-bold mt-1 ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'text-amber-600 dark:text-amber-400' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    ₦{day * 50}
+                  </span>
+                  {(dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) && (
+                    <span className="material-symbols-outlined text-green-500 text-[14px] mt-1" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button
+              disabled={hasClaimedDailyBonus}
+              onClick={() => {
+                claimDailyBonus();
+                setShowDailyModal(false);
+              }}
+              className={`w-full py-3 rounded-2xl font-bold transition-all ${hasClaimedDailyBonus ? 'bg-gray-100 text-gray-400 dark:bg-zinc-800 cursor-not-allowed' : 'bg-amber-500 text-white hover:bg-amber-600 active:scale-95 shadow-lg shadow-amber-500/30'}`}
+            >
+              {hasClaimedDailyBonus ? 'Come back tomorrow' : 'Claim Today\'s Reward'}
             </button>
           </div>
         </div>
