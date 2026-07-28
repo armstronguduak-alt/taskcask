@@ -8,7 +8,6 @@ export const UserProfile: React.FC = () => {
     levels, 
     darkMode, 
     toggleDarkMode, 
-    verifyEmail,
     verifyPhone,
     setTab
   } = useApp();
@@ -66,17 +65,7 @@ export const UserProfile: React.FC = () => {
         {/* Verification Status */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Verifications</h3>
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-gray-400">mail</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Email Address</span>
-            </div>
-            {user?.email_verified ? (
-              <span className="text-xs font-bold text-green-500">Verified</span>
-            ) : (
-              <button onClick={verifyEmail} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full hover:bg-primary/20">Verify Now</button>
-            )}
-          </div>
+
           <div className="flex justify-between items-center py-1">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-gray-400">phone_iphone</span>

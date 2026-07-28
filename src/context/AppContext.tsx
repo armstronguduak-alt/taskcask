@@ -434,11 +434,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const verifyPhone = () => {
-    updateDB((db) => {
-      const user = db.users.find(u => u.id === 'usr_willie');
-      if (user) user.phone_verified = true;
-    });
-    setDbState(loadDB());
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg && tg.requestContact) {
+      tg.requestContact((success: boolean, contact: any) => {
+        if (success) {
+          updateDB((db) => {
+            const user = db.users.find(u => u.id === 'usr_willie');
+            if (user) {
+              user.phone_verified = true;
+            }
+          });
+          setDbState(loadDB());
+          tg.showAlert('Phone number verified successfully!');
+        } else {
+          tg.showAlert('Verification failed or cancelled.');
+        }
+      });
+    } else {
+      // Fallback for non-telegram environments
+      updateDB((db) => {
+        const user = db.users.find(u => u.id === 'usr_willie');
+        if (user) user.phone_verified = true;
+      });
+      setDbState(loadDB());
+    }
   };
 
   const saveBankDetails = (bankId: string, accountNum: string, accountName: string) => {
@@ -476,8 +495,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     const minWithdraw = userLevel.min_withdrawal;
 
-    if (amount < minWithdraw) {
-      return { success: false, message: `Minimum withdrawal amount for ${userLevel.name} is ₦${minWithdraw.toLocaleString()}.` };
+    // Calculate activity balance (total activity earnings - total withdrawals)
+    const userTransactions = db.transactions.filter(t => t.wallet_id === wallet?.id);
+    const activityIncome = userTransactions
+      .filter(t => t.type !== 'ReferralReward' && t.type !== 'Withdrawal' && t.type !== 'LevelUpgrade')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const totalWithdrawn = userTransactions
+      .filter(t => t.type === 'Withdrawal')
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const activityBalance = Math.max(0, activityIncome - totalWithdrawn);
+
+    if (activityBalance < minWithdraw) {
+      return { success: false, message: `Minimum activity balance of ₦${minWithdraw.toLocaleString()} required. Referral earnings do not count towards this threshold.` };
     }
 
     if (!wallet || wallet.active_balance < amount) {

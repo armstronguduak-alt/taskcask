@@ -19,15 +19,17 @@ export const Dashboard: React.FC = () => {
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isCommunityJoined, setIsCommunityJoined] = useState(false);
+  const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem('welcome_bonus_claimed')) {
-      setShowWelcomeModal(true);
-    }
+    // Basic auth check
+    if (!user) return;
+    
+    // Auto-fetch dashboard data
     if (localStorage.getItem('community_bonus_claimed')) {
       setIsCommunityJoined(true);
     }
-  }, []);
+  }, [user]);
 
   const handleClaimWelcome = () => {
     claimWelcomeBonus();
@@ -35,9 +37,14 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleJoinCommunity = () => {
-    claimCommunityBonus();
-    setIsCommunityJoined(true);
-    window.open('https://t.me/taskcash_official', '_blank');
+    if (!isCommunityJoined && !isVerifyingCommunity) {
+      window.open('https://t.me/taskcash_official', '_blank');
+      setIsVerifyingCommunity(true);
+    } else if (isVerifyingCommunity) {
+      claimCommunityBonus();
+      setIsVerifyingCommunity(false);
+      setIsCommunityJoined(true);
+    }
   };
 
   const handleWithdrawClick = () => {
@@ -165,8 +172,17 @@ export const Dashboard: React.FC = () => {
               isCommunityJoined ? 'bg-white/20 text-white cursor-not-allowed shadow-none' : 'bg-white text-[#0088cc]'
             }`}
           >
-            {isCommunityJoined ? 'Joined' : 'Join'}
+            {isCommunityJoined ? 'Joined' : (isVerifyingCommunity ? 'Verify' : 'Join')}
           </button>
+        </section>
+
+        {/* Our Partners Section */}
+        <section className="space-y-3 mt-6">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 text-center">Verified Task Partners</h3>
+          <div className="flex justify-center items-center gap-8 opacity-70">
+            <img src="https://logo.clearbit.com/swagbucks.com" alt="Swagbucks" className="h-5 grayscale hover:grayscale-0 transition-all duration-300 object-contain" />
+            <img src="https://logo.clearbit.com/clickworker.com" alt="Clickworker" className="h-5 grayscale hover:grayscale-0 transition-all duration-300 object-contain" />
+          </div>
         </section>
 
         {/* Quick Actions Shortcuts */}
