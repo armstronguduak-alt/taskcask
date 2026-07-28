@@ -440,7 +440,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const verifyPhone = () => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg && tg.requestContact) {
-      tg.requestContact((success: boolean, contact: any) => {
+      tg.requestContact((success: boolean) => {
         if (success) {
           updateDB((db) => {
             const user = db.users.find(u => u.id === 'usr_willie');
