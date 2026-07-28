@@ -185,9 +185,11 @@ export const Dashboard: React.FC = () => {
         {/* Our Partners Section */}
         <section className="space-y-3 mt-6">
           <h3 className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 text-center">Verified Task Partners</h3>
-          <div className="flex justify-center items-center gap-8 opacity-70">
-            <img src="/swagbucks-logo.png" alt="Swagbucks" className="h-6 hover:opacity-100 transition-all duration-300 object-contain" />
-            <img src="/clickworker-logo.png" alt="Clickworker" className="h-6 hover:opacity-100 transition-all duration-300 object-contain" />
+          <div className="flex justify-center items-center gap-6 opacity-70 flex-wrap px-2">
+            <img src="/swagbucks-logo.png" alt="Swagbucks" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/clickworker-logo.png" alt="Clickworker" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/adsterra.png" alt="Adsterra" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/monetag-logo.png" alt="Monetag" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
           </div>
         </section>
 
