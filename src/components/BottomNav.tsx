@@ -19,14 +19,14 @@ export const BottomNav: React.FC = () => {
     { tab: 'Profile', label: 'Profile', icon: 'person' }
   ];
 
-  if (activeTab === 'Onboarding') return null;
+  if (activeTab === 'Onboarding' || activeTab === 'Admin') return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-[480px] w-full px-container-padding pb-6 pt-2 bg-transparent pointer-events-none">
       <div className="w-full h-18 rounded-3xl bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-lg shadow-black/10 flex items-center justify-around px-4 py-2 pointer-events-auto">
         {items.map((item) => {
           const isActive = activeTab === item.tab || 
-            (item.tab === 'Tasks' && activeTab === 'Admin') || 
+            (item.tab === 'Tasks' && (activeTab as string) === 'Admin') || 
             (item.tab === 'Profile' && (activeTab === 'Withdraw' || activeTab === 'History'));
           return (
             <button

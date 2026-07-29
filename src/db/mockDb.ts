@@ -388,6 +388,9 @@ export const loadDB = (): TaskCashDB => {
 // Save Database Helper
 export const saveDB = (db: TaskCashDB) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('taskcash_db_update', { detail: { timestamp: Date.now() } }));
+  }
 };
 
 // Update Database Operations Helper

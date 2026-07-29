@@ -4,8 +4,8 @@ import { useApp } from '../context/AppContext';
 export const WithdrawFunds: React.FC = () => {
   const { wallet, banks, user, levels, requestWithdrawal, setTab, users, systemSettings } = useApp();
 
-  const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
-  const minWithdraw = userLevel.min_withdrawal;
+  const userLevel = levels?.find(l => l.id === user?.level_id) || levels?.[0] || {} as any;
+  const minWithdraw = userLevel?.min_withdrawal || 0;
 
   const [selectedBank, setSelectedBank] = useState('');
   const [accountNum, setAccountNum] = useState('');
@@ -18,18 +18,18 @@ export const WithdrawFunds: React.FC = () => {
   const hasMinBalance = (wallet?.active_balance || 0) >= minWithdraw;
   
   const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.registered_at || new Date()).getTime()) / (1000 * 3600 * 24));
-  const hasAccountAge = accountAgeDays >= userLevel.req_account_age;
+  const hasAccountAge = accountAgeDays >= (userLevel?.req_account_age || 0);
   
-  const hasStreak = (user?.login_streak || 0) >= userLevel.req_streak;
-  const hasTasks = (user?.total_tasks_completed || 0) >= userLevel.req_tasks;
-  const hasAds = (user?.total_ads_watched || 0) >= userLevel.req_ads;
+  const hasStreak = (user?.login_streak || 0) >= (userLevel?.req_streak || 0);
+  const hasTasks = (user?.total_tasks_completed || 0) >= (userLevel?.req_tasks || 0);
+  const hasAds = (user?.total_ads_watched || 0) >= (userLevel?.req_ads || 0);
   
-  const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
+  const referralReqSetting = systemSettings?.find(s => s.key === 'referral_active_ads_req')?.value;
   const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
-  const activeReferralsCount = users.filter(
+  const activeReferralsCount = users?.filter(
     u => u.referrer_id === user?.id && (u.total_ads_watched || 0) >= activeAdsReq
-  ).length;
-  const hasReferrals = activeReferralsCount >= userLevel.req_referrals;
+  ).length || 0;
+  const hasReferrals = activeReferralsCount >= (userLevel?.req_referrals || 0);
 
   const isEligible = isEmailVerified && isPhoneVerified && hasMinBalance && hasAccountAge && hasStreak && hasTasks && hasAds && hasReferrals;
 

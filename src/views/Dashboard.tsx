@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { MembershipCard } from '../components/MembershipCard';
+import { NotificationCenterModal } from '../components/NotificationCenterModal';
+import { LiveWithdrawalToast } from '../components/LiveWithdrawalToast';
 
 export const Dashboard: React.FC = () => {
   const { 
@@ -8,7 +10,6 @@ export const Dashboard: React.FC = () => {
     wallet, 
     transactions, 
     levels, 
-    notifications,
     setTab, 
     claimDailyBonus,
     claimWelcomeBonus,
@@ -21,6 +22,7 @@ export const Dashboard: React.FC = () => {
 
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [isCommunityJoined, setIsCommunityJoined] = useState(false);
   const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
 
@@ -80,16 +82,17 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
           <button 
-            onClick={() => alert(`You have ${notifications.length} notifications.`)}
+            onClick={() => setShowNotificationsModal(true)}
             className="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant dark:text-gray-400 bg-surface-container/50 dark:bg-zinc-800/40 relative hover:bg-surface-container transition-colors"
           >
             <span className="material-symbols-outlined text-[24px]">notifications</span>
-            {notifications.length > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-background"></span>
-            )}
+            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-background animate-pulse"></span>
           </button>
         </div>
       </header>
+
+      {/* Live Floating Ticker for Nigerian Cash-outs (Outside document flow so no cards are pushed) */}
+      <LiveWithdrawalToast onOpenNotifications={() => setShowNotificationsModal(true)} />
 
       {/* Main Content */}
       <div className="px-container-padding pt-4 space-y-6">
@@ -359,6 +362,11 @@ export const Dashboard: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Notification Center Modal */}
+      {showNotificationsModal && (
+        <NotificationCenterModal onClose={() => setShowNotificationsModal(false)} />
       )}
     </div>
   );

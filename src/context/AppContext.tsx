@@ -24,6 +24,7 @@ import type {
   SdkLog
 } from '../db/mockDb';
 import { AdService } from '../services/AdService';
+import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
 
 export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
@@ -59,6 +60,7 @@ interface AppContextProps {
   dailyStreakDay: number;
   
   // Methods
+  refreshState: () => void;
   setTab: (tab: TabName) => void;
   skipOnboarding: () => void;
   playAd: (ad: RewardedAd) => void;
@@ -78,6 +80,13 @@ interface AppContextProps {
   rejectWithdrawal: (id: string) => void;
   banUser: (userId: string) => void;
   unbanUser: (userId: string) => void;
+  updateUserLevel: (userId: string, levelId: string) => void;
+  adjustUserBalance: (userId: string, amount: number, isCredit: boolean, reason: string) => void;
+  addTask: (taskData: Omit<Task, 'id'>) => void;
+  deleteTask: (taskId: string) => void;
+  toggleTaskStatus: (taskId: string) => void;
+  updateSystemSetting: (key: string, value: string) => void;
+  updateLevelConfig: (level: Level) => void;
   resetDatabase: () => void;
 }
 
@@ -138,8 +147,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
   
+  const refreshState = () => {
+    setDbState(loadDB());
+  };
+
+  // Realtime Data Sync Engine across tabs and components
+  useEffect(() => {
+    const handleDbUpdate = () => {
+      setDbState(loadDB());
+    };
+
+    window.addEventListener('taskcash_db_update', handleDbUpdate);
+    window.addEventListener('storage', handleDbUpdate);
+
+    // Light 2.5s polling loop to guarantee real-time reactivity across active tabs
+    const interval = setInterval(() => {
+      setDbState(loadDB());
+    }, 2500);
+
+    return () => {
+      window.removeEventListener('taskcash_db_update', handleDbUpdate);
+      window.removeEventListener('storage', handleDbUpdate);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // URL Route Sync for /admindata
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/admindata') {
+        setActiveTab('Admin');
+      }
+
+      const handlePopState = () => {
+        if (window.location.pathname === '/admindata') {
+          setActiveTab('Admin');
+        }
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, []);
+
   // Synchronize Telegram & Ad Monetization SDK Data
   useEffect(() => {
+    // Initialize global click haptics across all clickable elements
+    initGlobalHapticListener();
+
     // Initialize In-App Interstitial Ads from LibTL SDK
     AdService.initInAppInterstitial();
 
@@ -148,9 +203,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tg.ready();
       tg.expand();
       
-      // Load user details dynamically from Telegram
-      if (tg.initDataUnsafe?.user) {
-        const tgUser = tg.initDataUnsafe.user;
+      // Load user details dynamically from Telegram & parse referral start parameters
+      const initData = tg.initDataUnsafe;
+      if (initData?.user) {
+        const tgUser = initData.user;
+        const startParam = initData.start_param; // e.g. ref_usr_willie or usr_willie
+
         updateDB((db) => {
           const user = db.users.find(u => u.id === 'usr_willie');
           if (user) {
@@ -159,6 +217,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             user.username = tgUser.username || 'willie_earn';
             if (tgUser.photo_url) {
               user.avatar = tgUser.photo_url;
+            }
+            if (startParam && !user.referrer_id) {
+              const cleanedRefId = startParam.replace('ref_', '');
+              if (cleanedRefId !== user.id) {
+                user.referrer_id = cleanedRefId;
+              }
             }
           }
         });
@@ -192,7 +256,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (activeTab !== 'Dashboard' && activeTab !== 'Onboarding') {
         tg.BackButton.show();
         tg.BackButton.onClick(() => {
-          setActiveTab('Dashboard');
+          setTab('Dashboard');
         });
       } else {
         tg.BackButton.hide();
@@ -201,7 +265,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [activeTab]);
 
   const setTab = (tab: TabName) => {
+    triggerHaptic('selection');
     setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      if (tab === 'Admin') {
+        window.history.pushState({}, '', '/admindata');
+      } else if (window.location.pathname === '/admindata') {
+        window.history.pushState({}, '', '/');
+      }
+    }
   };
 
   const skipOnboarding = () => {
@@ -670,6 +742,81 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbState(loadDB());
   };
 
+  const updateUserLevel = (userId: string, levelId: string) => {
+    updateDB((db) => {
+      const u = db.users.find(user => user.id === userId);
+      if (u) {
+        u.level_id = levelId;
+      }
+    });
+    refreshState();
+  };
+
+  const adjustUserBalance = (userId: string, amount: number, isCredit: boolean, reason: string) => {
+    addTransaction(
+      userId,
+      isCredit ? 'TaskReward' : 'Withdrawal',
+      amount,
+      `Admin Adjustment: ${reason}`,
+      'Success'
+    );
+    refreshState();
+  };
+
+  const addTask = (taskData: Omit<Task, 'id'>) => {
+    updateDB((db) => {
+      const newTask: Task = {
+        ...taskData,
+        id: 'tsk_' + Math.random().toString(36).substr(2, 9)
+      };
+      db.tasks.unshift(newTask);
+    });
+    refreshState();
+  };
+
+  const deleteTask = (taskId: string) => {
+    updateDB((db) => {
+      db.tasks = db.tasks.filter(t => t.id !== taskId);
+    });
+    refreshState();
+  };
+
+  const toggleTaskStatus = (taskId: string) => {
+    updateDB((db) => {
+      const task = db.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.status = task.status === 'Active' ? 'Inactive' : 'Active';
+      }
+    });
+    refreshState();
+  };
+
+  const updateSystemSetting = (key: string, value: string) => {
+    updateDB((db) => {
+      const setting = db.system_settings.find(s => s.key === key);
+      if (setting) {
+        setting.value = value;
+      } else {
+        db.system_settings.push({
+          id: 'setting_' + Math.random().toString(36).substr(2, 9),
+          key,
+          value
+        });
+      }
+    });
+    refreshState();
+  };
+
+  const updateLevelConfig = (updatedLevel: Level) => {
+    updateDB((db) => {
+      const idx = db.levels.findIndex(l => l.id === updatedLevel.id);
+      if (idx !== -1) {
+        db.levels[idx] = updatedLevel;
+      }
+    });
+    refreshState();
+  };
+
   const resetDatabase = () => {
     localStorage.removeItem('taskcash_mock_db');
     localStorage.removeItem('taskcash_onboarding_done');
@@ -716,6 +863,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         hasClaimedDailyBonus,
         dailyStreakDay,
         
+        refreshState,
         setTab,
         skipOnboarding,
         playAd,
@@ -735,6 +883,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         rejectWithdrawal,
         banUser,
         unbanUser,
+        updateUserLevel,
+        adjustUserBalance,
+        addTask,
+        deleteTask,
+        toggleTaskStatus,
+        updateSystemSetting,
+        updateLevelConfig,
         resetDatabase
       }}
     >

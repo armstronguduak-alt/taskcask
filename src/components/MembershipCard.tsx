@@ -1,29 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { LevelsOverview } from './LevelsOverview';
 
 export const MembershipCard: React.FC = () => {
   const { user, levels, sdkLogs, transactions, users, wallet, systemSettings } = useApp();
+  const [showLevelsModal, setShowLevelsModal] = useState(false);
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
-  const nextLevel = levels.find(l => l.cost > userLevel.cost) || levels.find(l => 
-    l.req_streak > (user?.login_streak || 0) || 
-    l.req_ads > (user?.total_ads_watched || 0) || 
-    l.req_tasks > (user?.total_tasks_completed || 0)
-  ); // Fallback logic for determining next level
+  const currentLevelIdx = levels.findIndex(l => l.id === userLevel?.id);
+  const nextLevel = levels[currentLevelIdx + 1] || null;
 
   // Calculate Daily Videos Remaining (across all categories for simplicity, or sum them)
   const today = new Date().toDateString();
   const adsWatchedToday = sdkLogs.filter(
     log => new Date(log.timestamp).toDateString() === today && log.action === 'AD_PLAY_COMPLETE_SUCCESS'
   ).length;
-  const maxDailyAds = userLevel.max_daily_ads_cat_a + userLevel.max_daily_ads_cat_b + userLevel.max_daily_ads_cat_c;
+  const maxDailyAds = (userLevel?.max_daily_ads_cat_a || 0) + (userLevel?.max_daily_ads_cat_b || 0) + (userLevel?.max_daily_ads_cat_c || 0);
   const dailyVideosRemaining = Math.max(0, maxDailyAds - adsWatchedToday);
 
   // Calculate Daily Tasks Remaining
   const tasksCompletedToday = transactions.filter(
     t => t.type === 'TaskReward' && new Date(t.timestamp).toDateString() === today && t.status === 'Success'
   ).length;
-  const dailyTasksRemaining = Math.max(0, userLevel.max_daily_tasks - tasksCompletedToday);
+  const dailyTasksRemaining = Math.max(0, (userLevel?.max_daily_tasks || 0) - tasksCompletedToday);
 
   const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
   const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
@@ -43,11 +42,21 @@ export const MembershipCard: React.FC = () => {
           <p className="text-[10px] text-on-surface-variant dark:text-gray-400 mt-0.5">Your current status and daily limits</p>
         </div>
         <div className="text-right">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold uppercase tracking-wider">
-            {userLevel.name}
-          </span>
-          {nextLevel && (
-            <p className="text-[9px] text-gray-500 mt-1">Next: {nextLevel.name}</p>
+          <button 
+            onClick={() => setShowLevelsModal(true)}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 text-[10px] font-extrabold uppercase tracking-wider transition-all"
+          >
+            <span className="material-symbols-outlined text-[14px]">military_tech</span>
+            {userLevel?.name || 'Bronze'}
+          </button>
+          {nextLevel ? (
+            <p className="text-[9px] text-gray-500 mt-1 cursor-pointer" onClick={() => setShowLevelsModal(true)}>
+              Next: {nextLevel.name} &rarr;
+            </p>
+          ) : (
+            <p className="text-[9px] text-emerald-500 font-bold mt-1 cursor-pointer" onClick={() => setShowLevelsModal(true)}>
+              Max Tier Unlocked ★
+            </p>
           )}
         </div>
       </div>
@@ -66,7 +75,7 @@ export const MembershipCard: React.FC = () => {
           <p className="text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-1">Daily Tasks Remaining</p>
           <div className="flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[16px] text-secondary">assignment</span>
-            <span className="font-bold text-sm dark:text-white">{dailyTasksRemaining} / {userLevel.max_daily_tasks}</span>
+            <span className="font-bold text-sm dark:text-white">{dailyTasksRemaining} / {userLevel?.max_daily_tasks || 0}</span>
           </div>
         </div>
       </div>
@@ -78,7 +87,9 @@ export const MembershipCard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold">
             <span className="text-gray-500">Rewarded Videos</span>
-            <span className="text-on-surface dark:text-gray-300">{user?.total_ads_watched || 0} {nextLevel ? `/ ${nextLevel.req_ads}` : ''}</span>
+            <span className="text-on-surface dark:text-gray-300">
+              {user?.total_ads_watched || 0} {nextLevel ? `/ ${nextLevel.req_ads || 0}` : '(Max)'}
+            </span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-primary transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_ads > 0 ? Math.min(100, ((user?.total_ads_watched || 0) / nextLevel.req_ads) * 100) : 100}%` }} />
@@ -89,7 +100,9 @@ export const MembershipCard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold">
             <span className="text-gray-500">Tasks Completed</span>
-            <span className="text-on-surface dark:text-gray-300">{user?.total_tasks_completed || 0} {nextLevel ? `/ ${nextLevel.req_tasks}` : ''}</span>
+            <span className="text-on-surface dark:text-gray-300">
+              {user?.total_tasks_completed || 0} {nextLevel ? `/ ${nextLevel.req_tasks || 0}` : '(Max)'}
+            </span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-secondary transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_tasks > 0 ? Math.min(100, ((user?.total_tasks_completed || 0) / nextLevel.req_tasks) * 100) : 100}%` }} />
@@ -100,7 +113,9 @@ export const MembershipCard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold">
             <span className="text-gray-500">Login Streak</span>
-            <span className="text-on-surface dark:text-gray-300">{user?.login_streak || 0} {nextLevel ? `/ ${nextLevel.req_streak}` : ''}</span>
+            <span className="text-on-surface dark:text-gray-300">
+              {user?.login_streak || 0} {nextLevel ? `/ ${nextLevel.req_streak || 0}` : '(Max)'}
+            </span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_streak > 0 ? Math.min(100, ((user?.login_streak || 0) / nextLevel.req_streak) * 100) : 100}%` }} />
@@ -111,7 +126,9 @@ export const MembershipCard: React.FC = () => {
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold">
             <span className="text-gray-500">Active Referrals</span>
-            <span className="text-on-surface dark:text-gray-300">{activeReferralsCount} {nextLevel ? `/ ${nextLevel.req_referrals}` : ''}</span>
+            <span className="text-on-surface dark:text-gray-300">
+              {activeReferralsCount} {nextLevel ? `/ ${nextLevel.req_referrals || 0}` : '(Max)'}
+            </span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-purple-500 transition-all duration-500" style={{ width: `${nextLevel && nextLevel.req_referrals > 0 ? Math.min(100, (activeReferralsCount / nextLevel.req_referrals) * 100) : 100}%` }} />
@@ -140,7 +157,27 @@ export const MembershipCard: React.FC = () => {
           </div>
         </div>
 
+        {/* View All Levels Button */}
+        <div className="pt-2">
+          <button
+            onClick={() => setShowLevelsModal(true)}
+            className="w-full py-2.5 bg-gray-50 dark:bg-zinc-800/60 border border-gray-100 dark:border-zinc-800 rounded-2xl text-xs font-bold text-primary dark:text-[#62df7d] flex items-center justify-center gap-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">workspace_premium</span>
+            View All Membership Levels & Perks Matrix
+          </button>
+        </div>
+
       </div>
+
+      {/* Levels Overview Modal */}
+      {showLevelsModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-xl w-full max-h-[90vh] overflow-y-auto">
+            <LevelsOverview onClose={() => setShowLevelsModal(false)} />
+          </div>
+        </div>
+      )}
     </section>
   );
 };
