@@ -33,7 +33,7 @@ export const MembershipCard: React.FC = () => {
   ).length; // Filter by active ads
 
   const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.registered_at || new Date()).getTime()) / (1000 * 3600 * 24));
-  const minWithdrawal = userLevel.min_withdrawal;
+  const minWithdrawal = userLevel?.min_withdrawal || 0;
 
   return (
     <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
