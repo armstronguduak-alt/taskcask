@@ -61,6 +61,9 @@ export interface Task {
   description: string;
   link: string;
   status: 'Active' | 'Inactive';
+  badge?: 'External Link' | 'Sponsored' | 'Standard';
+  buttonText?: string;
+  icon?: string;
 }
 
 export interface TaskCategory {
@@ -264,19 +267,102 @@ const DEFAULT_BANKS: Bank[] = [
   { id: 'bank_access', name: 'Access Bank', code: '000014' }
 ];
 
-const DEFAULT_TASK_CATEGORIES: TaskCategory[] = [
-  { id: 'cat_tiktok', name: 'TikTok', icon: 'play_arrow' },
-  { id: 'cat_youtube', name: 'YouTube', icon: 'video_library' },
+export const DEFAULT_TASK_CATEGORIES: TaskCategory[] = [
+  { id: 'cat_explore', name: 'Explore & Engage', icon: 'explore' },
   { id: 'cat_telegram', name: 'Telegram', icon: 'send' },
+  { id: 'cat_youtube', name: 'YouTube', icon: 'video_library' },
+  { id: 'cat_tiktok', name: 'TikTok', icon: 'play_arrow' },
   { id: 'cat_x', name: 'X / Twitter', icon: 'alternate_email' }
 ];
 
-const DEFAULT_TASKS: Task[] = [
-  { id: 'task_1', title: 'Follow TaskCash Telegram Channel', category_id: 'cat_telegram', reward_amount: 150, description: 'Join our official Telegram news channel to get early payout alerts and promo codes.', link: 'https://t.me/taskcash_official', status: 'Active' },
-  { id: 'task_2', title: 'Subscribe to YouTube channel', category_id: 'cat_youtube', reward_amount: 250, description: 'Subscribe to our official YouTube channel, like our latest dashboard tutorial, and turn on notifications.', link: 'https://youtube.com', status: 'Active' },
-  { id: 'task_3', title: 'Like & Comment on TikTok video', category_id: 'cat_tiktok', reward_amount: 200, description: 'Follow our account, like our pinned video, and leave a positive comment about your earning experience.', link: 'https://tiktok.com', status: 'Active' },
-  { id: 'task_4', title: 'Retweet pinned post on X', category_id: 'cat_x', reward_amount: 180, description: 'Follow our handle, like, and retweet the pinned post about Level 4 VIP upgrade perks.', link: 'https://x.com', status: 'Active' },
-  { id: 'task_5', title: 'Share referral banner on Telegram groups', category_id: 'cat_telegram', reward_amount: 300, description: 'Forward the referral promotional banner to 3 active make-money groups and verify proof.', link: 'https://t.me/share', status: 'Active' }
+export const DEFAULT_TASKS: Task[] = [
+  // Explore & Engage Tasks
+  { 
+    id: 'task_exp_1', 
+    title: 'Explore Featured Content', 
+    category_id: 'cat_explore', 
+    reward_amount: 250, 
+    description: 'Open the featured page and explore the available content.', 
+    link: 'https://omg10.com/4/7016980', 
+    status: 'Active',
+    badge: 'External Link',
+    buttonText: 'View & Explore',
+    icon: 'explore'
+  },
+  { 
+    id: 'task_exp_2', 
+    title: 'Discover Something New', 
+    category_id: 'cat_explore', 
+    reward_amount: 300, 
+    description: 'Visit the external page and engage with content that interests you.', 
+    link: 'https://omg10.com/4/11285913', 
+    status: 'Active',
+    badge: 'Sponsored',
+    buttonText: 'Open & Discover',
+    icon: 'travel_explore'
+  },
+  { 
+    id: 'task_exp_3', 
+    title: 'Visit Featured Page', 
+    category_id: 'cat_explore', 
+    reward_amount: 200, 
+    description: 'Open this page and take a look at the content available.', 
+    link: 'https://omg10.com/4/7580237', 
+    status: 'Active',
+    badge: 'External Link',
+    buttonText: 'Visit & Explore',
+    icon: 'language'
+  },
+  { 
+    id: 'task_exp_4', 
+    title: 'Explore Recommended Content', 
+    category_id: 'cat_explore', 
+    reward_amount: 280, 
+    description: 'Visit the page and interact naturally with any content you find useful.', 
+    link: 'https://omg10.com/4/7566097', 
+    status: 'Active',
+    badge: 'Sponsored',
+    buttonText: 'Open & Engage',
+    icon: 'recommend'
+  },
+  { 
+    id: 'task_exp_5', 
+    title: 'Discover a New Offer', 
+    category_id: 'cat_explore', 
+    reward_amount: 350, 
+    description: 'Open the featured destination and learn more about what is available.', 
+    link: 'https://omg10.com/4/6921286', 
+    status: 'Active',
+    badge: 'External Link',
+    buttonText: 'Explore Offer',
+    icon: 'local_offer'
+  },
+  { 
+    id: 'task_exp_6', 
+    title: 'Check Out Featured Content', 
+    category_id: 'cat_explore', 
+    reward_amount: 220, 
+    description: 'Visit this external page and discover more.', 
+    link: 'https://omg10.com/4/7580236', 
+    status: 'Active',
+    badge: 'Sponsored',
+    buttonText: 'View Page',
+    icon: 'launch'
+  },
+
+  // Standard Social Media Tasks (Initially only Join Our Telegram Community as requested)
+  { 
+    id: 'task_telegram_community', 
+    title: 'Join Our Telegram Community', 
+    category_id: 'cat_telegram', 
+    reward_amount: 500, 
+    description: 'Join our official Telegram news channel to get early payout alerts, daily promo codes, and updates.', 
+    link: 'https://t.me/taskcash_official', 
+    status: 'Active', 
+    badge: 'Standard', 
+    buttonText: 'Join & Claim', 
+    icon: 'send' 
+  }
 ];
 
 const DEFAULT_ADS: RewardedAd[] = [
@@ -291,7 +377,20 @@ export const loadDB = (): TaskCashDB => {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     try {
-      return JSON.parse(raw);
+      const parsed: TaskCashDB = JSON.parse(raw);
+      // Ensure DEFAULT_TASK_CATEGORIES exist in parsed database
+      DEFAULT_TASK_CATEGORIES.forEach(cat => {
+        if (!parsed.task_categories.some(c => c.id === cat.id)) {
+          parsed.task_categories.unshift(cat);
+        }
+      });
+      // Ensure DEFAULT_TASKS exist in parsed database
+      DEFAULT_TASKS.forEach(task => {
+        if (!parsed.tasks.some(t => t.id === task.id)) {
+          parsed.tasks.push(task);
+        }
+      });
+      return parsed;
     } catch (e) {
       console.error('Failed to parse mock database, resetting...', e);
     }

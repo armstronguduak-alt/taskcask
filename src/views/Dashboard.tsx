@@ -10,6 +10,7 @@ export const Dashboard: React.FC = () => {
     wallet, 
     transactions, 
     levels, 
+    systemSettings,
     setTab, 
     claimDailyBonus,
     claimWelcomeBonus,
@@ -23,6 +24,7 @@ export const Dashboard: React.FC = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isCommunityJoined, setIsCommunityJoined] = useState(false);
   const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
 
@@ -55,6 +57,26 @@ export const Dashboard: React.FC = () => {
   const handleWithdrawClick = () => {
     setTab('Withdraw');
   };
+
+  const level1TargetSetting = systemSettings?.find(s => s.key === 'level1_withdrawal_target')?.value;
+  const targetAmount = level1TargetSetting ? parseFloat(level1TargetSetting) : 30000;
+  
+  const eligibleBalance = wallet?.active_balance || 0;
+  const remainingAmount = Math.max(0, targetAmount - eligibleBalance);
+  const progressPercent = Math.min(100, Math.round((eligibleBalance / targetAmount) * 100));
+
+  const todayStr = new Date().toDateString();
+  const todayEarnings = transactions
+    .filter(t => new Date(t.timestamp).toDateString() === todayStr && t.status === 'Success' && t.amount > 0)
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const pendingRewards = transactions
+    .filter(t => t.status === 'Pending' && t.amount > 0)
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const earningStreak = user?.login_streak || 1;
+  const availableActivities = 3 + (useApp().tasks?.filter(t => t.status === 'Active').length || 0);
+  const isLevel1MilestoneReached = eligibleBalance >= targetAmount;
 
   return (
     <div className="flex-grow pb-32">
@@ -134,6 +156,85 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
           </div>
+        </section>
+
+        {/* Level 1 Earning Progression & Target Card */}
+        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-sm text-on-surface dark:text-white">Level 1 Withdrawal Milestone</h3>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Target: ₦{targetAmount.toLocaleString()}</p>
+            </div>
+            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs rounded-full border border-emerald-500/20">
+              {progressPercent}% Complete
+            </span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-on-surface dark:text-gray-200">₦{eligibleBalance.toLocaleString()} of ₦{targetAmount.toLocaleString()} earned</span>
+              <span className="text-gray-500 dark:text-gray-400">₦{remainingAmount.toLocaleString()} remaining</span>
+            </div>
+            <div className="w-full h-3 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden p-0.5">
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-primary rounded-full transition-all duration-700 shadow-sm"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Real Statistics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+            <div className="bg-gray-50 dark:bg-zinc-800/50 p-2.5 rounded-2xl border border-gray-100 dark:border-zinc-800">
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Today's Earnings</p>
+              <p className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">+₦{todayEarnings.toFixed(2)}</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-zinc-800/50 p-2.5 rounded-2xl border border-gray-100 dark:border-zinc-800">
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Earning Streak</p>
+              <p className="font-extrabold text-xs text-amber-500 mt-0.5">{earningStreak} Days 🔥</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-zinc-800/50 p-2.5 rounded-2xl border border-gray-100 dark:border-zinc-800">
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Pending Rewards</p>
+              <p className="font-extrabold text-xs text-blue-500 mt-0.5">₦{pendingRewards.toFixed(2)}</p>
+            </div>
+            <div className="bg-gray-50 dark:bg-zinc-800/50 p-2.5 rounded-2xl border border-gray-100 dark:border-zinc-800">
+              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Activities Open</p>
+              <p className="font-extrabold text-xs text-purple-500 mt-0.5">{availableActivities} Available</p>
+            </div>
+          </div>
+
+          {/* Milestone Completion Banner */}
+          {isLevel1MilestoneReached && (
+            <div className="bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-primary/15 border border-emerald-500/40 rounded-2xl p-4 space-y-3 mt-3">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-amber-500 text-[28px]">emoji_events</span>
+                <div>
+                  <h4 className="font-extrabold text-xs text-on-surface dark:text-white">
+                    Congratulations! You have completed the Level 1 earning milestone.
+                  </h4>
+                  <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5 leading-snug">
+                    Upgrade to unlock higher earning limits and access to more available earning opportunities.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md active:scale-95 transition-all flex items-center justify-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[16px]">military_tech</span>
+                  View Upgrade Options
+                </button>
+                <button 
+                  onClick={() => setTab('Tasks')}
+                  className="px-4 py-2.5 bg-gray-100 dark:bg-zinc-800 text-on-surface dark:text-white font-bold text-xs rounded-xl active:scale-95 transition-all"
+                >
+                  Continue Earning
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Level Progress Card */}
@@ -367,6 +468,77 @@ export const Dashboard: React.FC = () => {
       {/* Notification Center Modal */}
       {showNotificationsModal && (
         <NotificationCenterModal onClose={() => setShowNotificationsModal(false)} />
+      )}
+
+      {/* Level Upgrade Options Modal (Requirement 8) */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl animate-scale-up">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-500 text-[28px]">military_tech</span>
+                <div>
+                  <h3 className="font-extrabold text-base text-on-surface dark:text-white">Upgrade Level Options</h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Unlock higher daily limits and faster earning</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowUpgradeModal(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-500 flex items-center justify-center hover:bg-gray-200"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl space-y-2">
+              <div className="flex justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                <span>Current Level: {userLevel.name}</span>
+                <span>Active Balance: ₦{eligibleBalance.toLocaleString()}</span>
+              </div>
+              <p className="text-[11px] text-gray-600 dark:text-gray-300 leading-snug">
+                You have reached the Level 1 milestone! Upgrading unlocks higher daily rewarded ad views, higher daily task capacity, and a higher earning multiplier.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Available Tier Upgrade</h4>
+              <div className="bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 p-4 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h5 className="font-extrabold text-sm text-on-surface dark:text-white">Level 2 (Active Tier)</h5>
+                    <p className="text-[10px] text-emerald-500 font-bold">1.2x Earning Multiplier</p>
+                  </div>
+                  <span className="px-3 py-1 bg-primary/10 text-primary font-black text-xs rounded-full">
+                    Free / Requirement Based
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 dark:text-gray-400 space-y-1">
+                  <p>• Upgrade Cost: <strong className="text-on-surface dark:text-white">₦0.00</strong></p>
+                  <p>• Balance After Upgrade: <strong className="text-emerald-500">₦{eligibleBalance.toLocaleString()}</strong></p>
+                  <p>• New Limits: <strong className="text-on-surface dark:text-white">30 ads/day • 15 tasks/day</strong></p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowUpgradeModal(false);
+                  setTab('Profile');
+                }}
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+              >
+                Proceed to Tier Verification
+              </button>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="px-4 py-3 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 font-bold text-xs rounded-2xl active:scale-95 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

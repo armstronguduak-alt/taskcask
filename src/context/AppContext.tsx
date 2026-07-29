@@ -489,15 +489,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const claimWelcomeBonus = () => {
     if (localStorage.getItem('welcome_bonus_claimed')) return;
+    const setting = dbState.system_settings?.find(s => s.key === 'welcome_bonus_amount')?.value;
+    const amount = setting ? parseFloat(setting) : 500;
     localStorage.setItem('welcome_bonus_claimed', 'true');
-    addTransaction('usr_willie', 'DailyReward', 500, 'Welcome Bonus');
+    addTransaction('usr_willie', 'DailyReward', amount, 'Welcome Bonus');
     setDbState(loadDB());
   };
 
   const claimCommunityBonus = () => {
-    if (localStorage.getItem('community_bonus_claimed')) return;
+    const isAlreadyClaimed = localStorage.getItem('community_bonus_claimed') || 
+      dbState.transactions.some(t => t.type === 'TaskReward' && (t.description.includes('Telegram Community') || t.description.includes('Join Our Telegram Community')) && t.status === 'Success');
+    
+    if (isAlreadyClaimed) return;
+    
+    const setting = dbState.system_settings?.find(s => s.key === 'telegram_task_reward')?.value;
+    const amount = setting ? parseFloat(setting) : 500;
+    
     localStorage.setItem('community_bonus_claimed', 'true');
-    addTransaction('usr_willie', 'TaskReward', 500, 'Telegram Community Bonus');
+    addTransaction('usr_willie', 'TaskReward', amount, 'Join Our Telegram Community');
+    
+    updateDB((db) => {
+      const u = db.users.find(user => user.id === 'usr_willie');
+      if (u) {
+        u.total_tasks_completed = (u.total_tasks_completed || 0) + 1;
+      }
+    });
+
     setDbState(loadDB());
   };
 
