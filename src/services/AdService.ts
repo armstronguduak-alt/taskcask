@@ -1,5 +1,6 @@
 import { updateDB, loadDB, addTransaction } from '../db/mockDb';
 import type { RewardedAd } from '../db/mockDb';
+import { SupabaseService } from './supabaseService';
 
 export interface AdFormatResult {
   success: boolean;
@@ -175,7 +176,16 @@ export const AdService = {
       });
     });
 
-    // Credit User Wallet with Transaction
+    // Credit User Wallet with Transaction via Supabase Backend & Local State
+    const idempotencyKey = `ad_${userId}_${ad.id}_${Date.now()}`;
+    SupabaseService.creditWalletRPC(
+      userId,
+      'WatchReward',
+      multipliedReward,
+      `Watched Ad: ${ad.name} (${userLevel.name} ${userLevel.earning_multiplier}x multiplier)`,
+      idempotencyKey
+    );
+
     const { tx } = addTransaction(
       userId,
       'WatchReward',
