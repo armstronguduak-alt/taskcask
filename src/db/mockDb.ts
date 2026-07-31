@@ -279,73 +279,73 @@ export const DEFAULT_TASK_CATEGORIES: TaskCategory[] = [
 
 export const DEFAULT_TASKS: Task[] = [
   // Explore & Engage Tasks
-  { 
-    id: 'task_exp_1', 
-    title: 'Explore Featured Content', 
-    category_id: 'cat_explore', 
-    reward_amount: 250, 
-    description: 'Open the featured page and explore the available content.', 
-    link: 'https://omg10.com/4/7016980', 
+  {
+    id: 'task_exp_1',
+    title: 'Explore Featured Content',
+    category_id: 'cat_explore',
+    reward_amount: 250,
+    description: 'Open the featured page and explore the available content.',
+    link: 'https://omg10.com/4/7016980',
     status: 'Active',
     badge: 'External Link',
     buttonText: 'View & Explore',
     icon: 'explore'
   },
-  { 
-    id: 'task_exp_2', 
-    title: 'Discover Something New', 
-    category_id: 'cat_explore', 
-    reward_amount: 300, 
-    description: 'Visit the external page and engage with content that interests you.', 
-    link: 'https://omg10.com/4/11285913', 
+  {
+    id: 'task_exp_2',
+    title: 'Discover Something New',
+    category_id: 'cat_explore',
+    reward_amount: 300,
+    description: 'Visit the external page and engage with content that interests you.',
+    link: 'https://omg10.com/4/11285913',
     status: 'Active',
     badge: 'Sponsored',
     buttonText: 'Open & Discover',
     icon: 'travel_explore'
   },
-  { 
-    id: 'task_exp_3', 
-    title: 'Visit Featured Page', 
-    category_id: 'cat_explore', 
-    reward_amount: 200, 
-    description: 'Open this page and take a look at the content available.', 
-    link: 'https://omg10.com/4/7580237', 
+  {
+    id: 'task_exp_3',
+    title: 'Visit Featured Page',
+    category_id: 'cat_explore',
+    reward_amount: 200,
+    description: 'Open this page and take a look at the content available.',
+    link: 'https://omg10.com/4/7580237',
     status: 'Active',
     badge: 'External Link',
     buttonText: 'Visit & Explore',
     icon: 'language'
   },
-  { 
-    id: 'task_exp_4', 
-    title: 'Explore Recommended Content', 
-    category_id: 'cat_explore', 
-    reward_amount: 280, 
-    description: 'Visit the page and interact naturally with any content you find useful.', 
-    link: 'https://omg10.com/4/7566097', 
+  {
+    id: 'task_exp_4',
+    title: 'Explore Recommended Content',
+    category_id: 'cat_explore',
+    reward_amount: 280,
+    description: 'Visit the page and interact naturally with any content you find useful.',
+    link: 'https://omg10.com/4/7566097',
     status: 'Active',
     badge: 'Sponsored',
     buttonText: 'Open & Engage',
     icon: 'recommend'
   },
-  { 
-    id: 'task_exp_5', 
-    title: 'Discover a New Offer', 
-    category_id: 'cat_explore', 
-    reward_amount: 350, 
-    description: 'Open the featured destination and learn more about what is available.', 
-    link: 'https://omg10.com/4/6921286', 
+  {
+    id: 'task_exp_5',
+    title: 'Discover a New Offer',
+    category_id: 'cat_explore',
+    reward_amount: 350,
+    description: 'Open the featured destination and learn more about what is available.',
+    link: 'https://omg10.com/4/6921286',
     status: 'Active',
     badge: 'External Link',
     buttonText: 'Explore Offer',
     icon: 'local_offer'
   },
-  { 
-    id: 'task_exp_6', 
-    title: 'Check Out Featured Content', 
-    category_id: 'cat_explore', 
-    reward_amount: 220, 
-    description: 'Visit this external page and discover more.', 
-    link: 'https://omg10.com/4/7580236', 
+  {
+    id: 'task_exp_6',
+    title: 'Check Out Featured Content',
+    category_id: 'cat_explore',
+    reward_amount: 220,
+    description: 'Visit this external page and discover more.',
+    link: 'https://omg10.com/4/7580236',
     status: 'Active',
     badge: 'Sponsored',
     buttonText: 'View Page',
@@ -353,17 +353,17 @@ export const DEFAULT_TASKS: Task[] = [
   },
 
   // Standard Social Media Tasks (Initially only Join Our Telegram Community as requested)
-  { 
-    id: 'task_telegram_community', 
-    title: 'Join Our Telegram Community', 
-    category_id: 'cat_telegram', 
-    reward_amount: 500, 
-    description: 'Join our official Telegram news channel to get early payout alerts, daily promo codes, and updates.', 
-    link: 'https://t.me/taskcash_official', 
-    status: 'Active', 
-    badge: 'Standard', 
-    buttonText: 'Join & Claim', 
-    icon: 'send' 
+  {
+    id: 'task_telegram_community',
+    title: 'Join Our Telegram Community',
+    category_id: 'cat_telegram',
+    reward_amount: 500,
+    description: 'Join our official Telegram news channel to get early payout alerts, daily promo codes, and updates.',
+    link: 'https://t.me/taskcash_official',
+    status: 'Active',
+    badge: 'Standard',
+    buttonText: 'Join & Claim',
+    icon: 'send'
   }
 ];
 
