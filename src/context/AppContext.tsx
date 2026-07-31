@@ -25,6 +25,7 @@ import type {
 } from '../db/mockDb';
 import { AdService } from '../services/AdService';
 import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
@@ -165,10 +166,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDbState(loadDB());
     }, 2500);
 
+    // Supabase Realtime Subscription when backend credentials configured
+    let channel: any = null;
+    if (isSupabaseConfigured()) {
+      channel = supabase
+        .channel('taskcash_realtime_changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+          refreshState();
+        })
+        .subscribe();
+    }
+
     return () => {
       window.removeEventListener('taskcash_db_update', handleDbUpdate);
       window.removeEventListener('storage', handleDbUpdate);
       clearInterval(interval);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
