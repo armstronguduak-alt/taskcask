@@ -5,65 +5,49 @@ export const DataMigrationService = {
   // Sync and migrate local user balance, transactions, and completed activities to Supabase backend
   migrateLocalUserToSupabase: async (): Promise<{ success: boolean; migratedCount: number }> => {
     if (!isSupabaseConfigured()) return { success: false, migratedCount: 0 };
-    if (localStorage.getItem('taskcash_supabase_migrated_v1')) {
-      return { success: true, migratedCount: 0 }; // Already migrated
-    }
 
     try {
       const localDb = loadDB();
-      const localUser = localDb.users.find(u => u.id === 'usr_willie') || localDb.users[0];
-      const localWallet = localDb.wallets.find(w => w.user_id === localUser?.id) || localDb.wallets[0];
-      const localTransactions = localDb.transactions.filter(t => t.wallet_id === localWallet?.id || t.user_id === localUser?.id);
-      const localDailyRewards = localDb.daily_rewards.filter(r => r.user_id === localUser?.id);
-      const localWithdrawals = localDb.withdrawal_requests.filter(w => w.user_id === localUser?.id);
+      let totalMigratedTx = 0;
 
-      if (!localUser || !localWallet) {
-        return { success: false, migratedCount: 0 };
+      console.log('Syncing all users, wallets, and transactions to Supabase backend...');
+
+      // 1. Migrate All Users
+      for (const u of localDb.users) {
+        await supabase.from('users').upsert({
+          id: u.id,
+          first_name: u.first_name,
+          last_name: u.last_name || '',
+          username: u.username,
+          avatar: u.avatar,
+          status: u.status,
+          level_id: u.level_id || 'lvl_1',
+          is_premium: u.is_premium || false,
+          email_verified: u.email_verified || false,
+          phone_verified: u.phone_verified || false,
+          login_streak: u.login_streak || 1,
+          total_ads_watched: u.total_ads_watched || 0,
+          total_tasks_completed: u.total_tasks_completed || 0,
+        });
       }
 
-      console.log('Migrating local user activity and earnings to Supabase backend...');
-
-      // 1. Upsert User Profile
-      const { error: userError } = await supabase.from('users').upsert({
-        id: localUser.id,
-        first_name: localUser.first_name,
-        last_name: localUser.last_name || '',
-        username: localUser.username,
-        avatar: localUser.avatar,
-        status: localUser.status,
-        level_id: localUser.level_id || 'lvl_1',
-        is_premium: localUser.is_premium || false,
-        email_verified: localUser.email_verified || false,
-        phone_verified: localUser.phone_verified || false,
-        login_streak: localUser.login_streak || 1,
-        total_ads_watched: localUser.total_ads_watched || 0,
-        total_tasks_completed: localUser.total_tasks_completed || 0,
-      });
-
-      if (userError) {
-        console.warn('Migration user upsert error:', userError);
+      // 2. Migrate All Wallets
+      for (const w of localDb.wallets) {
+        await supabase.from('wallets').upsert({
+          id: w.id,
+          user_id: w.user_id,
+          active_balance: w.active_balance,
+          lifetime_earnings: w.lifetime_earnings,
+          pending_balance: w.pending_balance || 0,
+        });
       }
 
-      // 2. Upsert Wallet Balance
-      const { error: walletError } = await supabase.from('wallets').upsert({
-        id: localWallet.id,
-        user_id: localUser.id,
-        active_balance: localWallet.active_balance,
-        lifetime_earnings: localWallet.lifetime_earnings,
-        pending_balance: localWallet.pending_balance || 0,
-      });
-
-      if (walletError) {
-        console.warn('Migration wallet upsert error:', walletError);
-      }
-
-      // 3. Migrate Transactions
-      let txCount = 0;
-      for (const tx of localTransactions) {
-        const { error: txError } = await supabase.from('transactions').upsert({
+      // 3. Migrate All Transactions
+      for (const tx of localDb.transactions) {
+        const { error } = await supabase.from('transactions').upsert({
           id: tx.id,
-          wallet_id: localWallet.id,
-          user_id: localUser.id,
+          wallet_id: tx.wallet_id,
+          user_id: tx.user_id || 'usr_willie',
           type: tx.type,
           amount: tx.amount,
           status: tx.status,
@@ -71,14 +55,14 @@ export const DataMigrationService = {
           idempotency_key: `migrated_${tx.id}`,
           timestamp: tx.timestamp
         });
-        if (!txError) txCount++;
+        if (!error) totalMigratedTx++;
       }
 
-      // 4. Migrate Daily Rewards
-      for (const dr of localDailyRewards) {
+      // 4. Migrate All Daily Rewards
+      for (const dr of localDb.daily_rewards) {
         await supabase.from('daily_rewards').upsert({
           id: dr.id,
-          user_id: localUser.id,
+          user_id: dr.user_id,
           day_number: dr.day_number,
           amount: dr.amount,
           claimed_at: dr.claimed_at,
@@ -86,11 +70,11 @@ export const DataMigrationService = {
         });
       }
 
-      // 5. Migrate Withdrawal Requests
-      for (const wdr of localWithdrawals) {
+      // 5. Migrate All Withdrawal Requests
+      for (const wdr of localDb.withdrawal_requests) {
         await supabase.from('withdrawal_requests').upsert({
           id: wdr.id,
-          user_id: localUser.id,
+          user_id: wdr.user_id,
           bank_id: wdr.bank_id,
           account_number: wdr.account_number,
           account_name: wdr.account_name,
@@ -101,8 +85,8 @@ export const DataMigrationService = {
       }
 
       localStorage.setItem('taskcash_supabase_migrated_v1', 'true');
-      console.log(`Successfully migrated user data to Supabase! (${txCount} transactions synced)`);
-      return { success: true, migratedCount: txCount };
+      console.log(`Supabase Backend Sync Complete! (${totalMigratedTx} transactions active in database)`);
+      return { success: true, migratedCount: totalMigratedTx };
     } catch (err) {
       console.error('Data migration error:', err);
       return { success: false, migratedCount: 0 };

@@ -27,6 +27,7 @@ import { AdService } from '../services/AdService';
 import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 import { DataMigrationService } from '../services/dataMigrationService';
+import { SupabaseService } from '../services/supabaseService';
 
 export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
@@ -422,10 +423,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: `Daily task limit reached (${userLevel.max_daily_tasks}/${userLevel.max_daily_tasks} tasks)` };
     }
 
-    // Submit mock proof
+    // Submit proof to Supabase & local DB
     const rewardAmount = Math.round(task.reward_amount * userLevel.earning_multiplier);
+    const idempotencyKey = `task_${taskId}_usr_willie_${Date.now()}`;
     
-    // Credit instantly with a notification (in a real DB this would go to a pending task reviews table, but we credit immediately for positive loop)
+    SupabaseService.submitTaskProofDB('usr_willie', taskId, username);
+    SupabaseService.creditWalletRPC(
+      'usr_willie',
+      'TaskReward',
+      rewardAmount,
+      `Completed Task: ${task.title} (proof username: @${username})`,
+      idempotencyKey
+    );
+
     addTransaction(
       'usr_willie',
       'TaskReward',
@@ -484,7 +494,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     checkAutoLevelUp();
 
-    // Credit Balance
+    // Credit Balance on Supabase & local DB
+    SupabaseService.creditWalletRPC(
+      'usr_willie',
+      'DailyReward',
+      bonusAmount,
+      `Day ${claimDay} Login Reward Streak`,
+      `dr_claim_${Date.now()}`
+    );
+
     addTransaction('usr_willie', 'DailyReward', bonusAmount, `Day ${claimDay} Login Reward Streak`);
 
     updateDB((db) => {
@@ -507,6 +525,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const setting = dbState.system_settings?.find(s => s.key === 'welcome_bonus_amount')?.value;
     const amount = setting ? parseFloat(setting) : 500;
     localStorage.setItem('welcome_bonus_claimed', 'true');
+
+    SupabaseService.creditWalletRPC('usr_willie', 'DailyReward', amount, 'Welcome Bonus', 'welcome_bonus_willie');
     addTransaction('usr_willie', 'DailyReward', amount, 'Welcome Bonus');
     setDbState(loadDB());
   };
@@ -521,6 +541,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const amount = setting ? parseFloat(setting) : 500;
     
     localStorage.setItem('community_bonus_claimed', 'true');
+    SupabaseService.creditWalletRPC('usr_willie', 'TaskReward', amount, 'Join Our Telegram Community', 'community_bonus_willie');
     addTransaction('usr_willie', 'TaskReward', amount, 'Join Our Telegram Community');
     
     updateDB((db) => {
@@ -622,7 +643,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: 'Insufficient active balance.' };
     }
 
-    // Submit Request (marked as Pending)
+    // Submit Request to Supabase RPC & Local State
+    SupabaseService.requestWithdrawalRPC('usr_willie', bankId, accountNum, accountName, amount);
+
     const requestId = 'wdr_' + Math.random().toString(36).substr(2, 9);
     const newRequest: WithdrawalRequest = {
       id: requestId,
