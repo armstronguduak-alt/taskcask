@@ -23,11 +23,13 @@ export interface Wallet {
   user_id: string;
   active_balance: number;
   lifetime_earnings: number;
+  pending_balance?: number;
 }
 
 export interface Transaction {
   id: string;
   wallet_id: string;
+  user_id?: string;
   type: 'WatchReward' | 'TaskReward' | 'ReferralReward' | 'DailyReward' | 'LevelUpgrade' | 'Withdrawal' | 'AdViewImpressions';
   amount: number;
   status: 'Success' | 'Pending' | 'Failed';

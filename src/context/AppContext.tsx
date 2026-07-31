@@ -26,6 +26,7 @@ import type {
 import { AdService } from '../services/AdService';
 import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
+import { DataMigrationService } from '../services/dataMigrationService';
 
 export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
@@ -166,9 +167,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setDbState(loadDB());
     }, 2500);
 
-    // Supabase Realtime Subscription when backend credentials configured
+    // Supabase Realtime Subscription & Data Migration when backend credentials configured
     let channel: any = null;
     if (isSupabaseConfigured()) {
+      DataMigrationService.migrateLocalUserToSupabase();
       channel = supabase
         .channel('taskcash_realtime_changes')
         .on('postgres_changes', { event: '*', schema: 'public' }, () => {
