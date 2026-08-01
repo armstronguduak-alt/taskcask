@@ -119,7 +119,7 @@ export const Dashboard: React.FC = () => {
       {/* Main Content */}
       <div className="px-container-padding pt-4 space-y-6">
         
-        {/* Wallet Card */}
+        {/* 1. Wallet / Balance Card */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[#0051d5] p-6 shadow-xl text-white">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
           <div className="relative z-10 space-y-6">
@@ -158,7 +158,110 @@ export const Dashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* Level 1 Earning Progression & Target Card */}
+        {/* 2. Quick Actions Shortcuts */}
+        <section className="space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Quick Actions</h3>
+          <div className="grid grid-cols-4 gap-3">
+            <button 
+              onClick={() => setTab('WatchEarn')}
+              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">play_circle</span>
+              </div>
+              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">Watch Ads</span>
+            </button>
+
+            <button 
+              onClick={() => setTab('Tasks')}
+              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
+            >
+              <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">assignment</span>
+              </div>
+              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">Tasks</span>
+            </button>
+
+            <button 
+              onClick={() => setTab('Invite')}
+              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">group_add</span>
+              </div>
+              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">Invite</span>
+            </button>
+
+            <button 
+              onClick={() => setTab('History')}
+              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
+            >
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">history</span>
+              </div>
+              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">History</span>
+            </button>
+          </div>
+        </section>
+
+        {/* 3. Daily Bonus Section */}
+        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                emoji_events
+              </span>
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-on-surface dark:text-white">Daily Login streak</h3>
+              <p className="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">Claim daily rewards streak bonuses</p>
+            </div>
+          </div>
+          <button 
+            disabled={hasClaimedDailyBonus}
+            onClick={() => setShowDailyModal(true)}
+            className={`px-4 py-2 font-bold text-xs rounded-full shadow-md active:scale-95 transition-all duration-150 ${
+              hasClaimedDailyBonus ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-amber-500 text-white shadow-amber-500/25'
+            }`}
+          >
+            {hasClaimedDailyBonus ? 'Claimed' : 'Claim'}
+          </button>
+        </section>
+
+        {/* 4. Telegram Community Bonus Section */}
+        <section className="bg-gradient-to-r from-[#0088cc] to-[#00a2f5] border border-[#0088cc] rounded-3xl p-5 shadow-lg flex items-center justify-between gap-4 text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 glass-effect flex items-center justify-center">
+              <span className="material-symbols-outlined text-[28px]">send</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-sm">Join our Community</h3>
+              <p className="text-[10px] text-white/80 mt-0.5">Earn ₦500 instantly for joining</p>
+            </div>
+          </div>
+          <button 
+            disabled={isCommunityJoined}
+            onClick={handleJoinCommunity}
+            className={`px-4 py-2 font-bold text-xs rounded-full shadow-md active:scale-95 transition-all duration-150 ${
+              isCommunityJoined ? 'bg-white/20 text-white cursor-not-allowed shadow-none' : 'bg-white text-[#0088cc]'
+            }`}
+          >
+            {isCommunityJoined ? 'Joined' : (isVerifyingCommunity ? 'Verify' : 'Join')}
+          </button>
+        </section>
+
+        {/* 5. Verified Task Partners Section */}
+        <section className="space-y-3 mt-6">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 text-center">Verified Task Partners</h3>
+          <div className="flex justify-center items-center gap-6 opacity-70 flex-wrap px-2">
+            <img src="/swagbucks-logo.png" alt="Swagbucks" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/clickworker-logo.png" alt="Clickworker" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/adsterra.png" alt="Adsterra" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+            <img src="/monetag-logo.png" alt="Monetag" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
+          </div>
+        </section>
+
+        {/* 6. Level 1 Earning Progression & Target Card */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
           <div className="flex justify-between items-center">
             <div>
@@ -237,113 +340,10 @@ export const Dashboard: React.FC = () => {
           )}
         </section>
 
-        {/* Level Progress Card */}
+        {/* Level Progress Membership Card */}
         <MembershipCard />
 
-        {/* Daily Bonus Section */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                emoji_events
-              </span>
-            </div>
-            <div>
-              <h3 className="font-bold text-sm text-on-surface dark:text-white">Daily Login streak</h3>
-              <p className="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">Claim daily rewards streak bonuses</p>
-            </div>
-          </div>
-          <button 
-            disabled={hasClaimedDailyBonus}
-            onClick={() => setShowDailyModal(true)}
-            className={`px-4 py-2 font-bold text-xs rounded-full shadow-md active:scale-95 transition-all duration-150 ${
-              hasClaimedDailyBonus ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 cursor-not-allowed' : 'bg-amber-500 text-white shadow-amber-500/25'
-            }`}
-          >
-            {hasClaimedDailyBonus ? 'Claimed' : 'Claim'}
-          </button>
-        </section>
-
-        {/* Telegram Community Bonus Section */}
-        <section className="bg-gradient-to-r from-[#0088cc] to-[#00a2f5] border border-[#0088cc] rounded-3xl p-5 shadow-lg flex items-center justify-between gap-4 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 glass-effect flex items-center justify-center">
-              <span className="material-symbols-outlined text-[28px]">send</span>
-            </div>
-            <div>
-              <h3 className="font-bold text-sm">Join our Community</h3>
-              <p className="text-[10px] text-white/80 mt-0.5">Earn ₦500 instantly for joining</p>
-            </div>
-          </div>
-          <button 
-            disabled={isCommunityJoined}
-            onClick={handleJoinCommunity}
-            className={`px-4 py-2 font-bold text-xs rounded-full shadow-md active:scale-95 transition-all duration-150 ${
-              isCommunityJoined ? 'bg-white/20 text-white cursor-not-allowed shadow-none' : 'bg-white text-[#0088cc]'
-            }`}
-          >
-            {isCommunityJoined ? 'Joined' : (isVerifyingCommunity ? 'Verify' : 'Join')}
-          </button>
-        </section>
-
-        {/* Our Partners Section */}
-        <section className="space-y-3 mt-6">
-          <h3 className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 text-center">Verified Task Partners</h3>
-          <div className="flex justify-center items-center gap-6 opacity-70 flex-wrap px-2">
-            <img src="/swagbucks-logo.png" alt="Swagbucks" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
-            <img src="/clickworker-logo.png" alt="Clickworker" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
-            <img src="/adsterra.png" alt="Adsterra" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
-            <img src="/monetag-logo.png" alt="Monetag" className="h-5 hover:opacity-100 transition-all duration-300 object-contain" />
-          </div>
-        </section>
-
-        {/* Quick Actions Shortcuts */}
-        <section className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Quick Actions</h3>
-          <div className="grid grid-cols-4 gap-3">
-            <button 
-              onClick={() => setTab('WatchEarn')}
-              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
-            >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">play_circle</span>
-              </div>
-              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">Watch Ads</span>
-            </button>
-
-            <button 
-              onClick={() => setTab('Tasks')}
-              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
-            >
-              <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">assignment</span>
-              </div>
-              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">Tasks</span>
-            </button>
-
-            <button 
-              onClick={() => setTab('Invite')}
-              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
-            >
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">group_add</span>
-              </div>
-              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">Invite</span>
-            </button>
-
-            <button 
-              onClick={() => setTab('History')}
-              className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-3 rounded-2xl flex flex-col items-center gap-1.5 shadow-sm active:scale-95 transition-all duration-150"
-            >
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">history</span>
-              </div>
-              <span className="text-[10px] font-bold text-on-surface dark:text-gray-300">History</span>
-            </button>
-          </div>
-        </section>
-
-        {/* Recent Timeline Feed */}
+        {/* 7. Recent Timeline Feed */}
         <section className="space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Recent Transactions</h3>
