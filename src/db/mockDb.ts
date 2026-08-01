@@ -435,12 +435,23 @@ export const loadDB = (): TaskCashDB => {
       {
         id: `wall_${initialUserId}`,
         user_id: initialUserId,
-        active_balance: 0,
-        lifetime_earnings: 0,
+        active_balance: 500,
+        lifetime_earnings: 500,
         pending_balance: 0
       }
     ],
-    transactions: [],
+    transactions: [
+      {
+        id: `tx_welcome_${initialUserId}`,
+        wallet_id: `wall_${initialUserId}`,
+        user_id: initialUserId,
+        type: 'DailyReward',
+        amount: 500,
+        description: 'Welcome Bonus',
+        status: 'Success',
+        timestamp: new Date().toISOString()
+      }
+    ],
     levels: DEFAULT_LEVELS,
     tasks: DEFAULT_TASKS,
     task_categories: DEFAULT_TASK_CATEGORIES,

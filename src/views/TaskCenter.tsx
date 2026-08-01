@@ -9,6 +9,7 @@ export const TaskCenter: React.FC = () => {
     tasks, 
     taskCategories, 
     submitTaskProof, 
+    claimCommunityBonus,
     levels, 
     user,
     transactions,
@@ -24,6 +25,7 @@ export const TaskCenter: React.FC = () => {
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
+  const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
 
   const today = new Date().toDateString();
   const tasksCompletedToday = transactions.filter(
@@ -245,7 +247,7 @@ export const TaskCenter: React.FC = () => {
           </section>
         )}
 
-        {/* Standard Social Media Tasks Section */}
+        {/* Standard Social Media Tasks Section (Telegram Community) */}
         {(selectedCategory === 'All' || selectedCategory !== 'cat_explore') && otherTasks.length > 0 && (
           <section className="space-y-3 pt-2">
             {selectedCategory === 'All' && (
@@ -260,9 +262,8 @@ export const TaskCenter: React.FC = () => {
                 const multipliedReward = Math.round(task.reward_amount * userLevel.earning_multiplier);
                 const category = taskCategories.find(c => c.id === task.category_id);
                 
-                const isCompleted = transactions.some(
-                  t => t.type === 'TaskReward' && t.description.includes(task.title) && t.status === 'Success'
-                );
+                const isTelegramClaimed = Boolean(localStorage.getItem('community_bonus_claimed')) || 
+                  transactions.some(t => t.type === 'TaskReward' && (t.description.includes('Telegram Community') || t.description.includes('Join Our Telegram Community')) && t.status === 'Success');
 
                 return (
                   <div 
@@ -273,7 +274,7 @@ export const TaskCenter: React.FC = () => {
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/10 text-primary">
                           <span className="material-symbols-outlined text-[28px]">
-                            {category?.icon || 'work'}
+                            {category?.icon || 'send'}
                           </span>
                         </div>
                         <div>
@@ -288,16 +289,27 @@ export const TaskCenter: React.FC = () => {
                       </div>
                       
                       <button 
-                        disabled={isCompleted}
-                        onClick={() => { triggerHaptic('light'); setActiveTaskDetail(task); }}
+                        disabled={isTelegramClaimed}
+                        onClick={() => {
+                          triggerHaptic('light');
+                          if (!isTelegramClaimed) {
+                            if (!isVerifyingCommunity) {
+                              window.open(task.link || 'https://t.me/taskcash_official', '_blank');
+                              setIsVerifyingCommunity(true);
+                            } else {
+                              claimCommunityBonus();
+                              setIsVerifyingCommunity(false);
+                            }
+                          }
+                        }}
                         className={`flex-shrink-0 px-4 py-2.5 rounded-full font-bold text-xs shadow-md active:scale-95 transition-all duration-150 flex items-center gap-1.5 ${
-                          isCompleted
+                          isTelegramClaimed
                             ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-not-allowed shadow-none'
                             : 'bg-primary text-white shadow-primary/20'
                         }`}
                       >
-                        <span>{isCompleted ? 'Done' : 'Do Task'}</span>
-                        {!isCompleted && <span className="material-symbols-outlined text-[14px]">arrow_forward</span>}
+                        <span>{isTelegramClaimed ? 'Joined & Claimed' : (isVerifyingCommunity ? 'Verify & Claim' : 'Join & Claim')}</span>
+                        {!isTelegramClaimed && <span className="material-symbols-outlined text-[14px]">send</span>}
                       </button>
                     </div>
                   </div>
