@@ -20,12 +20,12 @@ TRUNCATE TABLE
 CASCADE;
 
 -- Re-initialize system settings cleanly if needed
-INSERT INTO public.system_settings (id, key, value, description)
+INSERT INTO public.system_settings (id, key, value)
 VALUES 
-  ('st_1', 'min_withdrawal_l1', '2000', 'Minimum withdrawal for Level 1 free user'),
-  ('st_2', 'withdrawal_fee_percent', '5', 'Withdrawal fee percentage'),
-  ('st_3', 'maintenance_mode', 'false', 'Enable application maintenance mode'),
-  ('st_4', 'fraud_detection_level', 'High', 'Fraud detection strictness'),
-  ('st_5', 'welcome_bonus_amount', '500', 'Welcome bonus credited on signup'),
-  ('st_6', 'telegram_task_reward', '500', 'Telegram community task reward')
+  ('st_1', 'min_withdrawal_l1', '2000'),
+  ('st_2', 'withdrawal_fee_percent', '5'),
+  ('st_3', 'maintenance_mode', 'false'),
+  ('st_4', 'fraud_detection_level', 'High'),
+  ('st_5', 'welcome_bonus_amount', '500'),
+  ('st_6', 'telegram_task_reward', '500')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;

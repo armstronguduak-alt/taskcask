@@ -381,19 +381,24 @@ export const loadDB = (): TaskCashDB => {
   if (raw) {
     try {
       const parsed: TaskCashDB = JSON.parse(raw);
-      // Ensure DEFAULT_TASK_CATEGORIES exist in parsed database
-      DEFAULT_TASK_CATEGORIES.forEach(cat => {
-        if (!parsed.task_categories.some(c => c.id === cat.id)) {
-          parsed.task_categories.unshift(cat);
-        }
-      });
-      // Ensure DEFAULT_TASKS exist in parsed database
-      DEFAULT_TASKS.forEach(task => {
-        if (!parsed.tasks.some(t => t.id === task.id)) {
-          parsed.tasks.push(task);
-        }
-      });
-      return parsed;
+      // Purge legacy mock data if legacy test user usr_willie is detected
+      if (parsed.users?.some(u => u.id === 'usr_willie')) {
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        // Ensure DEFAULT_TASK_CATEGORIES exist in parsed database
+        DEFAULT_TASK_CATEGORIES.forEach(cat => {
+          if (!parsed.task_categories.some(c => c.id === cat.id)) {
+            parsed.task_categories.unshift(cat);
+          }
+        });
+        // Ensure DEFAULT_TASKS exist in parsed database
+        DEFAULT_TASKS.forEach(task => {
+          if (!parsed.tasks.some(t => t.id === task.id)) {
+            parsed.tasks.push(task);
+          }
+        });
+        return parsed;
+      }
     } catch (e) {
       console.error('Failed to parse mock database, resetting...', e);
     }
