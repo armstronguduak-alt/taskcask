@@ -105,9 +105,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem('taskcash_theme') === 'dark';
   });
 
-  const currentUser = dbState.users.find(u => u.id === 'usr_willie') || null;
-  const currentWallet = dbState.wallets.find(w => w.user_id === 'usr_willie') || null;
-  const userTransactions = dbState.transactions.filter(t => t.wallet_id === 'wall_willie');
+  const currentUser = dbState.users[0] || null;
+  const currentUserId = currentUser?.id || 'usr_live_user';
+  const currentWallet = dbState.wallets.find(w => w.user_id === currentUserId) || dbState.wallets[0] || null;
+  const userTransactions = dbState.transactions.filter(t => t.user_id === currentUserId || (currentWallet && t.wallet_id === currentWallet.id));
 
   const checkAutoLevelUp = () => {
     updateDB((db) => {

@@ -11,7 +11,8 @@ export const TaskCenter: React.FC = () => {
     submitTaskProof, 
     levels, 
     user,
-    transactions
+    transactions,
+    systemSettings
   } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
@@ -20,6 +21,7 @@ export const TaskCenter: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [activeTaskDetail, setActiveTaskDetail] = useState<Task | null>(null);
   const [proofUsername, setProofUsername] = useState('');
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
 
@@ -50,30 +52,38 @@ export const TaskCenter: React.FC = () => {
         window.open(task.link, '_blank', 'noopener,noreferrer');
       }
       
-      // Open proof submission modal to keep task in Pending Review state
+      // Open proof submission modal
       setActiveTaskDetail(task);
     }, 450);
   };
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeTaskDetail || !proofUsername.trim()) return;
+    if (!activeTaskDetail) return;
 
     setIsSubmitting(true);
-    const result = await submitTaskProof(activeTaskDetail.id, proofUsername);
+    const identifier = proofUsername.trim() || user?.username || 'user_verified';
+    const result = await submitTaskProof(activeTaskDetail.id, identifier);
     setIsSubmitting(false);
 
     if (result.success) {
       alert(result.message);
       setActiveTaskDetail(null);
       setProofUsername('');
+      setScreenshotFile(null);
     } else {
       alert(result.message);
     }
   };
 
   const exploreTasks = filteredTasks.filter(t => t.category_id === 'cat_explore');
-  const otherTasks = filteredTasks.filter(t => t.category_id !== 'cat_explore');
+  // Social Media Tasks: Filter to ONLY Telegram community task as requested
+  const otherTasks = filteredTasks.filter(t => t.id === 'task_telegram_community' || t.category_id === 'cat_telegram');
+
+  const requiresScreenshot = Boolean(
+    activeTaskDetail?.requires_screenshot || 
+    systemSettings?.find(s => s.key === 'require_task_screenshot')?.value === 'true'
+  );
 
   return (
     <div className="flex-grow pb-32">
@@ -343,24 +353,37 @@ export const TaskCenter: React.FC = () => {
                   Your Account / Verification Identifier
                 </label>
                 <input 
-                  required
                   value={proofUsername}
                   onChange={(e) => setProofUsername(e.target.value)}
-                  placeholder="e.g. willie_earn"
+                  placeholder="e.g. your_telegram_username"
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-on-surface dark:text-gray-200"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wide">
-                  Proof Screenshot (Mocked)
-                </label>
-                <div className="border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors">
-                  <span className="material-symbols-outlined text-[32px] text-gray-400">upload_file</span>
-                  <p className="text-xs text-on-surface dark:text-gray-300 font-bold mt-1">Upload verification screenshot</p>
-                  <p className="text-[9px] text-gray-400 mt-0.5">Supports PNG, JPG up to 5MB</p>
+              {/* Conditional Screenshot Upload (Enabled only when required by Admin) */}
+              {requiresScreenshot && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wide flex items-center justify-between">
+                    <span>Proof Screenshot</span>
+                    <span className="text-amber-500 font-extrabold text-[9px]">Admin Required</span>
+                  </label>
+                  <label className="border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition-colors">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => e.target.files?.[0] && setScreenshotFile(e.target.files[0])}
+                      className="hidden" 
+                    />
+                    <span className="material-symbols-outlined text-[28px] text-emerald-500">
+                      {screenshotFile ? 'check_circle' : 'upload_file'}
+                    </span>
+                    <p className="text-xs text-on-surface dark:text-gray-300 font-bold mt-1">
+                      {screenshotFile ? screenshotFile.name : 'Upload verification screenshot'}
+                    </p>
+                    <p className="text-[9px] text-gray-400 mt-0.5">Supports PNG, JPG up to 5MB</p>
+                  </label>
                 </div>
-              </div>
+              )}
 
               <button 
                 type="submit"

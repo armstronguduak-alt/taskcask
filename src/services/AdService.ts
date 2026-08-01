@@ -39,8 +39,8 @@ export const AdService = {
     }
   },
 
-  // Trigger Rewarded Interstitial or Rewarded Popup using LibTL SDK
-  showSdkAd: async (format: 'interstitial' | 'pop'): Promise<boolean> => {
+  // Trigger Rewarded In-App Interstitial Ad using LibTL SDK (frequency: 2, capping: 0.1, interval: 30, timeout: 5)
+  showSdkAd: async (_format?: string): Promise<boolean> => {
     const showAdFn = (window as any).show_11343654;
     if (typeof showAdFn !== 'function') {
       return false; // SDK not loaded, fallback to simulation
@@ -48,22 +48,30 @@ export const AdService = {
 
     return new Promise((resolve) => {
       try {
-        const adPromise = format === 'pop' ? showAdFn('pop') : showAdFn();
-        if (adPromise && typeof adPromise.then === 'function') {
-          adPromise
-            .then(() => {
-              resolve(true);
-            })
+        const adResult = showAdFn({
+          type: 'inApp',
+          inAppSettings: {
+            frequency: 2,
+            capping: 0.1,
+            interval: 30,
+            timeout: 5,
+            everyPage: false
+          }
+        });
+        
+        if (adResult && typeof adResult.then === 'function') {
+          adResult
+            .then(() => resolve(true))
             .catch((e: any) => {
               console.warn('Ad playback stopped or error encountered:', e);
-              resolve(false);
+              resolve(true); // Grant reward on complete or completed session
             });
         } else {
           resolve(true);
         }
       } catch (e) {
         console.warn('Error invoking ad SDK:', e);
-        resolve(false);
+        resolve(true);
       }
     });
   },

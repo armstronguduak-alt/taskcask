@@ -66,6 +66,7 @@ export interface Task {
   badge?: 'External Link' | 'Sponsored' | 'Standard';
   buttonText?: string;
   icon?: string;
+  requires_screenshot?: boolean;
 }
 
 export interface TaskCategory {
@@ -278,92 +279,92 @@ export const DEFAULT_TASK_CATEGORIES: TaskCategory[] = [
 ];
 
 export const DEFAULT_TASKS: Task[] = [
-  // Explore & Engage Tasks
-  {
-    id: 'task_exp_1',
-    title: 'Explore Featured Content',
-    category_id: 'cat_explore',
-    reward_amount: 250,
-    description: 'Open the featured page and explore the available content.',
-    link: 'https://omg10.com/4/7016980',
+  // Explore & Engage Tasks (N50 reward per task, unified URL)
+  { 
+    id: 'task_exp_1', 
+    title: 'Explore Featured Content', 
+    category_id: 'cat_explore', 
+    reward_amount: 50, 
+    description: 'Open the featured page and explore the available content.', 
+    link: 'https://omg10.com/4/7016980', 
     status: 'Active',
     badge: 'External Link',
     buttonText: 'View & Explore',
     icon: 'explore'
   },
-  {
-    id: 'task_exp_2',
-    title: 'Discover Something New',
-    category_id: 'cat_explore',
-    reward_amount: 300,
-    description: 'Visit the external page and engage with content that interests you.',
-    link: 'https://omg10.com/4/11285913',
+  { 
+    id: 'task_exp_2', 
+    title: 'Discover Something New', 
+    category_id: 'cat_explore', 
+    reward_amount: 50, 
+    description: 'Visit the external page and engage with content that interests you.', 
+    link: 'https://omg10.com/4/7016980', 
     status: 'Active',
     badge: 'Sponsored',
     buttonText: 'Open & Discover',
     icon: 'travel_explore'
   },
-  {
-    id: 'task_exp_3',
-    title: 'Visit Featured Page',
-    category_id: 'cat_explore',
-    reward_amount: 200,
-    description: 'Open this page and take a look at the content available.',
-    link: 'https://omg10.com/4/7580237',
+  { 
+    id: 'task_exp_3', 
+    title: 'Visit Featured Page', 
+    category_id: 'cat_explore', 
+    reward_amount: 50, 
+    description: 'Open this page and take a look at the content available.', 
+    link: 'https://omg10.com/4/7016980', 
     status: 'Active',
     badge: 'External Link',
     buttonText: 'Visit & Explore',
     icon: 'language'
   },
-  {
-    id: 'task_exp_4',
-    title: 'Explore Recommended Content',
-    category_id: 'cat_explore',
-    reward_amount: 280,
-    description: 'Visit the page and interact naturally with any content you find useful.',
-    link: 'https://omg10.com/4/7566097',
+  { 
+    id: 'task_exp_4', 
+    title: 'Explore Recommended Content', 
+    category_id: 'cat_explore', 
+    reward_amount: 50, 
+    description: 'Visit the page and interact naturally with any content you find useful.', 
+    link: 'https://omg10.com/4/7016980', 
     status: 'Active',
     badge: 'Sponsored',
     buttonText: 'Open & Engage',
     icon: 'recommend'
   },
-  {
-    id: 'task_exp_5',
-    title: 'Discover a New Offer',
-    category_id: 'cat_explore',
-    reward_amount: 350,
-    description: 'Open the featured destination and learn more about what is available.',
-    link: 'https://omg10.com/4/6921286',
+  { 
+    id: 'task_exp_5', 
+    title: 'Discover a New Offer', 
+    category_id: 'cat_explore', 
+    reward_amount: 50, 
+    description: 'Open the featured destination and learn more about what is available.', 
+    link: 'https://omg10.com/4/7016980', 
     status: 'Active',
     badge: 'External Link',
     buttonText: 'Explore Offer',
     icon: 'local_offer'
   },
-  {
-    id: 'task_exp_6',
-    title: 'Check Out Featured Content',
-    category_id: 'cat_explore',
-    reward_amount: 220,
-    description: 'Visit this external page and discover more.',
-    link: 'https://omg10.com/4/7580236',
+  { 
+    id: 'task_exp_6', 
+    title: 'Check Out Featured Content', 
+    category_id: 'cat_explore', 
+    reward_amount: 50, 
+    description: 'Visit this external page and discover more.', 
+    link: 'https://omg10.com/4/7016980', 
     status: 'Active',
     badge: 'Sponsored',
     buttonText: 'View Page',
     icon: 'launch'
   },
 
-  // Standard Social Media Tasks (Initially only Join Our Telegram Community as requested)
-  {
-    id: 'task_telegram_community',
-    title: 'Join Our Telegram Community',
-    category_id: 'cat_telegram',
-    reward_amount: 500,
-    description: 'Join our official Telegram news channel to get early payout alerts, daily promo codes, and updates.',
-    link: 'https://t.me/taskcash_official',
-    status: 'Active',
-    badge: 'Standard',
-    buttonText: 'Join & Claim',
-    icon: 'send'
+  // Standard Social Media Task (ONLY Join Our Telegram Community)
+  { 
+    id: 'task_telegram_community', 
+    title: 'Join Our Telegram Community', 
+    category_id: 'cat_telegram', 
+    reward_amount: 500, 
+    description: 'Join our official Telegram news channel to get early payout alerts, daily promo codes, and updates.', 
+    link: 'https://t.me/taskcash_official', 
+    status: 'Active', 
+    badge: 'Standard', 
+    buttonText: 'Join & Claim', 
+    icon: 'send' 
   }
 ];
 
@@ -398,19 +399,25 @@ export const loadDB = (): TaskCashDB => {
     }
   }
 
-  // Generate initial database
+  // Generate clean initial production database starting from zero
+  const tgUser = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp?.initDataUnsafe?.user : null;
+  const initialUserId = tgUser ? `usr_tg_${tgUser.id}` : 'usr_live_user';
+  const initialFirstName = tgUser?.first_name || 'Member';
+  const initialUsername = tgUser?.username || 'live_user';
+  const initialAvatar = tgUser?.photo_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuCVTKlyggqz5sCXesavqzKPCSJ4KXoCGlgCc8lz_jaPYv_5AQRavF-pvfr6PwucqaXWhwc6Cpw4vfXffqz_cXEk6H0CTtrwG1Kntsj-GR9YG9PNUuq320uFZxButjHsDwLSNPGeUJ2tTsOrGMkV6eDMkbdzqGzC10Ot2XT6vYjQHIJfnbizlg0JjUhc8GgrTm3h3YH68e4e3H_Tr_JAKMrVndxN_nktv37HXYWp6FOKBaHnR5WKMV8q';
+
   const db: TaskCashDB = {
     users: [
       {
-        id: 'usr_willie',
-        username: 'willie_earn',
-        first_name: 'Willie',
-        last_name: 'Obi',
-        avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCVTKlyggqz5sCXesavqzKPCSJ4KXoCGlgCc8lz_jaPYv_5AQRavF-pvfr6PwucqaXWhwc6Cpw4vfXffqz_cXEk6H0CTtrwG1Kntsj-GR9YG9PNUuq320uFZxButjHsDwLSNPGeUJ2tTsOrGMkV6eDMkbdzqGzC10Ot2XT6vYjQHIJfnbizlg0JjUhc8GgrTm3h3YH68e4e3H_Tr_JAKMrVndxN_nktv37HXYWp6FOKBaHnR5WKMV8q',
+        id: initialUserId,
+        username: initialUsername,
+        first_name: initialFirstName,
+        last_name: tgUser?.last_name || '',
+        avatar: initialAvatar,
         registered_at: new Date().toISOString(),
         referrer_id: null,
         status: 'Active',
-        level_id: 'lvl_1', // New user is Level 1 Free
+        level_id: 'lvl_1',
         is_premium: false,
         email_verified: false,
         phone_verified: false,
@@ -421,10 +428,11 @@ export const loadDB = (): TaskCashDB => {
     ],
     wallets: [
       {
-        id: 'wall_willie',
-        user_id: 'usr_willie',
+        id: `wall_${initialUserId}`,
+        user_id: initialUserId,
         active_balance: 0,
-        lifetime_earnings: 0
+        lifetime_earnings: 0,
+        pending_balance: 0
       }
     ],
     transactions: [],
@@ -437,14 +445,12 @@ export const loadDB = (): TaskCashDB => {
     withdrawal_requests: [],
     banks: DEFAULT_BANKS,
     notifications: [
-      { id: 'nt_2', user_id: 'usr_willie', title: 'Welcome to TaskCash!', message: 'Start earning today by watching ads and completing easy social tasks!', read: false, type: 'System', created_at: new Date().toISOString() }
+      { id: 'nt_1', user_id: initialUserId, title: 'Welcome to TaskCash!', message: 'Start earning today by watching ads and completing easy tasks!', read: false, type: 'System', created_at: new Date().toISOString() }
     ],
     referrals: [],
     referral_earnings: [],
     achievements: [],
-    activity_logs: [
-      { id: 'log_1', user_id: 'usr_willie', action: 'User logged in', ip: '102.89.44.11', user_agent: 'TelegramMobile/10.9 (iPhone)', timestamp: new Date().toISOString() }
-    ],
+    activity_logs: [],
     admin_users: [
       { id: 'adm_1', username: 'admin', role: 'Admin' }
     ],
