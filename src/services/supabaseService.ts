@@ -98,7 +98,43 @@ export const SupabaseService = {
       proof_identifier: proofUsername,
       status: 'Pending',
     });
-    return !error;
+    if (error) {
+      console.warn('Supabase submitTaskProofDB error:', error);
+      return false;
+    }
+    return true;
+  },
+
+  // Fetch Referral Detailed Profiles View from Supabase
+  getReferralProfiles: async (userId: string): Promise<any[] | null> => {
+    if (!isSupabaseConfigured()) return null;
+    const { data, error } = await supabase
+      .from('referral_profiles_view')
+      .select('*')
+      .eq('referrer_id', userId)
+      .order('joined_at', { ascending: false });
+
+    if (error) {
+      console.warn('Supabase getReferralProfiles error:', error);
+      return null;
+    }
+    return data;
+  },
+
+  // Fetch User Profile by User ID
+  getUserProfile: async (userId: string): Promise<any | null> => {
+    if (!isSupabaseConfigured()) return null;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Supabase getUserProfile error:', error);
+      return null;
+    }
+    return data;
   },
 
   // Telegram Auth via Edge Function

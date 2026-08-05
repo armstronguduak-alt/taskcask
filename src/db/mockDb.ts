@@ -2,15 +2,20 @@
 
 export interface User {
   id: string;
+  telegram_id?: number;
   username: string;
   first_name: string;
-  last_name: string;
+  last_name?: string;
+  display_name?: string;
+  photo_url?: string;
   avatar: string;
+  referral_code?: string;
   registered_at: string;
   referrer_id: string | null;
   status: 'Active' | 'Banned';
   level_id: string; // foreign key
   is_premium?: boolean;
+  is_telegram_premium?: boolean;
   email_verified?: boolean;
   phone_verified?: boolean;
   login_streak?: number;
@@ -141,6 +146,11 @@ export interface Referral {
   id: string;
   referrer_id: string;
   referred_id: string;
+  referral_code_used?: string;
+  status?: 'Pending' | 'Active' | 'Qualified' | 'Rewarded';
+  qualification_status?: 'Pending' | 'Qualified';
+  reward_status?: 'Pending' | 'Rewarded';
+  reward_amount?: number;
   created_at: string;
 }
 

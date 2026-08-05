@@ -28,6 +28,7 @@ import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 import { DataMigrationService } from '../services/dataMigrationService';
 import { SupabaseService } from '../services/supabaseService';
+import { TelegramAuthService } from '../services/telegramAuthService';
 
 export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
 
@@ -168,6 +169,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const interval = setInterval(() => {
       setDbState(loadDB());
     }, 2500);
+
+    // Telegram Identity Authentication Engine
+    TelegramAuthService.authenticateTelegramUser().then(res => {
+      if (res.success && res.user) {
+        const tgUser = res.user;
+        updateDB(db => {
+          let u = db.users.find(usr => usr.id === tgUser.id || (tgUser.telegram_id && usr.telegram_id === tgUser.telegram_id));
+          if (u) {
+            u.first_name = tgUser.first_name || u.first_name;
+            u.last_name = tgUser.last_name || u.last_name;
+            u.username = tgUser.username || u.username;
+            u.display_name = tgUser.display_name || u.display_name;
+            u.photo_url = tgUser.photo_url || u.photo_url;
+            if (tgUser.referral_code) u.referral_code = tgUser.referral_code;
+          } else {
+            db.users.unshift({
+              id: tgUser.id,
+              telegram_id: tgUser.telegram_id,
+              username: tgUser.username || `user_${tgUser.telegram_id}`,
+              first_name: tgUser.first_name || 'Member',
+              last_name: tgUser.last_name || '',
+              display_name: tgUser.display_name || tgUser.first_name,
+              photo_url: tgUser.photo_url,
+              avatar: tgUser.photo_url || '',
+              referral_code: tgUser.referral_code || `TC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+              registered_at: new Date().toISOString(),
+              referrer_id: null,
+              status: 'Active',
+              level_id: 'lvl_1',
+              is_premium: false,
+              email_verified: false,
+              phone_verified: false,
+              login_streak: 1,
+              total_ads_watched: 0,
+              total_tasks_completed: 0
+            });
+            // Create corresponding wallet
+            db.wallets.unshift({
+              id: `wall_${tgUser.id}`,
+              user_id: tgUser.id,
+              active_balance: 500,
+              lifetime_earnings: 500,
+              pending_balance: 0
+            });
+          }
+        });
+      }
+    });
 
     // Supabase Realtime Subscription & Data Migration when backend credentials configured
     let channel: any = null;
