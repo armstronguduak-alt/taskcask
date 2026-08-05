@@ -6,23 +6,15 @@ CREATE OR REPLACE FUNCTION public.generate_referral_code()
 RETURNS TEXT
 LANGUAGE plpgsql
 AS $$
-DECLARE
-    v_code TEXT;
-    v_exists BOOLEAN;
 BEGIN
-    LOOP
-        v_code := 'TC-' || UPPER(substr(md5(random()::text), 1, 6));
-        SELECT EXISTS (SELECT 1 FROM public.users WHERE referral_code = v_code) INTO v_exists;
-        EXIT WHEN NOT v_exists;
-    END LOOP;
-    RETURN v_code;
+    RETURN 'TC-' || UPPER(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
 END;
 $$;
 
 -- 2. Extend public.users table with Telegram profile details & referral code
 ALTER TABLE public.users 
-    ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE,
-    ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE DEFAULT public.generate_referral_code(),
+    ADD COLUMN IF NOT EXISTS auth_user_id UUID,
+    ADD COLUMN IF NOT EXISTS referral_code TEXT,
     ADD COLUMN IF NOT EXISTS photo_url TEXT,
     ADD COLUMN IF NOT EXISTS display_name TEXT,
     ADD COLUMN IF NOT EXISTS language_code TEXT,
@@ -31,11 +23,28 @@ ALTER TABLE public.users
 
 -- Populate existing null referral codes if any
 UPDATE public.users 
-SET referral_code = public.generate_referral_code() 
+SET referral_code = 'TC-' || UPPER(substr(md5(random()::text || clock_timestamp()::text || id), 1, 6))
 WHERE referral_code IS NULL;
 
--- Make referral_code NOT NULL
-ALTER TABLE public.users ALTER COLUMN referral_code SET NOT NULL;
+-- Set Default, NOT NULL, and UNIQUE constraint safely
+ALTER TABLE public.users 
+    ALTER COLUMN referral_code SET DEFAULT public.generate_referral_code(),
+    ALTER COLUMN referral_code SET NOT NULL;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'users_referral_code_key'
+    ) THEN
+        ALTER TABLE public.users ADD CONSTRAINT users_referral_code_key UNIQUE (referral_code);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'users_auth_user_id_key'
+    ) THEN
+        ALTER TABLE public.users ADD CONSTRAINT users_auth_user_id_key UNIQUE (auth_user_id);
+    END IF;
+END $$;
 
 -- 3. Update public.referrals table constraints & columns
 ALTER TABLE public.referrals
