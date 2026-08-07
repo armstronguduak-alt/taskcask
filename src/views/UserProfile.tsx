@@ -22,10 +22,9 @@ export const UserProfile: React.FC = () => {
 
   return (
     <div className="flex-grow pb-32 bg-transparent">
-      {/* Top App Bar */}
       <nav className="sticky top-0 w-full z-30 bg-transparent backdrop-blur-md pt-4">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
-          <h1 className="font-bold text-lg text-[#2563eb]">User Profile</h1>
+          <h1 className="font-extrabold text-[22px] text-white">User Profile</h1>
         </div>
       </nav>
 
@@ -33,8 +32,8 @@ export const UserProfile: React.FC = () => {
       <div className="px-container-padding pt-4 space-y-6">
         
         {/* User Card */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm flex flex-col items-center text-center space-y-4">
-          <div className="w-20 h-20 rounded-full border-4 border-[#2563eb]/30 overflow-hidden bg-gray-100 relative group">
+        <section className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg flex flex-col items-center text-center space-y-4">
+          <div className="w-20 h-20 rounded-full border-4 border-[#4a72ff]/30 overflow-hidden bg-[#1e3b7a] relative group">
             <img 
               className="w-full h-full object-cover" 
               alt="Avatar" 
@@ -45,12 +44,12 @@ export const UserProfile: React.FC = () => {
             />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-on-surface dark:text-white leading-tight flex items-center justify-center gap-1">
+            <h2 className="text-[18px] font-bold text-white leading-tight flex items-center justify-center gap-1">
               {user?.first_name} {user?.last_name}
-              {user?.is_premium && <span className="material-symbols-outlined text-[16px] text-amber-500" title="Premium Member">workspace_premium</span>}
+              {user?.is_premium && <span className="material-symbols-outlined text-[16px] text-amber-400" title="Premium Member" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>}
             </h2>
-            <p className="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">@{user?.username}</p>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#2563eb]/20 text-[#2563eb] text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
+            <p className="text-[13px] text-blue-200 mt-0.5">@{user?.username}</p>
+            <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#4a72ff]/20 text-[#4a72ff] text-[10px] font-extrabold uppercase tracking-wider mt-2.5 border border-[#4a72ff]/30">
               {userLevel?.name || 'Starter'}
             </span>
           </div>
@@ -58,27 +57,27 @@ export const UserProfile: React.FC = () => {
 
         {/* Earning Stats Grid */}
         <section className="grid grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm space-y-1">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Active Balance</p>
-            <p className="font-extrabold text-[16px] text-[#2563eb]">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</p>
+          <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg space-y-1">
+            <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-wide">Active Balance</p>
+            <p className="font-extrabold text-[16px] text-white">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</p>
           </div>
-          <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm space-y-1">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Cumulative Earnings</p>
-            <p className="font-extrabold text-[16px] text-on-surface dark:text-white">{(mainWallet?.lifetime_sb || 0).toLocaleString()} SB</p>
+          <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg space-y-1">
+            <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-wide">Cumulative Earnings</p>
+            <p className="font-extrabold text-[16px] text-white">{(mainWallet?.lifetime_sb || 0).toLocaleString()} SB</p>
           </div>
         </section>
 
         {/* Verification Status */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Verifications</h3>
+        <section className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg space-y-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-blue-300">Verifications</h3>
 
           <div className="flex justify-between items-center py-1">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-gray-400">phone_iphone</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Phone Number</span>
+              <span className="material-symbols-outlined text-blue-200">phone_iphone</span>
+              <span className="text-[13px] font-bold text-blue-100">Phone Number</span>
             </div>
             {user?.phone_verified ? (
-              <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#2563eb] bg-[#2563eb]/10 px-2.5 py-1 rounded-full border border-[#2563eb]/20">
+              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-green-400 bg-green-400/10 px-3 py-1.5 rounded-full border border-green-400/20">
                 <span className="material-symbols-outlined text-[14px]">check_circle</span>
                 Verified
               </span>
@@ -88,7 +87,7 @@ export const UserProfile: React.FC = () => {
                   triggerHaptic('medium');
                   verifyPhone();
                 }} 
-                className="text-[10px] font-extrabold text-[#2563eb] bg-[#2563eb]/10 px-3 py-1.5 rounded-full hover:bg-[#2563eb]/20 active:scale-95 transition-all"
+                className="text-[11px] font-extrabold text-[#4a72ff] bg-[#4a72ff]/10 px-4 py-2 rounded-full hover:bg-[#4a72ff]/20 border border-[#4a72ff]/20 active:scale-95 transition-all"
               >
                 Verify Now
               </button>
@@ -97,82 +96,80 @@ export const UserProfile: React.FC = () => {
         </section>
 
         {/* Settings options list */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 mb-2">Account Configurations</h3>
-
-
+        <section className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg space-y-2">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-blue-300 mb-2">Account Configurations</h3>
 
           {/* Withdraw Entry */}
           <button 
             onClick={() => setTab('Withdraw')}
-            className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
+            className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#2563eb]">payments</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Withdraw Funds</span>
+              <span className="material-symbols-outlined text-green-400">payments</span>
+              <span className="text-[13px] font-bold text-blue-100">Withdraw Funds</span>
             </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
 
 
           {/* History Entry */}
           <button 
             onClick={() => setTab('History')}
-            className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
+            className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-purple-500">history</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Transaction History</span>
+              <span className="material-symbols-outlined text-purple-400">history</span>
+              <span className="text-[13px] font-bold text-blue-100">Transaction History</span>
             </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
 
           {/* FAQs Entry */}
           <button 
             onClick={() => setShowFAQ(true)}
-            className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
+            className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-amber-500">help</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Frequently Asked Questions (FAQs)</span>
+              <span className="material-symbols-outlined text-amber-400">help</span>
+              <span className="text-[13px] font-bold text-blue-100">Frequently Asked Questions (FAQs)</span>
             </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
 
           {/* Privacy Policy Entry */}
           <button 
             onClick={() => setShowPrivacy(true)}
-            className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
+            className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-blue-500">policy</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Privacy Policy</span>
+              <span className="material-symbols-outlined text-blue-400">policy</span>
+              <span className="text-[13px] font-bold text-blue-100">Privacy Policy</span>
             </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
 
           {/* Terms of Service Entry */}
           <button 
             onClick={() => setShowTerms(true)}
-            className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
+            className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-red-500">gavel</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Terms of Service</span>
+              <span className="material-symbols-outlined text-red-400">gavel</span>
+              <span className="text-[13px] font-bold text-blue-100">Terms of Service</span>
             </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
 
           {/* About Entry */}
           <button 
             onClick={() => setShowAbout(true)}
-            className="w-full flex justify-between items-center py-2.5 text-left"
+            className="w-full flex justify-between items-center py-3 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#2563eb]">info</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">About SwagBucks</span>
+              <span className="material-symbols-outlined text-[#4a72ff]">info</span>
+              <span className="text-[13px] font-bold text-blue-100">About SwagBucks</span>
             </div>
-            <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
+            <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
         </section>
 

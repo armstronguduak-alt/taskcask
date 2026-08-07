@@ -54,10 +54,9 @@ export const Dashboard: React.FC = () => {
 
   const getPartnerLogo = (name: string) => {
     switch(name) {
-      case 'Clickworker': return 'https://logo.clearbit.com/clickworker.com';
-      case 'Swagbucks': return 'https://logo.clearbit.com/swagbucks.com';
-      case 'Adsterra': return 'https://logo.clearbit.com/adsterra.com';
-      case 'Monetag': return 'https://logo.clearbit.com/monetag.com';
+      case 'Clickworker': return '/clickworker-logo.png';
+      case 'Adsterra': return '/adsterra.png';
+      case 'Monetag': return '/monetag-logo.png';
       default: return '';
     }
   };
@@ -218,7 +217,7 @@ export const Dashboard: React.FC = () => {
         <section className="px-container-padding mt-6 space-y-3 pb-8">
           <h3 className="text-white font-extrabold text-[15px]">Verified Partners</h3>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-            {['Clickworker', 'Swagbucks', 'Adsterra', 'Monetag'].map(partner => (
+            {['Clickworker', 'Adsterra', 'Monetag'].map(partner => (
               <div key={partner} className="flex-shrink-0 bg-[#223b73] border border-blue-500/20 rounded-2xl p-3 w-28 flex flex-col items-center justify-center h-20 shadow-md">
                 <img 
                   src={getPartnerLogo(partner)} 
@@ -262,25 +261,25 @@ export const Dashboard: React.FC = () => {
 
       {showDailyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-slide-up relative p-6">
+          <div className="bg-[#1e3b7a] border border-blue-500/20 rounded-[24px] w-full max-w-sm overflow-hidden shadow-2xl animate-slide-up relative p-6">
             <button 
               onClick={() => setShowDailyModal(false)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 transition-all"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mb-3">
+              <div className="w-16 h-16 mx-auto bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center mb-3">
                 <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
               </div>
-              <h2 className="text-xl font-bold">Daily Login Streak</h2>
+              <h2 className="text-xl font-bold text-white">Daily Login Streak</h2>
             </div>
             
             <div className="grid grid-cols-4 gap-2 mb-6">
               {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                <div key={day} className={`flex flex-col items-center p-2 rounded-xl border ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'bg-orange-50 border-orange-500' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'bg-primary/10 border-primary' : 'bg-gray-50 border-gray-200'}`}>
-                  <span className="text-[10px] font-bold text-gray-400">Day {day}</span>
-                  <span className={`text-xs font-bold mt-1 ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'text-orange-600' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'text-primary' : 'text-gray-500'}`}>
+                <div key={day} className={`flex flex-col items-center p-2 rounded-xl border ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'bg-orange-500/20 border-orange-500/50' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'bg-blue-500/20 border-blue-500/30' : 'bg-[#152a5c] border-white/5'}`}>
+                  <span className={`text-[10px] font-bold ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'text-orange-300' : 'text-blue-300/60'}`}>Day {day}</span>
+                  <span className={`text-xs font-bold mt-1 ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'text-orange-400' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'text-blue-400' : 'text-gray-500'}`}>
                     {day * 50}
                   </span>
                 </div>
@@ -293,7 +292,7 @@ export const Dashboard: React.FC = () => {
                 claimDailyBonus();
                 setShowDailyModal(false);
               }}
-              className={`w-full py-3 rounded-2xl font-bold transition-all ${hasClaimedDailyBonus ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-primary text-white active:scale-95 shadow-lg'}`}
+              className={`w-full py-3 rounded-2xl font-bold transition-all ${hasClaimedDailyBonus ? 'bg-black/20 text-gray-400 cursor-not-allowed' : 'bg-[#4a72ff] text-white hover:bg-blue-600 active:scale-95 shadow-lg'}`}
             >
               {hasClaimedDailyBonus ? 'Come back tomorrow' : 'Claim Reward'}
             </button>
