@@ -12,44 +12,50 @@ export const BottomNav: React.FC = () => {
   const { activeTab, setTab } = useApp();
 
   const items: NavItem[] = [
-    { tab: 'Dashboard', label: 'Home', icon: 'home' },
-    { tab: 'WatchEarn', label: 'Watch', icon: 'play_circle' },
-    { tab: 'Tasks', label: 'Tasks', icon: 'assignment' },
-    { tab: 'Invite', label: 'Invite', icon: 'group_add' },
+    { tab: 'Home', label: 'Home', icon: 'home' },
+    { tab: 'Task', label: 'Task', icon: 'assignment' },
+    { tab: 'Leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
+    { tab: 'Records', label: 'Records', icon: 'history' },
     { tab: 'Profile', label: 'Profile', icon: 'person' }
   ];
 
   if (activeTab === 'Onboarding' || activeTab === 'Admin') return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-[480px] w-full px-container-padding pb-6 pt-2 bg-transparent pointer-events-none">
-      <div className="w-full h-18 rounded-3xl bg-white/80 dark:bg-[#18181b]/80 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-lg shadow-black/10 flex items-center justify-around px-4 py-2 pointer-events-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-[480px] w-full bg-[#131f42] rounded-t-[32px] border-t border-blue-500/10 shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+      <div className="flex justify-between items-end px-2 pt-2 pb-1 relative h-[72px]">
         {items.map((item) => {
-          const isActive = activeTab === item.tab || 
-            (item.tab === 'Tasks' && (activeTab as string) === 'Admin') || 
-            (item.tab === 'Profile' && (activeTab === 'Withdraw' || activeTab === 'History'));
+          const isActive = activeTab === item.tab || (item.tab === 'Profile' && activeTab === 'Withdraw');
+          
+          if (isActive) {
+            return (
+              <button
+                key={item.tab}
+                className="flex-1 flex flex-col items-center justify-center relative z-10 -mt-5"
+              >
+                <div className="w-[76px] h-[76px] bg-[#131f42] rounded-[24px] p-[6px] flex flex-col items-center justify-center relative">
+                  <div className="w-full h-full bg-gradient-to-b from-[#5c85ff] to-[#3a5be6] rounded-[18px] flex flex-col items-center justify-center shadow-lg shadow-[#4a72ff]/40 border border-blue-300/30">
+                    <span className="material-symbols-outlined text-[24px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>{item.icon}</span>
+                    <span className="text-[9px] font-black text-white mt-1 tracking-wide uppercase">{item.label}</span>
+                    {item.tab === 'Profile' && (
+                      <span className="absolute top-1 right-2 w-4 h-4 bg-red-500 rounded-full border border-[#5c85ff] text-[9px] font-bold text-white flex items-center justify-center shadow-sm">3</span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            )
+          }
+
           return (
             <button
               key={item.tab}
               onClick={() => setTab(item.tab)}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-2xl relative transition-all duration-300 ripple-active"
+              className="flex-1 flex flex-col items-center justify-center h-full gap-1 pb-2 transition-transform active:scale-95"
             >
-              <div 
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                  isActive 
-                    ? 'bg-primary text-white shadow-md shadow-primary/30' 
-                    : 'text-[#6e7b6c] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: `'FILL' ${isActive ? 1 : 0}` }}>
-                  {item.icon}
-                </span>
-              </div>
-              <span 
-                className={`text-[10px] font-semibold mt-1 tracking-wide transition-all duration-300 ${
-                  isActive ? 'opacity-100 max-h-4 text-primary dark:text-[#62df7d]' : 'opacity-0 max-h-0 overflow-hidden'
-                }`}
-              >
+              <span className="material-symbols-outlined text-[26px] text-blue-200/50" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {item.icon}
+              </span>
+              <span className="text-[9px] font-black text-blue-200/50 tracking-wider uppercase">
                 {item.label}
               </span>
             </button>

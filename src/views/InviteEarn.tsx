@@ -4,11 +4,11 @@ import { Avatar } from '../components/Avatar';
 import { SupabaseService } from '../services/supabaseService';
 
 export const InviteEarn: React.FC = () => {
-  const { wallet, user, users, systemSettings } = useApp();
+  const { affiliateWallet, user, referrals } = useApp();
   const [supabaseReferralProfiles, setSupabaseReferralProfiles] = useState<any[] | null>(null);
 
-  const refCode = user?.referral_code || `TC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-  const refLink = `https://t.me/taskcash_bot/app?startapp=${refCode}`;
+  const refCode = user?.referral_code || `SB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  const refLink = `https://t.me/swagbucks_bot/app?startapp=${refCode}`;
 
   useEffect(() => {
     if (user?.id) {
@@ -29,16 +29,13 @@ export const InviteEarn: React.FC = () => {
   };
 
   const handleShareTelegram = () => {
-    const text = encodeURIComponent(`👋 Hey! Start earning Nigerian Naira (₦) daily by watching ads and completing easy tasks on TaskCash. Join here: `);
+    const text = encodeURIComponent(`👋 Hey! Start earning SwagBucks (SB) daily by watching ads and completing easy tasks on SwagBucks. Join here: `);
     const url = `https://t.me/share/url?url=${encodeURIComponent(refLink)}&text=${text}`;
     window.open(url, '_blank');
   };
 
-  const referralReqSetting = systemSettings?.find(s => s.key === 'referral_active_ads_req')?.value;
-  const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
-  
   // Local state referred users fallback
-  const myReferrals = users.filter(u => u.referrer_id === user?.id);
+  const myReferrals = referrals.filter(r => r.referrer_id === user?.id);
 
   // Combine Supabase profiles or local fallback profiles
   const referralItems = supabaseReferralProfiles && supabaseReferralProfiles.length > 0
@@ -51,14 +48,14 @@ export const InviteEarn: React.FC = () => {
         earned: p.reward_amount || (p.referral_status === 'Active' ? 500 : 0),
         status: p.referral_status || 'Active'
       }))
-    : myReferrals.map(u => {
-        const isActive = (u.total_ads_watched || 0) >= activeAdsReq;
+    : myReferrals.map(r => {
+        const isActive = r.referral_status === 'Active' || r.referral_status === 'Qualified';
         return {
-          id: u.id,
-          name: u.display_name || u.first_name || 'Member',
-          username: u.username ? `@${u.username}` : 'No username',
-          photo: u.photo_url || u.avatar,
-          registered: new Date(u.registered_at || new Date()).toLocaleDateString(),
+          id: r.id,
+          name: 'Member',
+          username: 'No username',
+          photo: undefined,
+          registered: new Date(r.created_at || new Date()).toLocaleDateString(),
           earned: isActive ? 500 : 0,
           status: isActive ? 'Active' : 'Pending'
         };
@@ -74,10 +71,10 @@ export const InviteEarn: React.FC = () => {
       {/* Top App Bar */}
       <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
-          <h1 className="font-bold text-lg text-primary dark:text-[#62df7d]">Invite & Earn</h1>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full">
-            <span className="material-symbols-outlined text-primary text-[16px] font-fill">account_balance_wallet</span>
-            <span className="text-xs font-bold text-primary">₦{(wallet?.active_balance || 0).toLocaleString()}</span>
+          <h1 className="font-bold text-lg text-[#2563eb] dark:text-[#2563eb]">Invite & Earn</h1>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">
+            <span className="material-symbols-outlined text-[#2563eb] text-[16px] font-fill">account_balance_wallet</span>
+            <span className="text-xs font-bold text-[#2563eb]">{(affiliateWallet?.balance_sb || 0).toLocaleString()} SB</span>
           </div>
         </div>
       </nav>
@@ -86,31 +83,31 @@ export const InviteEarn: React.FC = () => {
       <div className="px-container-padding pt-4 space-y-6">
         
         {/* Referral Hero Card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 shadow-xl text-white">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2563eb] to-[#4caf50] p-6 shadow-xl text-zinc-900">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
           <div className="relative z-10 space-y-5">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider opacity-85 mb-1">Referral Rewards</p>
-              <h2 className="text-2xl font-extrabold tracking-tight">Earn ₦500.00 Per Friend</h2>
-              <p className="text-[11px] opacity-80 mt-1 leading-relaxed">
-                Invite your friends using your unique referral code. You earn ₦500 instantly when they join and complete tasks!
+              <p className="text-[10px] font-bold uppercase tracking-wider opacity-85 mb-1 text-zinc-800">Referral Rewards</p>
+              <h2 className="text-2xl font-extrabold tracking-tight">Earn 500 SB Per Friend</h2>
+              <p className="text-[11px] opacity-80 mt-1 leading-relaxed text-zinc-800">
+                Invite your friends using your unique referral code. You earn 500 SB instantly when they join and complete tasks!
               </p>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Total Invited</p>
                 <p className="font-bold text-[18px] mt-0.5">{referralItems.length}</p>
               </div>
-              <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Referral Income</p>
-                <p className="font-bold text-[18px] mt-0.5">₦{totalReferralEarnings.toLocaleString()}</p>
+                <p className="font-bold text-[18px] mt-0.5">{totalReferralEarnings.toLocaleString()} SB</p>
               </div>
-              <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Active Referrals</p>
                 <p className="font-bold text-[18px] mt-0.5">{activeReferrals.length}</p>
               </div>
-              <div className="bg-white/10 p-3 rounded-2xl border border-white/5">
+              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
                 <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Pending Referrals</p>
                 <p className="font-bold text-[18px] mt-0.5">{pendingReferrals.length}</p>
               </div>
@@ -122,17 +119,17 @@ export const InviteEarn: React.FC = () => {
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-bold text-xs text-on-surface dark:text-gray-200">Your Referral Code</h3>
-            <span className="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold text-xs rounded-full border border-amber-500/20">
+            <span className="px-3 py-1 bg-[#2563eb]/10 text-[#2563eb] dark:text-[#2563eb] font-extrabold text-xs rounded-full border border-[#2563eb]/20">
               {refCode}
             </span>
           </div>
 
           <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 p-3.5 rounded-2xl border border-gray-100 dark:border-zinc-800/80">
-            <span className="material-symbols-outlined text-primary text-[20px]">link</span>
+            <span className="material-symbols-outlined text-[#2563eb] text-[20px]">link</span>
             <span className="flex-1 text-xs font-semibold text-on-surface dark:text-gray-300 truncate text-left">{refLink}</span>
             <button 
               onClick={handleCopyLink}
-              className="text-xs font-bold text-primary dark:text-[#62df7d] hover:opacity-85"
+              className="text-xs font-bold text-[#2563eb] hover:opacity-85"
             >
               Copy
             </button>
@@ -170,11 +167,11 @@ export const InviteEarn: React.FC = () => {
           <div className="space-y-4">
             {/* Active Referrals */}
             <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-              <h4 className="font-bold text-xs text-primary">Active ({activeReferrals.length})</h4>
+              <h4 className="font-bold text-xs text-[#2563eb]">Active ({activeReferrals.length})</h4>
               {activeReferrals.length === 0 ? (
                 <div className="text-center py-6 text-xs text-gray-400 font-semibold space-y-1">
                   <p>No active referrals yet.</p>
-                  <p className="text-[10px] text-gray-400 font-normal">Share your link to start earning ₦500 per friend!</p>
+                  <p className="text-[10px] text-gray-400 font-normal">Share your link to start earning 500 SB per friend!</p>
                 </div>
               ) : (
                 activeReferrals.map((ref) => (
@@ -187,8 +184,8 @@ export const InviteEarn: React.FC = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-xs text-primary dark:text-[#62df7d]">+₦{(ref.earned || 500).toLocaleString()}</p>
-                      <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-green-500/10 text-green-600">
+                      <p className="font-bold text-xs text-[#2563eb] dark:text-[#2563eb]">+{ref.earned || 500} SB</p>
+                      <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-[#2563eb]/10 text-[#2563eb]">
                         Active
                       </span>
                     </div>

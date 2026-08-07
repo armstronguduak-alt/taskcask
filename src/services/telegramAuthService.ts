@@ -1,4 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+export const getDeterministicReferralCode = (user: any) => {
+  return `SB-${user.id.substring(user.id.length - 6).toUpperCase()}`;
+};
 
 export interface TelegramAuthResult {
   success: boolean;
@@ -72,7 +75,7 @@ export const TelegramAuthService = {
           username: mockUsername,
           display_name: mockUsername ? `@${mockUsername}` : mockFirstName,
           photo_url: mockPhotoUrl,
-          referral_code: `TC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          referral_code: getDeterministicReferralCode({ id: `usr_tg_${mockTelegramId}`, username: mockUsername }),
         },
         startParam,
       };
@@ -108,7 +111,7 @@ export const TelegramAuthService = {
       const fallbackPhoto = tgUser?.photo_url || null;
 
       // Upsert profile directly on Supabase
-      const referralCode = `TC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const referralCode = getDeterministicReferralCode({ id: fallbackId, username: fallbackUsername });
       const { data: userProfile } = await supabase
         .from('users')
         .upsert({

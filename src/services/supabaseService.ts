@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import type { Task, Wallet, Transaction } from '../db/mockDb';
+import type { Task, Wallet, Transaction } from '../types';
 
 export const SupabaseService = {
   // Fetch Tasks from Supabase database

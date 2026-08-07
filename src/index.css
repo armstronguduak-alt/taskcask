@@ -6,14 +6,14 @@
   body {
     -webkit-tap-highlight-color: transparent;
     font-family: 'Inter', sans-serif;
-    background-color: #f8f9ff;
-    color: #0b1c30;
+    background-color: #05143a;
+    color: #ffffff;
     overflow-x: hidden;
   }
 
   body.dark {
-    background-color: #09090b;
-    color: #f8f9ff;
+    background-color: #05143a;
+    color: #ffffff;
   }
 }
 

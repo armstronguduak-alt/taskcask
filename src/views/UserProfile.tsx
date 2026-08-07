@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { triggerHaptic } from '../utils/haptic';
 
 export const UserProfile: React.FC = () => {
   const { 
     user, 
-    wallet, 
+    mainWallet, 
     levels, 
     darkMode, 
     toggleDarkMode, 
@@ -20,11 +21,11 @@ export const UserProfile: React.FC = () => {
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
 
   return (
-    <div className="flex-grow pb-32">
+    <div className="flex-grow pb-32 bg-[#f8f9ff] dark:bg-[#09090b]">
       {/* Top App Bar */}
       <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
-          <h1 className="font-bold text-lg text-primary dark:text-[#62df7d]">User Profile</h1>
+          <h1 className="font-bold text-lg text-[#2563eb]">User Profile</h1>
         </div>
       </nav>
 
@@ -33,7 +34,7 @@ export const UserProfile: React.FC = () => {
         
         {/* User Card */}
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm flex flex-col items-center text-center space-y-4">
-          <div className="w-20 h-20 rounded-full border-4 border-primary-container overflow-hidden bg-gray-100 relative group">
+          <div className="w-20 h-20 rounded-full border-4 border-[#2563eb]/30 overflow-hidden bg-gray-100 relative group">
             <img 
               className="w-full h-full object-cover" 
               alt="Avatar" 
@@ -49,8 +50,8 @@ export const UserProfile: React.FC = () => {
               {user?.is_premium && <span className="material-symbols-outlined text-[16px] text-amber-500" title="Premium Member">workspace_premium</span>}
             </h2>
             <p className="text-xs text-on-surface-variant dark:text-gray-400 mt-0.5">@{user?.username}</p>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
-              {userLevel.name}
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#2563eb]/20 text-[#2563eb] text-[9px] font-extrabold uppercase tracking-wider mt-2.5">
+              {userLevel?.name || 'Starter'}
             </span>
           </div>
         </section>
@@ -58,12 +59,12 @@ export const UserProfile: React.FC = () => {
         {/* Earning Stats Grid */}
         <section className="grid grid-cols-2 gap-4">
           <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm space-y-1">
-            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Active Cash</p>
-            <p className="font-extrabold text-[16px] text-primary dark:text-[#62df7d]">₦{(wallet?.active_balance || 0).toLocaleString()}</p>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Active Balance</p>
+            <p className="font-extrabold text-[16px] text-[#2563eb]">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</p>
           </div>
           <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm space-y-1">
             <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">Cumulative Earnings</p>
-            <p className="font-extrabold text-[16px] text-on-surface dark:text-white">₦{(wallet?.lifetime_earnings || 0).toLocaleString()}</p>
+            <p className="font-extrabold text-[16px] text-on-surface dark:text-white">{(mainWallet?.lifetime_sb || 0).toLocaleString()} SB</p>
           </div>
         </section>
 
@@ -77,9 +78,20 @@ export const UserProfile: React.FC = () => {
               <span className="text-xs font-bold text-on-surface dark:text-gray-200">Phone Number</span>
             </div>
             {user?.phone_verified ? (
-              <span className="text-xs font-bold text-green-500">Verified</span>
+              <span className="inline-flex items-center gap-1 text-xs font-extrabold text-[#2563eb] bg-[#2563eb]/10 px-2.5 py-1 rounded-full border border-[#2563eb]/20">
+                <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                Verified
+              </span>
             ) : (
-              <button onClick={verifyPhone} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full hover:bg-primary/20">Verify Now</button>
+              <button 
+                onClick={() => {
+                  triggerHaptic('medium');
+                  verifyPhone();
+                }} 
+                className="text-[10px] font-extrabold text-[#2563eb] bg-[#2563eb]/10 px-3 py-1.5 rounded-full hover:bg-[#2563eb]/20 active:scale-95 transition-all"
+              >
+                Verify Now
+              </button>
             )}
           </div>
         </section>
@@ -97,11 +109,11 @@ export const UserProfile: React.FC = () => {
             <button 
               onClick={toggleDarkMode}
               className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 ${
-                darkMode ? 'bg-primary' : 'bg-gray-200'
+                darkMode ? 'bg-[#2563eb]' : 'bg-gray-200'
               }`}
             >
               <div 
-                className={`w-4 .h-4 bg-white rounded-full h-4 shadow-md transition-transform ${
+                className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
                   darkMode ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
@@ -114,7 +126,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-2.5 border-b border-gray-50 dark:border-zinc-800/60 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">payments</span>
+              <span className="material-symbols-outlined text-[#2563eb]">payments</span>
               <span className="text-xs font-bold text-on-surface dark:text-gray-200">Withdraw Funds</span>
             </div>
             <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
@@ -175,8 +187,8 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-2.5 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-green-500">info</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">About TaskCash</span>
+              <span className="material-symbols-outlined text-[#2563eb]">info</span>
+              <span className="text-xs font-bold text-on-surface dark:text-gray-200">About SwagBucks</span>
             </div>
             <span className="material-symbols-outlined text-gray-400 text-[18px]">chevron_right</span>
           </button>
@@ -196,31 +208,31 @@ export const UserProfile: React.FC = () => {
             </div>
             <div className="p-5 overflow-y-auto space-y-4">
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">How do I earn money?</h4>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">How do I earn money?</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">You can earn by watching ads, completing available micro-tasks, claiming your daily login bonus streak, and referring friends using your unique Telegram referral link.</p>
               </div>
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">What is the minimum withdrawal?</h4>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">What is the minimum withdrawal?</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">The minimum withdrawal varies based on your account level. As you level up through consistent activity, your minimum withdrawal requirement decreases!</p>
               </div>
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">Do referrals count toward my withdrawal limit?</h4>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">Do referrals count toward my withdrawal limit?</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">No. To ensure the integrity of our platform, the minimum withdrawal threshold must be met entirely through your own active earnings (tasks, videos, daily bonuses). Once you meet this activity threshold, your referral earnings can be freely withdrawn.</p>
               </div>
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">How do I level up my account?</h4>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">How do I level up my account?</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Your account automatically levels up as you increase your daily login streak, complete more tasks, watch more ads, and invite active referrals.</p>
               </div>
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">What is the Telegram Community Bonus?</h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">You receive an instant ₦500 bonus added to your active balance when you join our official Telegram community via the dashboard.</p>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">What is the Telegram Community Bonus?</h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">You receive an instant 500 SB bonus added to your active balance when you join our official Telegram community via the dashboard.</p>
               </div>
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">How long do withdrawals take?</h4>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">How long do withdrawals take?</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Withdrawal requests are typically processed within 24-48 business hours. Ensure your bank details are correct before submitting a request.</p>
               </div>
               <div>
-                <h4 className="font-bold text-sm text-primary mb-1">What happens if I use a VPN?</h4>
+                <h4 className="font-bold text-sm text-[#2563eb] mb-1">What happens if I use a VPN?</h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">Using a VPN, Proxy, or Tor network is strictly prohibited as it violates the policies of our ad partners (like Adsterra, Monetag, Swagbucks). Doing so will block your access to the app.</p>
               </div>
             </div>
@@ -235,12 +247,12 @@ export const UserProfile: React.FC = () => {
             <button onClick={() => setShowAbout(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-500 hover:text-gray-800 dark:hover:text-white">
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
-            <div className="w-16 h-16 mx-auto bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4 mt-2">
+            <div className="w-16 h-16 mx-auto bg-[#2563eb]/10 text-[#2563eb] rounded-full flex items-center justify-center mb-4 mt-2">
               <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
             </div>
-            <h2 className="text-xl font-bold mb-2">About TaskCash</h2>
+            <h2 className="text-xl font-bold mb-2">About SwagBucks</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-              TaskCash is a premier digital rewards and micro-tasking platform built exclusively on Telegram. Our mission is to empower users to monetize their spare time efficiently.
+              SwagBucks is a premier digital rewards and micro-tasking platform built exclusively on Telegram. Our mission is to empower users to monetize their spare time efficiently.
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
               Through our integrations with leading advertising networks and verified task providers like Swagbucks, Clickworker, Adsterra, and Monetag, we bring high-paying opportunities directly to your device. 
@@ -294,13 +306,13 @@ export const UserProfile: React.FC = () => {
             </div>
             <div className="p-5 overflow-y-auto space-y-4">
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                <strong>1. Acceptance:</strong> By using TaskCash, you agree to comply with all rules and guidelines laid out in this document.
+                <strong>1. Acceptance:</strong> By using SwagBucks, you agree to comply with all rules and guidelines laid out in this document.
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                 <strong>2. Prohibited Activity:</strong> The use of bots, emulators, auto-clickers, VPNs, Proxies, or multiple accounts per person is strictly forbidden. 
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                <strong>3. Earnings & Withdrawals:</strong> Earnings are distributed at the sole discretion of TaskCash based on verified activity. TaskCash reserves the right to withhold payments if fraudulent activity is detected.
+                <strong>3. Earnings & Withdrawals:</strong> Earnings are distributed at the sole discretion of SwagBucks based on verified activity. SwagBucks reserves the right to withhold payments if fraudulent activity is detected.
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                 <strong>4. Account Termination:</strong> We reserve the right to ban or suspend any account found violating these terms without prior notice or compensation.

@@ -8,10 +8,13 @@ import InviteEarn from './views/InviteEarn';
 import WithdrawFunds from './views/WithdrawFunds';
 import TransactionHistory from './views/TransactionHistory';
 import UserProfile from './views/UserProfile';
-import AdminDashboard from './views/admin/AdminDashboard';
+import Leaderboard from './views/Leaderboard';
+
+
+import VideoAdModal from './components/VideoAdModal';
 
 const AppContent: React.FC = () => {
-  const { activeTab } = useApp();
+  const { activeTab, activeAd, setActiveAd, completeAd, levels, user, systemSettings } = useApp();
   const [vpnDetected, setVpnDetected] = useState<boolean>(false);
 
   useEffect(() => {
@@ -26,6 +29,11 @@ const AppContent: React.FC = () => {
       .catch(err => console.error("VPN check failed:", err));
   }, []);
 
+  const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
+  const rewardSetting = activeAd ? systemSettings.find(s => s.key === `reward_cat_${activeAd.category}`)?.value : null;
+  const baseReward = activeAd ? (rewardSetting ? parseFloat(rewardSetting) : activeAd.reward_amount) : 0;
+  const rewardAmount = Math.round(baseReward * (userLevel?.earning_multiplier || 1));
+
   if (vpnDetected) {
     return (
       <div className="min-h-screen bg-background dark:bg-[#09090b] flex flex-col items-center justify-center p-6 text-center">
@@ -33,7 +41,7 @@ const AppContent: React.FC = () => {
         <h1 className="text-2xl font-bold text-on-surface dark:text-white mb-2">VPN Detected</h1>
         <p className="text-on-surface-variant dark:text-gray-400">
           Our security systems detected that you are using a VPN, Proxy, or Tor network. 
-          Please disable it to access TaskCash and protect the integrity of our platform.
+          Please disable it to access SwagBucks and protect the integrity of our platform.
         </p>
       </div>
     );
@@ -41,22 +49,20 @@ const AppContent: React.FC = () => {
 
   const renderActiveView = () => {
     switch (activeTab) {
-      case 'Dashboard':
+      case 'Home':
         return <Dashboard />;
-      case 'WatchEarn':
-        return <WatchEarn />;
-      case 'Tasks':
+      case 'Task':
         return <TaskCenter />;
+      case 'Leaderboard':
+        return <Leaderboard />;
       case 'Invite':
         return <InviteEarn />;
       case 'Profile':
         return <UserProfile />;
       case 'Withdraw':
         return <WithdrawFunds />;
-      case 'History':
+      case 'Records':
         return <TransactionHistory />;
-      case 'Admin':
-        return <AdminDashboard />;
       default:
         return <Dashboard />;
     }
@@ -72,6 +78,15 @@ const AppContent: React.FC = () => {
       {/* Floating Bottom Nav */}
       <BottomNav />
 
+      {/* Video Ad Player Modal */}
+      {activeAd && (
+        <VideoAdModal
+          ad={activeAd}
+          onClose={() => setActiveAd(null)}
+          onComplete={(ad) => completeAd(ad)}
+          rewardAmount={rewardAmount}
+        />
+      )}
     </div>
   );
 };

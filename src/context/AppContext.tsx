@@ -1,9 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  loadDB, 
-  updateDB, 
-  addTransaction
-} from '../db/mockDb';
 import type {
   User, 
   Wallet, 
@@ -15,26 +10,20 @@ import type {
   Bank, 
   Notification, 
   Referral, 
-  FraudLog,
-  PostbackLog,
   TaskCategory,
-  UserBankDetail,
-  ReferralMilestone,
   SystemSetting,
-  SdkLog
-} from '../db/mockDb';
-import { AdService } from '../services/AdService';
+  TabName
+} from '../types';
+
 import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
-import { DataMigrationService } from '../services/dataMigrationService';
 import { SupabaseService } from '../services/supabaseService';
 import { TelegramAuthService } from '../services/telegramAuthService';
 
-export type TabName = 'Dashboard' | 'Tasks' | 'WatchEarn' | 'Invite' | 'Profile' | 'Withdraw' | 'History' | 'Admin' | 'Onboarding';
-
 interface AppContextProps {
   user: User | null;
-  wallet: Wallet | null;
+  mainWallet: Wallet | null;
+  affiliateWallet: Wallet | null;
   transactions: Transaction[];
   levels: Level[];
   tasks: Task[];
@@ -44,14 +33,9 @@ interface AppContextProps {
   banks: Bank[];
   notifications: Notification[];
   referrals: Referral[];
-  fraudLogs: FraudLog[];
-  postbackLogs: PostbackLog[];
-  sdkLogs: SdkLog[];
-  userBankDetails: UserBankDetail[];
-  referralMilestones: ReferralMilestone[];
   systemSettings: SystemSetting[];
-  users: User[];
   
+  isLoading: boolean;
   onboardingCompleted: boolean;
   activeTab: TabName;
   activeAd: RewardedAd | null;
@@ -68,6 +52,8 @@ interface AppContextProps {
   setTab: (tab: TabName) => void;
   skipOnboarding: () => void;
   playAd: (ad: RewardedAd) => void;
+  completeAd: (ad: RewardedAd) => Promise<void>;
+  setActiveAd: (ad: RewardedAd | null) => void;
   triggerInAppAd: (onComplete: () => void) => void;
   submitTaskProof: (taskId: string, username: string) => Promise<{ success: boolean; message: string }>;
   claimDailyBonus: () => void;
@@ -76,126 +62,137 @@ interface AppContextProps {
   verifyEmail: () => void;
   verifyPhone: () => void;
   saveBankDetails: (bankId: string, accountNum: string, accountName: string) => void;
-  requestWithdrawal: (bankId: string, accountNum: string, accountName: string, amount: number) => { success: boolean; message: string };
+  requestWithdrawal: (walletType: 'Main' | 'Affiliate', currency: 'SB' | 'USDT', bankId: string | null, accountNum: string | null, accountName: string | null, trc20Address: string | null, amount: number) => Promise<{ success: boolean; message: string }>;
   toggleDarkMode: () => void;
-  
-  // Admin Methods
-  approveWithdrawal: (id: string) => void;
-  rejectWithdrawal: (id: string) => void;
-  banUser: (userId: string) => void;
-  unbanUser: (userId: string) => void;
-  updateUserLevel: (userId: string, levelId: string) => void;
-  adjustUserBalance: (userId: string, amount: number, isCredit: boolean, reason: string) => void;
-  addTask: (taskData: Omit<Task, 'id'>) => void;
-  deleteTask: (taskId: string) => void;
-  toggleTaskStatus: (taskId: string) => void;
-  updateSystemSetting: (key: string, value: string) => void;
-  updateLevelConfig: (level: Level) => void;
-  resetDatabase: () => void;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [dbState, setDbState] = useState(() => loadDB());
-  const [activeTab, setActiveTab] = useState<TabName>('Dashboard');
-  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [mainWallet, setMainWallet] = useState<Wallet | null>(null);
+  const [affiliateWallet, setAffiliateWallet] = useState<Wallet | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskCategories, setTaskCategories] = useState<TaskCategory[]>([]);
+  const [rewardedAds, setRewardedAds] = useState<RewardedAd[]>([]);
+  const [withdrawalRequests, _setWithdrawalRequests] = useState<WithdrawalRequest[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [referrals, _setReferrals] = useState<Referral[]>([]);
+  const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([]);
+  
+  const [activeTab, setActiveTab] = useState<TabName>('Home');
+  const [onboardingCompleted, setOnboardingCompleted] = useState(() => {
+    return localStorage.getItem('swagbucks_onboarding_done') === 'true';
+  });
   
   const [activeAd, setActiveAd] = useState<RewardedAd | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('taskcash_theme') === 'dark';
+    return localStorage.getItem('swagbucks_theme') === 'dark';
   });
 
-  const currentUser = dbState.users[0] || null;
-  const currentUserId = currentUser?.id || 'usr_live_user';
-  const currentWallet = dbState.wallets.find(w => w.user_id === currentUserId) || dbState.wallets[0] || null;
-  const userTransactions = dbState.transactions.filter(t => t.user_id === currentUserId || (currentWallet && t.wallet_id === currentWallet.id));
+  const hasClaimedDailyBonus = false; // Add logic based on daily_rewards table
+  const dailyStreakDay = user?.login_streak || 1;
 
-  const checkAutoLevelUp = () => {
-    updateDB((db) => {
-      const user = db.users.find(u => u.id === 'usr_willie');
-      if (!user) return;
-      
-      const streak = user.login_streak || 0;
-      const ads = user.total_ads_watched || 0;
-      const tasks = user.total_tasks_completed || 0;
-      
-      const referralReqSetting = db.system_settings.find(s => s.key === 'referral_active_ads_req')?.value;
-      const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
-      
-      const activeReferralsCount = db.users.filter(
-        u => u.referrer_id === user.id && (u.total_ads_watched || 0) >= activeAdsReq
-      ).length;
-      
-      // Determine highest eligible level (levels are assumed sorted 1 to 4)
-      const eligibleLevel = db.levels.slice().reverse().find(l => 
-        streak >= l.req_streak && ads >= l.req_ads && tasks >= l.req_tasks && activeReferralsCount >= l.req_referrals
-      );
-      
-      if (eligibleLevel && eligibleLevel.id !== user.level_id) {
-        user.level_id = eligibleLevel.id;
-        db.notifications.unshift({
-          id: 'nt_up_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'usr_willie',
-          title: 'Account Level Upgraded!',
-          message: `Congratulations! Your activity has earned you a promotion to ${eligibleLevel.name}. Earning multiplier set to ${eligibleLevel.earning_multiplier}x.`,
-          read: false,
-          type: 'System',
-          created_at: new Date().toISOString()
-        });
-        
-        const tg = (window as any).Telegram?.WebApp;
-        if (tg && tg.showAlert) {
-          tg.showAlert(`Level Up! You are now a ${eligibleLevel.name}!`);
-        }
+  const refreshState = async () => {
+    if (!isSupabaseConfigured() || !user) return;
+    
+    try {
+      const [
+        { data: userData },
+        { data: walletsData },
+        { data: txData },
+        { data: notificationsData },
+      ] = await Promise.all([
+        supabase.from('users').select('*').eq('id', user.id).single(),
+        supabase.from('wallets').select('*').eq('user_id', user.id),
+        supabase.from('transactions').select('*').eq('user_id', user.id).order('timestamp', { ascending: false }),
+        supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+      ]);
+
+      if (userData) setUser(userData as User);
+      if (walletsData) {
+        setMainWallet((walletsData.find((w: any) => w.wallet_type === 'Main') as Wallet) || null);
+        setAffiliateWallet((walletsData.find((w: any) => w.wallet_type === 'Affiliate') as Wallet) || null);
       }
-    });
-  };
-  
-  const refreshState = () => {
-    setDbState(loadDB());
+      if (txData) setTransactions(txData as Transaction[]);
+      if (notificationsData) setNotifications(notificationsData as Notification[]);
+    } catch (e) {
+      console.error("Error refreshing state", e);
+    }
   };
 
-  // Realtime Data Sync Engine across tabs and components
   useEffect(() => {
-    const handleDbUpdate = () => {
-      setDbState(loadDB());
-    };
+    const initApp = async () => {
+      setIsLoading(true);
+      
+      // Load static data
+      if (isSupabaseConfigured()) {
+        const [
+          { data: levelsData },
+          { data: tasksData },
+          { data: categoriesData },
+          { data: adsData },
+          { data: settingsData },
+          { data: banksData }
+        ] = await Promise.all([
+          supabase.from('levels').select('*'),
+          supabase.from('tasks').select('*').eq('status', 'Active'),
+          supabase.from('task_categories').select('*'),
+          supabase.from('rewarded_ads').select('*'),
+          supabase.from('system_settings').select('*'),
+          supabase.from('banks').select('*')
+        ]);
+        
+        if (levelsData) setLevels(levelsData as Level[]);
+        if (tasksData) setTasks(tasksData as Task[]);
+        if (categoriesData) setTaskCategories(categoriesData as TaskCategory[]);
+        if (adsData) setRewardedAds(adsData as RewardedAd[]);
+        if (settingsData) setSystemSettings(settingsData as SystemSetting[]);
+        if (banksData) setBanks(banksData as Bank[]);
+      }
 
-    window.addEventListener('taskcash_db_update', handleDbUpdate);
-    window.addEventListener('storage', handleDbUpdate);
+      // Initialize Telegram
+      initGlobalHapticListener();
+      // AdService.initInAppInterstitial();
 
-    // Light 2.5s polling loop to guarantee real-time reactivity across active tabs
-    const interval = setInterval(() => {
-      setDbState(loadDB());
-    }, 2500);
-
-    // Telegram Identity Authentication Engine
-    TelegramAuthService.authenticateTelegramUser().then(res => {
-      if (res.success && res.user) {
-        const tgUser = res.user;
-        updateDB(db => {
-          let u = db.users.find(usr => usr.id === tgUser.id || (tgUser.telegram_id && usr.telegram_id === tgUser.telegram_id));
-          if (u) {
-            u.first_name = tgUser.first_name || u.first_name;
-            u.last_name = tgUser.last_name || u.last_name;
-            u.username = tgUser.username || u.username;
-            u.display_name = tgUser.display_name || u.display_name;
-            u.photo_url = tgUser.photo_url || u.photo_url;
-            if (tgUser.referral_code) u.referral_code = tgUser.referral_code;
-          } else {
-            db.users.unshift({
-              id: tgUser.id,
-              telegram_id: tgUser.telegram_id,
-              username: tgUser.username || `user_${tgUser.telegram_id}`,
-              first_name: tgUser.first_name || 'Member',
-              last_name: tgUser.last_name || '',
-              display_name: tgUser.display_name || tgUser.first_name,
-              photo_url: tgUser.photo_url,
-              avatar: tgUser.photo_url || '',
-              referral_code: tgUser.referral_code || `TC-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        
+        if (tg.initDataUnsafe?.user) {
+          try {
+            const authResponse = await TelegramAuthService.authenticateTelegramUser();
+            if (authResponse.success && authResponse.user) {
+              setUser(authResponse.user as User);
+              
+              if (isSupabaseConfigured()) {
+                const { data: walletsData } = await supabase.from('wallets').select('*').eq('user_id', authResponse.user.id);
+                if (walletsData) {
+                  setMainWallet((walletsData.find((w: any) => w.wallet_type === 'Main') as Wallet) || null);
+                  setAffiliateWallet((walletsData.find((w: any) => w.wallet_type === 'Affiliate') as Wallet) || null);
+                }
+                const { data: txData } = await supabase.from('transactions').select('*').eq('user_id', authResponse.user.id).order('timestamp', { ascending: false });
+                if (txData) setTransactions(txData as Transaction[]);
+              }
+            }
+          } catch (e) {
+            console.error("Auth failed", e);
+          }
+        } else {
+           // Mock user for local testing without Telegram
+           console.warn("No Telegram initDataUnsafe found. Using mock user.");
+           setUser({
+              id: 'usr_mock',
+              telegram_id: 123456789,
+              first_name: 'Mock',
+              last_name: 'User',
+              username: 'mock_user',
               registered_at: new Date().toISOString(),
-              referrer_id: null,
               status: 'Active',
               level_id: 'lvl_1',
               is_premium: false,
@@ -204,800 +201,167 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               login_streak: 1,
               total_ads_watched: 0,
               total_tasks_completed: 0
-            });
-            // Create corresponding wallet
-            db.wallets.unshift({
-              id: `wall_${tgUser.id}`,
-              user_id: tgUser.id,
-              active_balance: 500,
-              lifetime_earnings: 500,
-              pending_balance: 0
-            });
-          }
-        });
-      }
-    });
-
-    // Supabase Realtime Subscription & Data Migration when backend credentials configured
-    let channel: any = null;
-    if (isSupabaseConfigured()) {
-      DataMigrationService.migrateLocalUserToSupabase();
-      channel = supabase
-        .channel('taskcash_realtime_changes')
-        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-          refreshState();
-        })
-        .subscribe();
-    }
-
-    return () => {
-      window.removeEventListener('taskcash_db_update', handleDbUpdate);
-      window.removeEventListener('storage', handleDbUpdate);
-      clearInterval(interval);
-      if (channel) supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // URL Route Sync for /admindata
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (window.location.pathname === '/admindata') {
-        setActiveTab('Admin');
-      }
-
-      const handlePopState = () => {
-        if (window.location.pathname === '/admindata') {
-          setActiveTab('Admin');
+           } as User);
+           setMainWallet({
+              id: 'wall_main',
+              user_id: 'usr_mock',
+              wallet_type: 'Main',
+              balance_sb: 30500,
+              balance_usdt: 25.5,
+              lifetime_sb: 30500,
+              lifetime_usdt: 25.5,
+              updated_at: new Date().toISOString()
+           });
+           setAffiliateWallet({
+              id: 'wall_aff',
+              user_id: 'usr_mock',
+              wallet_type: 'Affiliate',
+              balance_sb: 12500,
+              balance_usdt: 0,
+              lifetime_sb: 12500,
+              lifetime_usdt: 0,
+              updated_at: new Date().toISOString()
+           });
         }
-      };
-
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
-    }
-  }, []);
-
-  // Synchronize Telegram & Ad Monetization SDK Data
-  useEffect(() => {
-    // Initialize global click haptics across all clickable elements
-    initGlobalHapticListener();
-
-    // Initialize In-App Interstitial Ads from LibTL SDK
-    AdService.initInAppInterstitial();
-
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      tg.expand();
-      
-      // Load user details dynamically from Telegram & parse referral start parameters
-      const initData = tg.initDataUnsafe;
-      if (initData?.user) {
-        const tgUser = initData.user;
-        const startParam = initData.start_param; // e.g. ref_usr_willie or usr_willie
-
-        updateDB((db) => {
-          const user = db.users.find(u => u.id === 'usr_willie');
-          if (user) {
-            user.first_name = tgUser.first_name || 'Willie';
-            user.last_name = tgUser.last_name || 'Obi';
-            user.username = tgUser.username || 'willie_earn';
-            if (tgUser.photo_url) {
-              user.avatar = tgUser.photo_url;
-            }
-            if (startParam && !user.referrer_id) {
-              const cleanedRefId = startParam.replace('ref_', '');
-              if (cleanedRefId !== user.id) {
-                user.referrer_id = cleanedRefId;
-              }
-            }
-          }
-        });
-        setDbState(loadDB());
       }
-    }
+      setIsLoading(false);
+    };
+
+    initApp();
   }, []);
 
-  // Theme Sync effect
   useEffect(() => {
     if (darkMode) {
       document.body.classList.add('dark');
-      localStorage.setItem('taskcash_theme', 'dark');
+      localStorage.setItem('swagbucks_theme', 'dark');
     } else {
       document.body.classList.remove('dark');
-      localStorage.setItem('taskcash_theme', 'light');
+      localStorage.setItem('swagbucks_theme', 'light');
     }
   }, [darkMode]);
-
-  // Navigate to Dashboard if onboarding is done
-  useEffect(() => {
-    if (onboardingCompleted && activeTab === 'Onboarding') {
-      setActiveTab('Dashboard');
-    }
-  }, [onboardingCompleted]);
-
-  // Bottom Safe Area fixes for Telegram Back Button integration
-  useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg && tg.BackButton) {
-      if (activeTab !== 'Dashboard' && activeTab !== 'Onboarding') {
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => {
-          setTab('Dashboard');
-        });
-      } else {
-        tg.BackButton.hide();
-      }
-    }
-  }, [activeTab]);
 
   const setTab = (tab: TabName) => {
     triggerHaptic('selection');
     setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      if (tab === 'Admin') {
-        window.history.pushState({}, '', '/admindata');
-      } else if (window.location.pathname === '/admindata') {
-        window.history.pushState({}, '', '/');
-      }
-    }
   };
 
   const skipOnboarding = () => {
-    localStorage.setItem('taskcash_onboarding_done', 'true');
+    localStorage.setItem('swagbucks_onboarding_done', 'true');
     setOnboardingCompleted(true);
     setActiveTab('Dashboard');
   };
 
-  // Play Rewarded Ad directly via LibTL SDK
   const playAd = async (ad: RewardedAd) => {
-    // Daily Limit Check by category
-    const userLevel = dbState.levels.find(l => l.id === currentUser?.level_id) || dbState.levels[0];
-    const today = new Date().toDateString();
-    const adsWatchedToday = dbState.sdk_logs.filter(
-      (log: SdkLog) => new Date(log.timestamp).toDateString() === today && 
-             log.action === 'AD_PLAY_COMPLETE_SUCCESS' && 
-             dbState.rewarded_ads.find((a: RewardedAd) => a.id === log.ad_id)?.category === ad.category
-    ).length;
-
-    let limit = 0;
-    if (ad.category === 'A') limit = userLevel.max_daily_ads_cat_a;
-    else if (ad.category === 'B') limit = userLevel.max_daily_ads_cat_b;
-    else if (ad.category === 'C') limit = userLevel.max_daily_ads_cat_c;
-    else limit = 999;
-
-    if (adsWatchedToday >= limit) {
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg && tg.showAlert) tg.showAlert(`Daily limit reached for this ad category.`);
-      else alert(`Daily limit reached for this ad category.`);
-      return;
-    }
-    
-    // Log start of SDK ad play
-    AdService.logSdkAction(ad.id, 'AD_PLAY_START', { type: ad.type, time: ad.watch_time_sec });
-    
-    setActiveAd(ad);
-
-    const sdkFormat = ad.type === 'Popup' ? 'pop' : 'interstitial';
-    const sdkSuccess = await AdService.showSdkAd(sdkFormat);
-
-    if (sdkSuccess) {
-      AdService.logSdkAction(ad.id, 'AD_PLAY_COMPLETE_SUCCESS', { rewarded: true, format: sdkFormat });
-      
-      updateDB((db) => {
-        const user = db.users.find(u => u.id === 'usr_willie');
-        if (user) {
-          user.total_ads_watched = (user.total_ads_watched || 0) + 1;
-        }
-      });
-      checkAutoLevelUp();
-      
-      const result = await AdService.validateAndCreditReward('usr_willie', ad);
-      
-      setActiveAd(null);
-      setDbState(loadDB());
-      
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg && tg.showAlert) {
-        tg.HapticFeedback?.notificationOccurred('success');
-        tg.showAlert(result.message);
-      } else {
-        alert(result.message);
-      }
-    } else {
-      AdService.logSdkAction(ad.id, 'AD_PLAY_FAILED', { reason: 'SDK returned false or errored' });
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg && tg.showAlert) tg.showAlert('Ad playback failed or was closed early.');
-      else alert('Ad playback failed or was closed early.');
-      setActiveAd(null);
-    }
+    // Disabled for now based on user request
+    alert('Ads are temporarily disabled.');
+    return;
   };
 
-  // Play Non-rewarded In-App interstitial
+  const completeAd = async (ad: RewardedAd) => {
+    // Call RPC to credit reward
+    if (user && isSupabaseConfigured()) {
+       await SupabaseService.creditWalletRPC(user.id, 'WatchReward', ad.reward_amount, `Watched Ad: ${ad.name}`);
+       refreshState();
+    }
+    setActiveAd(null);
+  };
+
   const triggerInAppAd = (onComplete: () => void) => {
-    const inAppAd = dbState.rewarded_ads.find(a => a.type === 'InAppInterstitial') || {
-      id: 'ad_inapp_default',
-      name: 'Banner Sponsor Ads',
-      type: 'InAppInterstitial',
-      reward_amount: 0,
-      watch_time_sec: 3,
-      remaining_views: 999
-    } as RewardedAd;
-
-    AdService.logSdkAction(inAppAd.id, 'INAPP_PLAY_START', {});
-    setActiveAd(inAppAd);
-
-    setTimeout(() => {
-      AdService.logSdkAction(inAppAd.id, 'INAPP_PLAY_COMPLETE', {});
-      
-      // Add impression log
-      updateDB((db) => {
-        db.ad_views.unshift({
-          id: 'view_inapp_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'usr_willie',
-          ad_id: inAppAd.id,
-          timestamp: new Date().toISOString(),
-          rewarded: false
-        });
-      });
-
-      setActiveAd(null);
-      setDbState(loadDB());
-      onComplete();
-    }, 3000);
+    // Disabled for now
+    onComplete();
   };
 
-  // Submit Social Task Proof
-  const submitTaskProof = async (taskId: string, username: string): Promise<{ success: boolean; message: string }> => {
-    const db = loadDB();
-    const task = db.tasks.find(t => t.id === taskId);
+  const submitTaskProof = async (taskId: string, username: string) => {
+    if (!user || !isSupabaseConfigured()) return { success: false, message: 'Not connected' };
+    const task = tasks.find(t => t.id === taskId);
     if (!task) return { success: false, message: 'Task not found' };
 
-    // Duplicate Check
-    const user = db.users.find(u => u.id === 'usr_willie');
-    const userLevel = db.levels.find(l => l.id === user?.level_id) || db.levels[0];
-    
-    // Check if task completed in transaction logs
-    const completed = db.transactions.find(
-      t => t.type === 'TaskReward' && t.description.includes(task.title) && t.status === 'Success'
-    );
-    if (completed) {
-      return { success: false, message: 'You have already completed this task!' };
-    }
-
-    // Daily Limit Check
-    const today = new Date().toDateString();
-    const todayTasks = db.transactions.filter(
-      t => t.type === 'TaskReward' && new Date(t.timestamp).toDateString() === today && t.status === 'Success'
-    );
-    if (todayTasks.length >= userLevel.max_daily_tasks) {
-      return { success: false, message: `Daily task limit reached (${userLevel.max_daily_tasks}/${userLevel.max_daily_tasks} tasks)` };
-    }
-
-    // Submit proof to Supabase & local DB
-    const rewardAmount = Math.round(task.reward_amount * userLevel.earning_multiplier);
-    const idempotencyKey = `task_${taskId}_usr_willie_${Date.now()}`;
-    
-    SupabaseService.submitTaskProofDB('usr_willie', taskId, username);
-    SupabaseService.creditWalletRPC(
-      'usr_willie',
-      'TaskReward',
-      rewardAmount,
-      `Completed Task: ${task.title} (proof username: @${username})`,
-      idempotencyKey
-    );
-
-    addTransaction(
-      'usr_willie',
-      'TaskReward',
-      rewardAmount,
-      `Completed Task: ${task.title} (proof username: @${username})`
-    );
-
-    updateDB((db) => {
-      const u = db.users.find(u => u.id === 'usr_willie');
-      if (u) {
-        u.total_tasks_completed = (u.total_tasks_completed || 0) + 1;
-      }
-      db.notifications.unshift({
-        id: 'nt_t_' + Math.random().toString(36).substr(2, 9),
-        user_id: 'usr_willie',
-        title: 'Task Approved',
-        message: `Your proof for "${task.title}" has been approved! ₦${rewardAmount.toFixed(2)} credited.`,
-        read: false,
-        type: 'Task',
-        created_at: new Date().toISOString()
-      });
-    });
-    checkAutoLevelUp();
-
-    setDbState(loadDB());
-    return { success: true, message: `Task submitted! ₦${rewardAmount.toFixed(2)} added to balance.` };
+    await SupabaseService.submitTaskProofDB(user.id, taskId, username);
+    await SupabaseService.creditWalletRPC(user.id, 'TaskReward', task.reward_amount, `Completed Task: ${task.title}`);
+    refreshState();
+    return { success: true, message: `Task submitted! Reward added to balance.` };
   };
 
-  // Claim Daily Login Bonus
   const claimDailyBonus = () => {
-    const today = new Date().toDateString();
-    const lastClaim = dbState.daily_rewards.find(r => r.user_id === 'usr_willie');
-    
-    if (lastClaim && new Date(lastClaim.claimed_at).toDateString() === today) {
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg) tg.showAlert('You have already claimed today\'s login reward! Come back tomorrow.');
-      else alert('You have already claimed today\'s login reward! Come back tomorrow.');
-      return;
-    }
-
-    const claimDay = (dbState.daily_rewards.length % 7) + 1;
-    const bonusAmount = claimDay * 50; // Daily streak scaling: Day 1 = ₦50, Day 2 = ₦100, etc.
-
-    updateDB((db) => {
-      db.daily_rewards.unshift({
-        id: 'dr_' + Math.random().toString(36).substr(2, 9),
-        user_id: 'usr_willie',
-        day_number: claimDay,
-        amount: bonusAmount,
-        claimed_at: new Date().toISOString()
-      });
-      const u = db.users.find(user => user.id === 'usr_willie');
-      if (u) {
-        u.login_streak = (u.login_streak || 0) + 1;
-      }
-    });
-    checkAutoLevelUp();
-
-    // Credit Balance on Supabase & local DB
-    SupabaseService.creditWalletRPC(
-      'usr_willie',
-      'DailyReward',
-      bonusAmount,
-      `Day ${claimDay} Login Reward Streak`,
-      `dr_claim_${Date.now()}`
-    );
-
-    addTransaction('usr_willie', 'DailyReward', bonusAmount, `Day ${claimDay} Login Reward Streak`);
-
-    updateDB((db) => {
-      db.notifications.unshift({
-        id: 'nt_dr_' + Math.random().toString(36).substr(2, 9),
-        user_id: 'usr_willie',
-        title: 'Daily Bonus Claimed',
-        message: `Earned ₦${bonusAmount.toFixed(2)} login streak reward (Day ${claimDay}/7)!`,
-        read: false,
-        type: 'Wallet',
-        created_at: new Date().toISOString()
-      });
-    });
-
-    setDbState(loadDB());
+     if (user && isSupabaseConfigured()) {
+       SupabaseService.creditWalletRPC(user.id, 'DailyReward', 50, 'Daily Login Reward');
+       refreshState();
+     }
   };
 
   const claimWelcomeBonus = () => {
     if (localStorage.getItem('welcome_bonus_claimed')) return;
-    const setting = dbState.system_settings?.find(s => s.key === 'welcome_bonus_amount')?.value;
-    const amount = setting ? parseFloat(setting) : 500;
     localStorage.setItem('welcome_bonus_claimed', 'true');
-
-    SupabaseService.creditWalletRPC('usr_willie', 'DailyReward', amount, 'Welcome Bonus', 'welcome_bonus_willie');
-    addTransaction('usr_willie', 'DailyReward', amount, 'Welcome Bonus');
-    setDbState(loadDB());
+    if (user && isSupabaseConfigured()) {
+       SupabaseService.creditWalletRPC(user.id, 'DailyReward', 500, 'Welcome Bonus');
+       refreshState();
+    }
   };
 
   const claimCommunityBonus = () => {
-    const isAlreadyClaimed = localStorage.getItem('community_bonus_claimed') || 
-      dbState.transactions.some(t => t.type === 'TaskReward' && (t.description.includes('Telegram Community') || t.description.includes('Join Our Telegram Community')) && t.status === 'Success');
-    
-    if (isAlreadyClaimed) return;
-    
-    const setting = dbState.system_settings?.find(s => s.key === 'telegram_task_reward')?.value;
-    const amount = setting ? parseFloat(setting) : 500;
-    
+    if (localStorage.getItem('community_bonus_claimed')) return;
     localStorage.setItem('community_bonus_claimed', 'true');
-    SupabaseService.creditWalletRPC('usr_willie', 'TaskReward', amount, 'Join Our Telegram Community', 'community_bonus_willie');
-    addTransaction('usr_willie', 'TaskReward', amount, 'Join Our Telegram Community');
-    
-    updateDB((db) => {
-      const u = db.users.find(user => user.id === 'usr_willie');
-      if (u) {
-        u.total_tasks_completed = (u.total_tasks_completed || 0) + 1;
-      }
-    });
-
-    setDbState(loadDB());
+    if (user && isSupabaseConfigured()) {
+       SupabaseService.creditWalletRPC(user.id, 'TaskReward', 500, 'Join Our Community');
+       refreshState();
+    }
   };
 
   const verifyEmail = () => {
-    updateDB((db) => {
-      const user = db.users.find(u => u.id === 'usr_willie');
-      if (user) user.email_verified = true;
-    });
-    setDbState(loadDB());
+    // Update Supabase
   };
 
   const verifyPhone = () => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg && tg.requestContact) {
-      tg.requestContact((success: boolean) => {
-        if (success) {
-          updateDB((db) => {
-            const user = db.users.find(u => u.id === 'usr_willie');
-            if (user) {
-              user.phone_verified = true;
-            }
-          });
-          setDbState(loadDB());
-          tg.showAlert('Phone number verified successfully!');
-        } else {
-          tg.showAlert('Verification failed or cancelled.');
-        }
-      });
-    } else {
-      // Fallback for non-telegram environments
-      updateDB((db) => {
-        const user = db.users.find(u => u.id === 'usr_willie');
-        if (user) user.phone_verified = true;
-      });
-      setDbState(loadDB());
-    }
+    // Update Supabase
   };
 
-  const saveBankDetails = (bankId: string, accountNum: string, accountName: string) => {
-    updateDB((db) => {
-      const existing = db.user_bank_details.find(b => b.user_id === 'usr_willie');
-      if (existing) {
-        existing.bank_id = bankId;
-        existing.account_number = accountNum;
-        existing.account_name = accountName;
-      } else {
-        db.user_bank_details.push({
-          id: 'ubd_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'usr_willie',
-          bank_id: bankId,
-          account_number: accountNum,
-          account_name: accountName,
-          is_default: true
-        });
-      }
-    });
-    setDbState(loadDB());
+  const saveBankDetails = (_bankId: string, _accountNum: string, _accountName: string) => {
+    // Update Supabase
   };
 
-  // Submit Withdrawal payouts request
-  const requestWithdrawal = (
-    bankId: string, 
-    accountNum: string, 
-    accountName: string, 
+  const requestWithdrawal = async (
+    walletType: 'Main' | 'Affiliate',
+    currency: 'SB' | 'USDT',
+    bankId: string | null,
+    accountNum: string | null,
+    accountName: string | null,
+    _trc20Address: string | null,
     amount: number
-  ): { success: boolean; message: string } => {
-    const db = loadDB();
-    const wallet = db.wallets.find(w => w.user_id === 'usr_willie');
-    const user = db.users.find(u => u.id === 'usr_willie');
-    const userLevel = db.levels.find(l => l.id === user?.level_id) || db.levels[0];
+  ) => {
+    if (!user || !isSupabaseConfigured()) return { success: false, message: 'Not configured' };
     
-    const minWithdraw = userLevel.min_withdrawal;
-
-    // Calculate activity balance (total activity earnings - total withdrawals)
-    const userTransactions = db.transactions.filter(t => t.wallet_id === wallet?.id);
-    const activityIncome = userTransactions
-      .filter(t => t.type !== 'ReferralReward' && t.type !== 'Withdrawal' && t.type !== 'LevelUpgrade')
-      .reduce((sum, t) => sum + t.amount, 0);
-    const totalWithdrawn = userTransactions
-      .filter(t => t.type === 'Withdrawal')
-      .reduce((sum, t) => sum + t.amount, 0);
+    // Check balances locally
+    const wallet = walletType === 'Main' ? mainWallet : affiliateWallet;
+    if (!wallet) return { success: false, message: 'Wallet not found' };
     
-    const activityBalance = Math.max(0, activityIncome - totalWithdrawn);
-
-    if (activityBalance < minWithdraw) {
-      return { success: false, message: `Minimum activity balance of ₦${minWithdraw.toLocaleString()} required. Referral earnings do not count towards this threshold.` };
-    }
-
-    if (!wallet || wallet.active_balance < amount) {
-      return { success: false, message: 'Insufficient active balance.' };
-    }
-
-    // Submit Request to Supabase RPC & Local State
-    SupabaseService.requestWithdrawalRPC('usr_willie', bankId, accountNum, accountName, amount);
-
-    const requestId = 'wdr_' + Math.random().toString(36).substr(2, 9);
-    const newRequest: WithdrawalRequest = {
-      id: requestId,
-      user_id: 'usr_willie',
-      bank_id: bankId,
-      account_number: accountNum,
-      account_name: accountName,
-      amount,
-      status: 'Pending',
-      created_at: new Date().toISOString()
-    };
-
-    // Add transaction and withdrawal request (deduct balance instantly)
-    addTransaction('usr_willie', 'Withdrawal', amount, `Withdrawal of ₦${amount.toLocaleString()} to ${accountName} (${accountNum})`, 'Pending');
-
-    updateDB((db) => {
-      db.withdrawal_requests.unshift(newRequest);
-      db.notifications.unshift({
-        id: 'nt_w_' + Math.random().toString(36).substr(2, 9),
-        user_id: 'usr_willie',
-        title: 'Withdrawal Pending',
-        message: `Your cash-out request of ₦${amount.toLocaleString()} is processing. Usually takes 24 hours.`,
-        read: false,
-        type: 'Wallet',
-        created_at: new Date().toISOString()
-      });
-    });
-
-    setDbState(loadDB());
-    return { success: true, message: 'Withdrawal request submitted! Sent to verification queue.' };
+    const balance = currency === 'SB' ? wallet.balance_sb : wallet.balance_usdt;
+    if (balance < amount) return { success: false, message: 'Insufficient balance' };
+    
+    const res = await SupabaseService.requestWithdrawalRPC(
+      user.id,
+      bankId || '',
+      accountNum || '',
+      accountName || '',
+      amount
+    );
+    refreshState();
+    
+    return { success: res.success, message: res.message || 'Withdrawal requested' };
   };
 
-  // Toggle Dark Mode
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
 
-  // ADMIN METHODS
-  const approveWithdrawal = (id: string) => {
-    updateDB((db) => {
-      const request = db.withdrawal_requests.find(r => r.id === id);
-      if (request) {
-        request.status = 'Approved';
-        
-        // Find matching transaction in logs to set Success
-        const tx = db.transactions.find(
-          t => t.type === 'Withdrawal' && t.amount === request.amount && t.status === 'Pending'
-        );
-        if (tx) tx.status = 'Success';
-
-        // Add verification log
-        db.activity_logs.unshift({
-          id: 'act_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'adm_1',
-          action: `Approved withdrawal ID: ${id} for ₦${request.amount}`,
-          ip: '127.0.0.1',
-          user_agent: 'System Admin Panel',
-          timestamp: new Date().toISOString()
-        });
-
-        db.notifications.unshift({
-          id: 'nt_wa_' + Math.random().toString(36).substr(2, 9),
-          user_id: request.user_id,
-          title: 'Withdrawal Approved',
-          message: `Your cash-out of ₦${request.amount.toLocaleString()} has been fully settled by admin!`,
-          read: false,
-          type: 'Wallet',
-          created_at: new Date().toISOString()
-        });
-      }
-    });
-    setDbState(loadDB());
-  };
-
-  const rejectWithdrawal = (id: string) => {
-    updateDB((db) => {
-      const request = db.withdrawal_requests.find(r => r.id === id);
-      if (request) {
-        request.status = 'Rejected';
-        
-        // Update matching transaction status
-        const tx = db.transactions.find(
-          t => t.type === 'Withdrawal' && t.amount === request.amount && t.status === 'Pending'
-        );
-        if (tx) tx.status = 'Failed';
-
-        // Return cash to user wallet
-        const wallet = db.wallets.find(w => w.user_id === request.user_id);
-        if (wallet) {
-          wallet.active_balance += request.amount;
-        }
-
-        db.activity_logs.unshift({
-          id: 'act_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'adm_1',
-          action: `Rejected withdrawal ID: ${id}. Returned ₦${request.amount}`,
-          ip: '127.0.0.1',
-          user_agent: 'System Admin Panel',
-          timestamp: new Date().toISOString()
-        });
-
-        db.notifications.unshift({
-          id: 'nt_wr_' + Math.random().toString(36).substr(2, 9),
-          user_id: request.user_id,
-          title: 'Withdrawal Rejected',
-          message: `Your payout of ₦${request.amount.toLocaleString()} was rejected by system. Funds returned to balance.`,
-          read: false,
-          type: 'Wallet',
-          created_at: new Date().toISOString()
-        });
-      }
-    });
-    setDbState(loadDB());
-  };
-
-  const banUser = (userId: string) => {
-    updateDB((db) => {
-      const user = db.users.find(u => u.id === userId);
-      if (user) {
-        user.status = 'Banned';
-        db.activity_logs.unshift({
-          id: 'act_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'adm_1',
-          action: `Banned User ID: ${userId}`,
-          ip: '127.0.0.1',
-          user_agent: 'System Admin Panel',
-          timestamp: new Date().toISOString()
-        });
-      }
-    });
-    setDbState(loadDB());
-  };
-
-  const unbanUser = (userId: string) => {
-    updateDB((db) => {
-      const user = db.users.find(u => u.id === userId);
-      if (user) {
-        user.status = 'Active';
-        db.activity_logs.unshift({
-          id: 'act_' + Math.random().toString(36).substr(2, 9),
-          user_id: 'adm_1',
-          action: `Unbanned User ID: ${userId}`,
-          ip: '127.0.0.1',
-          user_agent: 'System Admin Panel',
-          timestamp: new Date().toISOString()
-        });
-      }
-    });
-    setDbState(loadDB());
-  };
-
-  const updateUserLevel = (userId: string, levelId: string) => {
-    updateDB((db) => {
-      const u = db.users.find(user => user.id === userId);
-      if (u) {
-        u.level_id = levelId;
-      }
-    });
-    refreshState();
-  };
-
-  const adjustUserBalance = (userId: string, amount: number, isCredit: boolean, reason: string) => {
-    addTransaction(
-      userId,
-      isCredit ? 'TaskReward' : 'Withdrawal',
-      amount,
-      `Admin Adjustment: ${reason}`,
-      'Success'
-    );
-    refreshState();
-  };
-
-  const addTask = (taskData: Omit<Task, 'id'>) => {
-    updateDB((db) => {
-      const newTask: Task = {
-        ...taskData,
-        id: 'tsk_' + Math.random().toString(36).substr(2, 9)
-      };
-      db.tasks.unshift(newTask);
-    });
-    refreshState();
-  };
-
-  const deleteTask = (taskId: string) => {
-    updateDB((db) => {
-      db.tasks = db.tasks.filter(t => t.id !== taskId);
-    });
-    refreshState();
-  };
-
-  const toggleTaskStatus = (taskId: string) => {
-    updateDB((db) => {
-      const task = db.tasks.find(t => t.id === taskId);
-      if (task) {
-        task.status = task.status === 'Active' ? 'Inactive' : 'Active';
-      }
-    });
-    refreshState();
-  };
-
-  const updateSystemSetting = (key: string, value: string) => {
-    updateDB((db) => {
-      const setting = db.system_settings.find(s => s.key === key);
-      if (setting) {
-        setting.value = value;
-      } else {
-        db.system_settings.push({
-          id: 'setting_' + Math.random().toString(36).substr(2, 9),
-          key,
-          value
-        });
-      }
-    });
-    refreshState();
-  };
-
-  const updateLevelConfig = (updatedLevel: Level) => {
-    updateDB((db) => {
-      const idx = db.levels.findIndex(l => l.id === updatedLevel.id);
-      if (idx !== -1) {
-        db.levels[idx] = updatedLevel;
-      }
-    });
-    refreshState();
-  };
-
-  const resetDatabase = () => {
-    localStorage.removeItem('taskcash_mock_db');
-    localStorage.removeItem('taskcash_onboarding_done');
-    setOnboardingCompleted(false);
-    setActiveTab('Onboarding');
-    setDbState(loadDB());
-  };
-
-  const hasClaimedDailyBonus = (() => {
-    const today = new Date().toDateString();
-    const lastClaim = dbState.daily_rewards.find(r => r.user_id === 'usr_willie');
-    return !!(lastClaim && new Date(lastClaim.claimed_at).toDateString() === today);
-  })();
-
-  const dailyStreakDay = (dbState.daily_rewards.length % 7) + 1;
-
   return (
-    <AppContext.Provider
-      value={{
-        user: currentUser,
-        wallet: currentWallet,
-        transactions: userTransactions,
-        levels: dbState.levels,
-        tasks: dbState.tasks,
-        taskCategories: dbState.task_categories,
-        rewardedAds: dbState.rewarded_ads,
-        withdrawalRequests: dbState.withdrawal_requests,
-        banks: dbState.banks,
-        notifications: dbState.notifications.filter(n => n.user_id === 'usr_willie'),
-        referrals: dbState.referrals,
-        fraudLogs: dbState.fraud_logs,
-        postbackLogs: dbState.postback_logs,
-        sdkLogs: dbState.sdk_logs,
-        userBankDetails: dbState.user_bank_details,
-        referralMilestones: dbState.referral_milestones,
-        systemSettings: dbState.system_settings,
-        users: dbState.users,
-        
-        onboardingCompleted,
-        activeTab,
-        activeAd,
-        darkMode,
-
-        hasClaimedDailyBonus,
-        dailyStreakDay,
-        
-        refreshState,
-        setTab,
-        skipOnboarding,
-        playAd,
-        triggerInAppAd,
-        submitTaskProof,
-        claimDailyBonus,
-        claimWelcomeBonus,
-        claimCommunityBonus,
-        verifyEmail,
-        verifyPhone,
-        saveBankDetails,
-        requestWithdrawal,
-        toggleDarkMode,
-        
-        // Admin
-        approveWithdrawal,
-        rejectWithdrawal,
-        banUser,
-        unbanUser,
-        updateUserLevel,
-        adjustUserBalance,
-        addTask,
-        deleteTask,
-        toggleTaskStatus,
-        updateSystemSetting,
-        updateLevelConfig,
-        resetDatabase
-      }}
-    >
+    <AppContext.Provider value={{
+      user, mainWallet, affiliateWallet, transactions, levels, tasks, taskCategories, 
+      rewardedAds, withdrawalRequests, banks, notifications, referrals, systemSettings,
+      isLoading, onboardingCompleted, activeTab, activeAd, darkMode, hasClaimedDailyBonus, dailyStreakDay,
+      refreshState, setTab, skipOnboarding, playAd, completeAd, setActiveAd, triggerInAppAd,
+      submitTaskProof, claimDailyBonus, claimWelcomeBonus, claimCommunityBonus, verifyEmail, verifyPhone,
+      saveBankDetails, requestWithdrawal, toggleDarkMode
+    }}>
       {children}
     </AppContext.Provider>
   );

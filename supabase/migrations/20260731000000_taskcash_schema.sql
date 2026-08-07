@@ -1,6 +1,6 @@
--- TaskCash Supabase Production Database Schema Migration
+-- SwagBucks Supabase Production Database Schema Migration
 -- Migration ID: 20260731000000_taskcash_schema
--- Created for TaskCash Telegram Mini App
+-- Created for SwagBucks Telegram Mini App
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -14,6 +14,8 @@ CREATE TYPE task_badge_type AS ENUM ('External Link', 'Sponsored', 'Standard');
 CREATE TYPE notification_type_enum AS ENUM ('System', 'Wallet', 'Task', 'Referral');
 CREATE TYPE severity_level_enum AS ENUM ('Low', 'Medium', 'High');
 CREATE TYPE admin_role_enum AS ENUM ('Admin', 'Moderator');
+CREATE TYPE wallet_type_enum AS ENUM ('Main', 'Affiliate');
+CREATE TYPE currency_type_enum AS ENUM ('SB', 'USDT');
 
 -- 1. Levels Table
 CREATE TABLE IF NOT EXISTS public.levels (
@@ -25,7 +27,8 @@ CREATE TABLE IF NOT EXISTS public.levels (
     max_daily_ads_cat_b INTEGER NOT NULL DEFAULT 5,
     max_daily_ads_cat_c INTEGER NOT NULL DEFAULT 5,
     max_daily_tasks INTEGER NOT NULL DEFAULT 10,
-    min_withdrawal NUMERIC(12, 2) NOT NULL DEFAULT 30000.00,
+    min_withdrawal_sb NUMERIC(12, 2) NOT NULL DEFAULT 30000.00,
+    min_withdrawal_usdt NUMERIC(12, 2) NOT NULL DEFAULT 20.00,
     req_account_age INTEGER NOT NULL DEFAULT 30,
     req_streak INTEGER NOT NULL DEFAULT 20,
     req_ads INTEGER NOT NULL DEFAULT 300,
@@ -56,14 +59,17 @@ CREATE TABLE IF NOT EXISTS public.users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 3. Wallets Table
+-- 3. Wallets Table (Main and Affiliate)
 CREATE TABLE IF NOT EXISTS public.wallets (
     id TEXT PRIMARY KEY DEFAULT ('wall_' || substr(md5(random()::text), 1, 12)),
-    user_id TEXT NOT NULL UNIQUE REFERENCES public.users(id) ON DELETE CASCADE,
-    active_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (active_balance >= 0),
-    lifetime_earnings NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (lifetime_earnings >= 0),
-    pending_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (pending_balance >= 0),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    wallet_type wallet_type_enum NOT NULL DEFAULT 'Main',
+    balance_sb NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (balance_sb >= 0),
+    balance_usdt NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (balance_usdt >= 0),
+    lifetime_sb NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (lifetime_sb >= 0),
+    lifetime_usdt NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (lifetime_usdt >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(user_id, wallet_type)
 );
 
 -- 4. Transactions Ledger Table
@@ -72,6 +78,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     wallet_id TEXT NOT NULL REFERENCES public.wallets(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     type transaction_type_enum NOT NULL,
+    currency currency_type_enum NOT NULL DEFAULT 'SB',
     amount NUMERIC(12, 2) NOT NULL,
     status transaction_status_enum NOT NULL DEFAULT 'Success',
     description TEXT NOT NULL,
@@ -92,6 +99,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     id TEXT PRIMARY KEY DEFAULT ('task_' || substr(md5(random()::text), 1, 12)),
     title TEXT NOT NULL,
     category_id TEXT NOT NULL REFERENCES public.task_categories(id) ON DELETE CASCADE,
+    reward_type currency_type_enum NOT NULL DEFAULT 'SB',
     reward_amount NUMERIC(12, 2) NOT NULL,
     description TEXT NOT NULL,
     link TEXT NOT NULL,
@@ -119,6 +127,7 @@ CREATE TABLE IF NOT EXISTS public.rewarded_ads (
     name TEXT NOT NULL,
     type TEXT NOT NULL,
     category TEXT NOT NULL DEFAULT 'None',
+    reward_type currency_type_enum NOT NULL DEFAULT 'SB',
     reward_amount NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     watch_time_sec INTEGER NOT NULL DEFAULT 15,
     remaining_views INTEGER NOT NULL DEFAULT 999
@@ -139,6 +148,7 @@ CREATE TABLE IF NOT EXISTS public.daily_rewards (
     id TEXT PRIMARY KEY DEFAULT ('dr_' || substr(md5(random()::text), 1, 12)),
     user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     day_number INTEGER NOT NULL CHECK (day_number BETWEEN 1 AND 7),
+    reward_type currency_type_enum NOT NULL DEFAULT 'SB',
     amount NUMERIC(12, 2) NOT NULL,
     claimed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     claimed_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -167,10 +177,13 @@ CREATE TABLE IF NOT EXISTS public.user_bank_details (
 CREATE TABLE IF NOT EXISTS public.withdrawal_requests (
     id TEXT PRIMARY KEY DEFAULT ('wdr_' || substr(md5(random()::text), 1, 12)),
     user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-    bank_id TEXT NOT NULL REFERENCES public.banks(id),
-    account_number TEXT NOT NULL,
-    account_name TEXT NOT NULL,
+    wallet_type wallet_type_enum NOT NULL DEFAULT 'Main',
+    currency currency_type_enum NOT NULL DEFAULT 'SB',
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    bank_id TEXT REFERENCES public.banks(id),
+    account_number TEXT,
+    account_name TEXT,
+    trc20_address TEXT,
     status withdrawal_status_enum NOT NULL DEFAULT 'Pending',
     admin_notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -202,6 +215,7 @@ CREATE TABLE IF NOT EXISTS public.referral_earnings (
     id TEXT PRIMARY KEY DEFAULT ('refe_' || substr(md5(random()::text), 1, 12)),
     referrer_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     referral_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    currency currency_type_enum NOT NULL DEFAULT 'SB',
     amount NUMERIC(12, 2) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -210,6 +224,7 @@ CREATE TABLE IF NOT EXISTS public.referral_earnings (
 CREATE TABLE IF NOT EXISTS public.referral_milestones (
     id TEXT PRIMARY KEY,
     required_referrals INTEGER NOT NULL,
+    reward_type currency_type_enum NOT NULL DEFAULT 'SB',
     reward_amount NUMERIC(12, 2) NOT NULL,
     title TEXT NOT NULL
 );
@@ -293,6 +308,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_
 CREATE INDEX IF NOT EXISTS idx_transactions_wallet_id ON public.transactions(wallet_id);
 CREATE INDEX IF NOT EXISTS idx_ad_views_user_id ON public.ad_views(user_id);
 CREATE INDEX IF NOT EXISTS idx_withdrawal_requests_user_id ON public.withdrawal_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_wallets_user_id_type ON public.wallets(user_id, wallet_type);
 
 -- ENABLE ROW LEVEL SECURITY (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -308,48 +324,3 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public tasks read access" ON public.tasks FOR SELECT USING (status = 'Active');
 CREATE POLICY "Public categories read access" ON public.task_categories FOR SELECT USING (true);
 CREATE POLICY "Public levels read access" ON public.levels FOR SELECT USING (true);
-
--- SEED INITIAL SYSTEM DATA
-INSERT INTO public.levels (id, name, cost, earning_multiplier, max_daily_ads_cat_a, max_daily_ads_cat_b, max_daily_ads_cat_c, max_daily_tasks, min_withdrawal, req_account_age, req_streak, req_ads, req_tasks, req_referrals, benefits)
-VALUES 
-('lvl_1', 'Explorer', 0, 1.0, 10, 5, 5, 10, 30000, 30, 20, 300, 100, 0, '["Withdrawal: ₦30,000", "20 rewarded videos/day", "10 normal tasks/day", "Standard earning rate"]'::jsonb),
-('lvl_2', 'Active', 0, 1.2, 15, 8, 7, 15, 25000, 30, 15, 150, 50, 5, '["Withdrawal: ₦25,000", "30 rewarded videos/day", "15 tasks/day", "Higher daily earning limit", "5% referral commission"]'::jsonb),
-('lvl_3', 'Pro', 0, 1.5, 20, 10, 10, 20, 20000, 30, 30, 400, 150, 20, '["Withdrawal: ₦20,000", "40 rewarded videos/day", "20 tasks/day", "Higher referral commission", "Exclusive campaigns"]'::jsonb),
-('lvl_4', 'Elite', 0, 2.0, 30, 15, 15, 30, 15000, 30, 60, 1000, 300, 50, '["Withdrawal: ₦15,000", "60 rewarded videos/day", "30 tasks/day", "Highest earning rate", "Priority withdrawal review", "VIP campaigns"]'::jsonb)
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.task_categories (id, name, icon) VALUES 
-('cat_explore', 'Explore & Engage', 'explore'),
-('cat_telegram', 'Telegram', 'send'),
-('cat_youtube', 'YouTube', 'video_library'),
-('cat_tiktok', 'TikTok', 'play_arrow'),
-('cat_x', 'X / Twitter', 'alternate_email')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.tasks (id, title, category_id, reward_amount, description, link, status, badge, button_text, icon) VALUES 
-('task_telegram_community', 'Join Our Telegram Community', 'cat_telegram', 500, 'Join our official Telegram news channel to get early payout alerts, daily promo codes, and updates.', 'https://t.me/taskcash_official', 'Active', 'Standard', 'Join & Claim', 'send'),
-('task_exp_1', 'Explore Featured Content', 'cat_explore', 250, 'Open the featured page and explore the available content.', 'https://omg10.com/4/7016980', 'Active', 'External Link', 'View & Explore', 'explore'),
-('task_exp_2', 'Discover Something New', 'cat_explore', 300, 'Visit the external page and engage with content that interests you.', 'https://omg10.com/4/11285913', 'Active', 'Sponsored', 'Open & Discover', 'travel_explore'),
-('task_exp_3', 'Visit Featured Page', 'cat_explore', 200, 'Open this page and take a look at the content available.', 'https://omg10.com/4/7580237', 'Active', 'External Link', 'Visit & Explore', 'language'),
-('task_exp_4', 'Explore Recommended Content', 'cat_explore', 280, 'Visit the page and interact naturally with any content you find useful.', 'https://omg10.com/4/7566097', 'Active', 'Sponsored', 'Open & Engage', 'recommend'),
-('task_exp_5', 'Discover a New Offer', 'cat_explore', 350, 'Open the featured destination and learn more about what is available.', 'https://omg10.com/4/6921286', 'Active', 'External Link', 'Explore Offer', 'local_offer'),
-('task_exp_6', 'Check Out Featured Content', 'cat_explore', 220, 'Visit this external page and discover more.', 'https://omg10.com/4/7580236', 'Active', 'Sponsored', 'View Page', 'launch')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.banks (id, name, code) VALUES 
-('bank_opay', 'OPay Digital Bank', '999992'),
-('bank_palmpay', 'PalmPay', '999991'),
-('bank_kuda', 'Kuda Microfinance Bank', '090267'),
-('bank_gtb', 'Guaranty Trust Bank (GTB)', '000013'),
-('bank_zenith', 'Zenith Bank', '000015'),
-('bank_access', 'Access Bank', '000014')
-ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO public.system_settings (key, value) VALUES 
-('welcome_bonus_amount', '500'),
-('telegram_task_reward', '500'),
-('level1_withdrawal_target', '30000'),
-('reward_cat_A', '35'),
-('reward_cat_B', '25'),
-('reward_cat_C', '20')
-ON CONFLICT (key) DO NOTHING;

@@ -33,7 +33,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   };
 
   const gradients = [
-    'from-emerald-500 to-teal-600',
+    'from-blue-500 to-teal-600',
     'from-primary to-blue-600',
     'from-amber-500 to-orange-600',
     'from-purple-500 to-indigo-600'

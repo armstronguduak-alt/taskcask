@@ -3,12 +3,12 @@ import { useApp } from '../context/AppContext';
 
 export const WatchEarn: React.FC = () => {
   const { 
-    wallet, 
+    mainWallet, 
     rewardedAds, 
     playAd, 
     levels,
     user,
-    sdkLogs,
+    transactions,
     systemSettings
   } = useApp();
 
@@ -16,22 +16,22 @@ export const WatchEarn: React.FC = () => {
 
   // Calculate daily progress across all categories
   const today = new Date().toDateString();
-  const adsWatchedToday = sdkLogs.filter(
-    log => new Date(log.timestamp).toDateString() === today && log.action === 'AD_PLAY_COMPLETE_SUCCESS'
+  const adsWatchedToday = transactions.filter(
+    t => new Date(t.timestamp).toDateString() === today && t.type === 'AdViewImpressions'
   ).length;
-  const maxDailyAds = userLevel.max_daily_ads_cat_a + userLevel.max_daily_ads_cat_b + userLevel.max_daily_ads_cat_c;
+  const maxDailyAds = (userLevel?.max_daily_ads_cat_a || 0) + (userLevel?.max_daily_ads_cat_b || 0) + (userLevel?.max_daily_ads_cat_c || 0);
 
   return (
-    <div className="flex-grow pb-32">
+    <div className="flex-grow pb-32 bg-[#f8f9ff] dark:bg-[#09090b]">
       {/* Top Navigation Bar */}
       <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
           <div className="flex items-center gap-2">
-            <h1 className="font-bold text-lg text-primary dark:text-[#62df7d]">Watch & Earn</h1>
+            <h1 className="font-bold text-lg text-[#2563eb]">Watch & Earn</h1>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 rounded-full">
-            <span className="material-symbols-outlined text-primary text-[16px] font-fill">account_balance_wallet</span>
-            <span className="text-xs font-bold text-primary">₦{(wallet?.active_balance || 0).toLocaleString()}</span>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">
+            <span className="material-symbols-outlined text-[#2563eb] text-[16px] font-fill">account_balance_wallet</span>
+            <span className="text-xs font-bold text-[#2563eb]">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</span>
           </div>
         </div>
       </nav>
@@ -56,7 +56,7 @@ export const WatchEarn: React.FC = () => {
             </button>
             <div className="text-white">
               <h3 className="font-bold text-sm">Play High-Yield Campaign</h3>
-              <p className="text-[10px] text-gray-300 mt-0.5">Earn up to ₦35.00 per 15-second ad</p>
+              <p className="text-[10px] text-gray-300 mt-0.5">Earn up to 35 SB per 15-second ad</p>
             </div>
           </div>
         </section>
@@ -65,12 +65,12 @@ export const WatchEarn: React.FC = () => {
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-2">
           <div className="flex justify-between items-center text-xs">
             <span className="font-bold text-on-surface dark:text-gray-300">Daily Task Progress</span>
-            <span className="font-bold text-primary dark:text-[#62df7d]">{adsWatchedToday}/{maxDailyAds}</span>
+            <span className="font-bold text-[#2563eb]">{adsWatchedToday}/{maxDailyAds}</span>
           </div>
           <div className="w-full h-2 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" 
-              style={{ width: `${Math.min(100, (adsWatchedToday / maxDailyAds) * 100)}%` }}
+              className="h-full bg-gradient-to-r from-blue-500 to-[#2563eb] rounded-full transition-all duration-500" 
+              style={{ width: `${Math.min(100, maxDailyAds > 0 ? (adsWatchedToday / maxDailyAds) * 100 : 0)}%` }}
             />
           </div>
         </section>
@@ -80,25 +80,25 @@ export const WatchEarn: React.FC = () => {
           <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Available Ad Campaigns</h3>
           
           <div className="space-y-4">
-            {rewardedAds.filter(a => a.type !== 'InAppInterstitial').filter((ad) => {
+            {rewardedAds.filter((ad) => {
               const enabledSetting = systemSettings.find(s => s.key === `enabled_cat_${ad.category}`)?.value;
               return enabledSetting !== 'false';
             }).map((ad) => {
               const rewardSetting = systemSettings.find(s => s.key === `reward_cat_${ad.category}`)?.value;
               const baseReward = rewardSetting ? parseFloat(rewardSetting) : ad.reward_amount;
-              const multipliedReward = Math.round(baseReward * userLevel.earning_multiplier);
+              const multipliedReward = Math.round(baseReward * (userLevel?.earning_multiplier || 1));
               
-              const catLimit = ad.category === 'A' ? userLevel.max_daily_ads_cat_a :
-                               ad.category === 'B' ? userLevel.max_daily_ads_cat_b :
-                               userLevel.max_daily_ads_cat_c;
+              const catLimit = ad.category === 'A' ? userLevel?.max_daily_ads_cat_a || 0 :
+                               ad.category === 'B' ? userLevel?.max_daily_ads_cat_b || 0 :
+                               userLevel?.max_daily_ads_cat_c || 0;
               
-              const catWatched = sdkLogs.filter(
-                log => new Date(log.timestamp).toDateString() === today && 
-                       log.action === 'AD_PLAY_COMPLETE_SUCCESS' &&
-                       rewardedAds.find(a => a.id === log.ad_id)?.category === ad.category
+              const catWatched = transactions.filter(
+                t => new Date(t.timestamp).toDateString() === today && 
+                     t.type === 'AdViewImpressions' && 
+                     t.description.includes(ad.category)
               ).length;
 
-              const limitReached = catWatched >= catLimit;
+              const limitReached = catLimit > 0 && catWatched >= catLimit;
 
               return (
                 <div 
@@ -106,21 +106,24 @@ export const WatchEarn: React.FC = () => {
                   className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-4 shadow-sm flex items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                      ad.type === 'Interstitial' ? 'bg-primary/10 text-primary' : 'bg-amber-500/10 text-amber-500'
-                    }`}>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[#2563eb]/10 text-[#2563eb]">
                       <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        {ad.type === 'Interstitial' ? 'play_circle' : 'ad_group'}
+                        play_circle
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">Watch a video (Cat {ad.category})</h4>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-xs text-on-surface dark:text-gray-200">Watch Video (Cat {ad.category})</h4>
+                        <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[8px] font-black uppercase rounded-md border border-blue-500/20">
+                          In-App Interstitial
+                        </span>
+                      </div>
                       <p className="text-[10px] text-on-surface-variant dark:text-gray-400 mt-0.5 flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-[12px]">task_alt</span>
                         Progress: {catWatched}/{catLimit}
                       </p>
                       <span className="inline-block px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[8px] font-extrabold uppercase rounded-md mt-1">
-                        ₦{multipliedReward.toFixed(2)} reward
+                        {multipliedReward} SB reward
                       </span>
                     </div>
                   </div>
@@ -131,9 +134,7 @@ export const WatchEarn: React.FC = () => {
                     className={`px-4 py-2.5 rounded-full font-bold text-xs shadow-md active:scale-95 transition-all duration-150 flex items-center gap-1.5 ${
                       limitReached
                         ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 cursor-not-allowed shadow-none'
-                        : ad.type === 'Interstitial'
-                          ? 'bg-primary text-white shadow-primary/20'
-                          : 'bg-amber-500 text-white shadow-amber-500/20'
+                        : 'bg-[#2563eb] text-zinc-900 shadow-[#2563eb]/20'
                     }`}
                   >
                     <span>{limitReached ? 'Completed' : 'Watch'}</span>

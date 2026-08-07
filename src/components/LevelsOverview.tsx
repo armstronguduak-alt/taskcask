@@ -1,22 +1,20 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import type { Level } from '../db/mockDb';
+import type { Level } from '../types';
 
 interface LevelsOverviewProps {
   onClose?: () => void;
 }
 
 export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
-  const { user, levels, users, systemSettings } = useApp();
+  const { user, levels, referrals, systemSettings } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0] || {} as Level;
   const currentLevelIndex = levels.findIndex(l => l.id === userLevel.id);
 
   // Active Referrals requirement check
-  const referralReqSetting = systemSettings.find(s => s.key === 'referral_active_ads_req')?.value;
-  const activeAdsReq = referralReqSetting ? parseInt(referralReqSetting) : 10;
-  const activeReferralsCount = users.filter(
-    u => u.referrer_id === user?.id && (u.total_ads_watched || 0) >= activeAdsReq
+  const activeReferralsCount = referrals.filter(
+    r => r.referrer_id === user?.id && (r.referral_status === 'Active' || r.referral_status === 'Qualified')
   ).length;
 
   const userStreak = user?.login_streak || 0;
@@ -38,7 +36,7 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
       case 'diamond':
         return 'from-indigo-400 to-purple-600 text-purple-100 border-purple-300/40';
       default:
-        return 'from-primary to-blue-600 text-white border-primary/30';
+        return 'from-[#2563eb] to-blue-600 text-zinc-900 border-[#2563eb]/30';
     }
   };
 
@@ -68,12 +66,12 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
       </div>
 
       {/* Current Level Summary Highlight */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl p-4 flex justify-between items-center">
+      <div className="bg-gradient-to-r from-[#2563eb]/10 via-[#2563eb]/5 to-transparent border border-[#2563eb]/20 rounded-2xl p-4 flex justify-between items-center">
         <div>
-          <span className="text-[9px] font-extrabold uppercase tracking-widest text-primary">Your Current Status</span>
+          <span className="text-[9px] font-extrabold uppercase tracking-widest text-[#2563eb]">Your Current Status</span>
           <h4 className="text-lg font-black text-on-surface dark:text-white flex items-center gap-2 mt-0.5">
             {userLevel.name || 'Bronze Tier'}
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-white font-bold">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[#2563eb] text-zinc-900 font-bold">
               {userLevel.earning_multiplier || 1.0}x Earnings
             </span>
           </h4>
@@ -84,7 +82,7 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
           </p>
         </div>
         <div className="text-right">
-          <span className="material-symbols-outlined text-4xl text-primary animate-pulse">
+          <span className="material-symbols-outlined text-4xl text-[#2563eb] animate-pulse">
             military_tech
           </span>
         </div>
@@ -97,7 +95,7 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
             <h5 className="text-xs font-bold text-on-surface dark:text-gray-200 uppercase tracking-wide">
               Road to {nextLevel.name}
             </h5>
-            <span className="text-[10px] text-primary font-bold">Requirements</span>
+            <span className="text-[10px] text-[#2563eb] font-bold">Requirements</span>
           </div>
 
           {/* Login Streak */}
@@ -122,7 +120,7 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
             </div>
             <div className="w-full h-2 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-primary transition-all duration-500" 
+                className="h-full bg-[#2563eb] transition-all duration-500" 
                 style={{ width: `${Math.min(100, (userAds / (nextLevel.req_ads || 1)) * 100)}%` }} 
               />
             </div>
@@ -136,7 +134,7 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
             </div>
             <div className="w-full h-2 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-emerald-500 transition-all duration-500" 
+                className="h-full bg-blue-500 transition-all duration-500" 
                 style={{ width: `${Math.min(100, (userTasks / (nextLevel.req_tasks || 1)) * 100)}%` }} 
               />
             </div>
@@ -174,12 +172,12 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
                 key={lvl.id}
                 className={`relative rounded-2xl p-4 border transition-all ${
                   isCurrent 
-                    ? 'border-primary dark:border-primary/80 ring-2 ring-primary/20 bg-white dark:bg-zinc-900 shadow-md' 
+                    ? 'border-[#2563eb] dark:border-[#2563eb]/80 ring-2 ring-[#2563eb]/20 bg-white dark:bg-zinc-900 shadow-md' 
                     : 'border-gray-100 dark:border-zinc-800/80 bg-gray-50/50 dark:bg-zinc-800/30'
                 }`}
               >
                 {isCurrent && (
-                  <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-primary text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
+                  <span className="absolute -top-2.5 right-4 px-2.5 py-0.5 rounded-full bg-[#2563eb] text-zinc-900 text-[9px] font-black uppercase tracking-wider shadow-sm">
                     CURRENT LEVEL
                   </span>
                 )}
@@ -189,14 +187,14 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
                     <span className={`inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r ${gradientClass} shadow-sm`}>
                       {lvl.name}
                     </span>
-                    <p className="text-xs font-bold text-primary mt-2">
+                    <p className="text-xs font-bold text-[#2563eb] mt-2">
                       {lvl.earning_multiplier}x Multiplier Boost
                     </p>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-gray-400 font-bold uppercase block">Min Cashout</span>
                     <span className="text-sm font-black text-on-surface dark:text-white">
-                      ₦{(lvl.min_withdrawal || 0).toLocaleString()}
+                      {(lvl.min_withdrawal_sb || 0).toLocaleString()} SB
                     </span>
                   </div>
                 </div>
@@ -230,9 +228,9 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
 
                 {lvl.benefits && lvl.benefits.length > 0 && (
                   <div className="mt-3 text-[10px] text-gray-500 dark:text-gray-400 space-y-1 border-t border-dashed border-gray-100 dark:border-zinc-800 pt-2">
-                    {lvl.benefits.map((benefit, idx) => (
+                    {lvl.benefits.map((benefit: any, idx: number) => (
                       <div key={idx} className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-xs text-emerald-500">check_circle</span>
+                        <span className="material-symbols-outlined text-xs text-blue-500">check_circle</span>
                         <span>{benefit}</span>
                       </div>
                     ))}
