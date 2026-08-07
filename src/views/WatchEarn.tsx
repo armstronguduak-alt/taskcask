@@ -22,9 +22,9 @@ export const WatchEarn: React.FC = () => {
   const maxDailyAds = (userLevel?.max_daily_ads_cat_a || 0) + (userLevel?.max_daily_ads_cat_b || 0) + (userLevel?.max_daily_ads_cat_c || 0);
 
   return (
-    <div className="flex-grow pb-32 bg-[#f8f9ff] dark:bg-[#09090b]">
+    <div className="flex-grow pb-32 bg-transparent">
       {/* Top Navigation Bar */}
-      <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
+      <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
           <div className="flex items-center gap-2">
             <h1 className="font-bold text-lg text-[#2563eb]">Watch & Earn</h1>

@@ -67,9 +67,9 @@ export const InviteEarn: React.FC = () => {
   const totalReferralEarnings = activeReferrals.reduce((sum, r) => sum + (r.earned || 500), 0);
 
   return (
-    <div className="flex-grow pb-32">
+    <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
-      <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
+      <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
           <h1 className="font-bold text-lg text-[#2563eb] dark:text-[#2563eb]">Invite & Earn</h1>
           <div className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">

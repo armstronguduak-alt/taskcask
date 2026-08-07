@@ -17,9 +17,9 @@ export const TransactionHistory: React.FC = () => {
   });
 
   return (
-    <div className="flex-grow pb-32 bg-[#f8f9ff] dark:bg-[#09090b]">
+    <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
-      <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
+      <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex items-center gap-stack-md px-container-padding py-4 w-full">
           <button onClick={() => setTab('Dashboard')} className="ripple-active p-1 text-[#2563eb]">
             <span className="material-symbols-outlined">arrow_back</span>

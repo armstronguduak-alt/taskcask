@@ -21,9 +21,9 @@ export const UserProfile: React.FC = () => {
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
 
   return (
-    <div className="flex-grow pb-32 bg-[#f8f9ff] dark:bg-[#09090b]">
+    <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
-      <nav className="sticky top-0 w-full z-30 bg-[#f8f9ff]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900">
+      <nav className="sticky top-0 w-full z-30 bg-transparent backdrop-blur-md pt-4">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
           <h1 className="font-bold text-lg text-[#2563eb]">User Profile</h1>
         </div>
@@ -100,25 +100,7 @@ export const UserProfile: React.FC = () => {
         <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-2">
           <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400 mb-2">Account Configurations</h3>
 
-          {/* Dark Mode Switcher */}
-          <div className="flex justify-between items-center py-2 border-b border-gray-50 dark:border-zinc-800/60 pb-3">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#0051d5] dark:text-[#b4c5ff]">dark_mode</span>
-              <span className="text-xs font-bold text-on-surface dark:text-gray-200">Dark Mode Interface</span>
-            </div>
-            <button 
-              onClick={toggleDarkMode}
-              className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 ${
-                darkMode ? 'bg-[#2563eb]' : 'bg-gray-200'
-              }`}
-            >
-              <div 
-                className={`w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
-                  darkMode ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+
 
           {/* Withdraw Entry */}
           <button 

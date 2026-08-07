@@ -15,9 +15,9 @@ export const Leaderboard: React.FC = () => {
   ];
 
   return (
-    <div className="flex-grow pb-32">
+    <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
-      <nav className="sticky top-0 w-full z-30 bg-[#f8fafc]/90 dark:bg-[#09090b]/90 backdrop-blur-md border-b border-gray-200 dark:border-zinc-900">
+      <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
           <h1 className="font-bold text-lg text-primary dark:text-[#60a5fa]">Leaderboard</h1>
           <span className="material-symbols-outlined text-primary text-[24px]">emoji_events</span>

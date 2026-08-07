@@ -36,10 +36,10 @@ const AppContent: React.FC = () => {
 
   if (vpnDetected) {
     return (
-      <div className="min-h-screen bg-background dark:bg-[#09090b] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#0b1437] flex flex-col items-center justify-center p-6 text-center">
         <span className="material-symbols-outlined text-6xl text-red-500 mb-4">vpn_lock</span>
-        <h1 className="text-2xl font-bold text-on-surface dark:text-white mb-2">VPN Detected</h1>
-        <p className="text-on-surface-variant dark:text-gray-400">
+        <h1 className="text-2xl font-bold text-white mb-2">VPN Detected</h1>
+        <p className="text-blue-200">
           Our security systems detected that you are using a VPN, Proxy, or Tor network. 
           Please disable it to access SwagBucks and protect the integrity of our platform.
         </p>
@@ -69,7 +69,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="tma-container min-h-screen bg-background dark:bg-[#09090b] flex flex-col justify-between">
+    <div className="tma-container min-h-screen bg-[#0b1437] flex flex-col justify-between relative overflow-hidden">
       {/* Active Screen View */}
       <div className="flex-grow flex flex-col">
         {renderActiveView()}
