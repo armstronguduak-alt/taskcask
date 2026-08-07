@@ -163,18 +163,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setRewardedAds([
           { id: 'ad_connect', name: 'Connect wallet', type: 'wallet', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 0, remaining_views: 1 },
           { id: 'ad_monetag1', name: 'Click on the Ad after viewing', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
-          { id: 'ad_monetag2', name: 'Watch and click on ads', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
-          { id: 'ad_giga', name: 'Watch the Giga AD', type: 'giga', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
-          { id: 'ad_video', name: 'View video, then tap the AD', type: 'video', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 }
+          { id: 'ad_monetag2', name: 'Watch and click on ads', type: 'monetag', category: 'Official', reward_type: 'USDT', reward_amount: 0.05, watch_time_sec: 30, remaining_views: 1 },
+          { id: 'ad_giga', name: 'Watch the Giga AD', type: 'giga', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 45, remaining_views: 1 },
+          { id: 'ad_video', name: 'View video, then tap the AD', type: 'video', category: 'Official', reward_type: 'USDT', reward_amount: 0.10, watch_time_sec: 60, remaining_views: 1 }
         ]);
 
         setTasks([
-          { id: 't_ton1', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 9000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'ton_yellow' },
-          { id: 't_star1', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 4000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'star_yellow' },
-          { id: 't_star2', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 320000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'star_yellow' },
-          { id: 't_ton2', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 320000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'ton_blue' },
-          { id: 't_tether', title: 'Watch and click on ads', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 10000, description: '', link: '#', status: 'Active', badge: 'Standard', button_text: 'Go', icon: 'tether' },
-          { id: 't_social', title: 'Social Media Tasks', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 5000, description: '', link: '#', status: 'Active', badge: 'Standard', button_text: 'Go', icon: 'globe' }
+          { id: 't_ton1', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'USDT', reward_amount: 2.5, description: 'Send TON to partner address', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'ton_yellow' },
+          { id: 't_star1', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 4000, description: 'Donate stars on Telegram', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'star_yellow' },
+          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 1500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'globe' },
+          { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'globe' },
+          { id: 't_visit', title: 'Visit partner website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 10000, description: 'Visit and stay for 60 seconds', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'explore' },
+          { id: 't_read', title: 'Read content', category_id: 'cat_engagement', reward_type: 'USDT', reward_amount: 0.05, description: 'Read the latest blog post', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'explore' }
+        ]);
+
+        setBanks([
+          { id: 'bank_opay', name: 'OPAY (Popular)', code: '000000' },
+          { id: 'bank_palmpay', name: 'PalmPay (Popular)', code: '000000' },
+          { id: 'bank_first', name: 'First Bank', code: '000000' },
+          { id: 'bank_access', name: 'Access Bank', code: '000000' },
+          { id: 'bank_uba', name: 'UBA', code: '000000' },
+          { id: 'bank_gtb', name: 'GTBank', code: '000000' },
+          { id: 'bank_fcmb', name: 'FCMB', code: '000000' },
+          { id: 'bank_union', name: 'Union Bank', code: '000000' }
         ]);
       }
 

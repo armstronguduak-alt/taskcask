@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Task, RewardedAd } from '../types';
 import { triggerHaptic } from '../utils/haptic';
@@ -7,9 +7,7 @@ export const TaskCenter: React.FC = () => {
   const { 
     mainWallet, 
     tasks, 
-    taskCategories, 
     submitTaskProof, 
-    claimCommunityBonus,
     levels, 
     user,
     transactions,
@@ -21,60 +19,55 @@ export const TaskCenter: React.FC = () => {
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
   const today = new Date().toDateString();
 
-  // Top Level Tab State
   const [taskTab, setTaskTab] = useState<'watch' | 'other'>('watch');
 
-  // Watch Earn Logic
-  const adsWatchedToday = transactions.filter(
-    t => new Date(t.timestamp).toDateString() === today && t.type === 'AdViewImpressions'
-  ).length;
-  const maxDailyAds = (userLevel?.max_daily_ads_cat_a || 0) + (userLevel?.max_daily_ads_cat_b || 0) + (userLevel?.max_daily_ads_cat_c || 0);
+  // Watch Earn State
+  const [watchingAdId, setWatchingAdId] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
 
-  // Other Tasks Logic
+  // Other Tasks State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [activeTaskDetail, setActiveTaskDetail] = useState<Task | null>(null);
   const [proofUsername, setProofUsername] = useState('');
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingTaskId, setLoadingTaskId] = useState<string | null>(null);
-  const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
+  const [pendingTasks, setPendingTasks] = useState<Record<string, boolean>>({});
 
-  const tasksCompletedToday = transactions.filter(
-    t => t.type === 'TaskReward' && new Date(t.timestamp).toDateString() === today && t.status === 'Success'
-  ).length;
+  useEffect(() => {
+    let timer: any;
+    if (watchingAdId && countdown > 0) {
+      timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+    } else if (watchingAdId && countdown === 0) {
+      const ad = rewardedAds.find(a => a.id === watchingAdId);
+      if (ad) {
+        playAd(ad);
+      }
+      setWatchingAdId(null);
+    }
+    return () => clearTimeout(timer);
+  }, [watchingAdId, countdown, playAd, rewardedAds]);
+
+  const handlePlayAd = (ad: RewardedAd) => {
+    if (watchingAdId) return;
+    triggerHaptic('light');
+    setWatchingAdId(ad.id);
+    setCountdown(ad.watch_time_sec > 0 ? ad.watch_time_sec : 3);
+  };
 
   const filteredTasks = tasks.filter((task) => {
-    const matchesCategory = selectedCategory === 'All' || task.category_id === selectedCategory;
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           task.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
-  const exploreTasks = filteredTasks.filter(t => t.category_id === 'cat_explore');
-  const otherTasks = filteredTasks.filter(t => t.id === 'task_telegram_community' || t.category_id === 'cat_telegram');
+  const communityTasks = filteredTasks.filter(t => t.category_id === 'cat_community');
+  const engagementTasks = filteredTasks.filter(t => t.category_id === 'cat_engagement' || t.category_id === 'cat_extra');
 
   const requiresScreenshot = Boolean(
     activeTaskDetail?.requires_screenshot || 
     systemSettings?.find(s => s.key === 'require_task_screenshot')?.value === 'true'
   );
-
-  const handleOpenExternalTask = (task: Task, e: React.MouseEvent) => {
-    e.stopPropagation();
-    triggerHaptic('light');
-    setLoadingTaskId(task.id);
-
-    setTimeout(() => {
-      setLoadingTaskId(null);
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg && tg.openLink) {
-        tg.openLink(task.link);
-      } else {
-        window.open(task.link, '_blank', 'noopener,noreferrer');
-      }
-      setActiveTaskDetail(task);
-    }, 450);
-  };
 
   const handleSubmitProof = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,12 +80,28 @@ export const TaskCenter: React.FC = () => {
 
     if (result.success) {
       alert(result.message);
+      setPendingTasks(prev => ({ ...prev, [activeTaskDetail.id]: true }));
       setActiveTaskDetail(null);
       setProofUsername('');
       setScreenshotFile(null);
     } else {
       alert(result.message);
     }
+  };
+
+  const handleCompleteTask = (task: Task, e: React.MouseEvent) => {
+    e.stopPropagation();
+    triggerHaptic('light');
+    
+    // Open link
+    if (task.link && task.link !== '#') {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.openLink) tg.openLink(task.link);
+      else window.open(task.link, '_blank', 'noopener,noreferrer');
+    }
+    
+    // Open verification modal
+    setActiveTaskDetail(task);
   };
 
   return (
@@ -133,26 +142,18 @@ export const TaskCenter: React.FC = () => {
       <div className="px-container-padding pt-6 space-y-5">
         {taskTab === 'watch' ? (
           <section className="space-y-3 animate-fade-in">
-            <h3 className="font-bold text-[18px] text-white mb-3">Official</h3>
-            {rewardedAds.filter((ad) => {
-              const enabledSetting = systemSettings.find(s => s.key === `enabled_cat_${ad.category}`)?.value;
-              return enabledSetting !== 'false';
-            }).map((ad) => {
-              const rewardSetting = systemSettings.find(s => s.key === `reward_cat_${ad.category}`)?.value;
-              const baseReward = rewardSetting ? parseFloat(rewardSetting) : ad.reward_amount;
-              const multipliedReward = Math.round(baseReward * (userLevel?.earning_multiplier || 1));
-              
-              const catLimit = ad.category === 'A' ? userLevel?.max_daily_ads_cat_a || 0 :
-                               ad.category === 'B' ? userLevel?.max_daily_ads_cat_b || 0 :
-                               userLevel?.max_daily_ads_cat_c || 0;
+            {rewardedAds.map((ad) => {
+              const catLimit = ad.category === 'A' ? (userLevel?.max_daily_ads_cat_a || 10) :
+                               ad.category === 'B' ? (userLevel?.max_daily_ads_cat_b || 10) : 10;
               
               const catWatched = transactions.filter(
                 t => new Date(t.timestamp).toDateString() === today && 
                      t.type === 'AdViewImpressions' && 
-                     t.description.includes(ad.category)
+                     t.description.includes(ad.name)
               ).length;
 
-              const limitReached = catLimit > 0 && catWatched >= catLimit;
+              const limitReached = catWatched >= catLimit;
+              const isWatchingThis = watchingAdId === ad.id;
 
               let AdIcon;
               if (ad.type === 'wallet') AdIcon = <div className="text-[24px] bg-blue-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
@@ -164,21 +165,35 @@ export const TaskCenter: React.FC = () => {
               return (
                 <div 
                   key={ad.id} 
-                  className={`bg-[#1e3b7a] border border-blue-500/20 rounded-[20px] p-3 shadow-md flex items-center justify-between cursor-pointer transition-all ${limitReached ? 'opacity-50' : 'hover:bg-[#24428b] active:scale-95'}`}
-                  onClick={() => !limitReached && playAd(ad)}
+                  className={`bg-[#1e3b7a] border border-blue-500/20 rounded-[20px] p-4 shadow-md flex items-center justify-between transition-all ${limitReached ? 'opacity-60' : ''}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full">
                     {AdIcon}
-                    <div className="flex flex-col">
-                      <span className="text-[14px] text-white font-bold">{ad.name}</span>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="flex items-center text-[#fbbf24] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🪙</span> +{multipliedReward.toLocaleString()}</span>
-                        {!limitReached && <span className="flex items-center text-[#f87171] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🗝️</span> +1</span>}
-                        {limitReached && <span className="text-[10px] text-blue-300 ml-2">Done</span>}
+                    <div className="flex flex-col flex-1">
+                      <div className="flex justify-between items-center w-full">
+                        <span className="text-[14px] text-white font-bold">{ad.name}</span>
+                        <span className="text-[10px] font-bold text-blue-300 bg-blue-900/30 px-2 py-0.5 rounded-full">{catWatched}/{catLimit}</span>
+                      </div>
+                      <div className="text-[11px] text-blue-300 mt-0.5">
+                        Duration: {ad.watch_time_sec} seconds
+                      </div>
+                      <div className="flex items-center justify-between w-full mt-2">
+                        <span className="text-[12px] font-extrabold text-[#fbbf24]">
+                          Reward: {ad.reward_amount.toLocaleString()} {ad.reward_type}
+                        </span>
+                        
+                        {!limitReached && !isWatchingThis && (
+                           <button onClick={() => handlePlayAd(ad)} className="px-3 py-1 bg-[#4a72ff] text-white rounded-lg text-[11px] font-bold hover:bg-blue-600 active:scale-95 transition-all">Start</button>
+                        )}
+                        {isWatchingThis && (
+                           <button disabled className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[11px] font-bold shadow-inner">Watching... ({countdown}s)</button>
+                        )}
+                        {limitReached && (
+                           <button disabled className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-[11px] font-bold border border-green-500/30 flex items-center gap-1">Claimed <span className="material-symbols-outlined text-[12px]">check</span></button>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-blue-400 text-[20px]">chevron_right</span>
                 </div>
               );
             })}
@@ -197,143 +212,24 @@ export const TaskCenter: React.FC = () => {
               />
             </section>
 
-            <section className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button 
-                onClick={() => { triggerHaptic('selection'); setSelectedCategory('All'); }}
-                className={`px-5 py-2.5 rounded-full font-bold text-[11px] uppercase whitespace-nowrap shadow-md transition-all duration-150 ${
-                  selectedCategory === 'All'
-                    ? 'bg-[#4a72ff] text-white'
-                    : 'bg-[#1e3b7a] border border-blue-500/20 text-blue-200'
-                }`}
-              >
-                All
-              </button>
-              {taskCategories.map((cat) => (
-                <button 
-                  key={cat.id}
-                  onClick={() => { triggerHaptic('selection'); setSelectedCategory(cat.id); }}
-                  className={`px-5 py-2.5 rounded-full font-bold text-[11px] uppercase whitespace-nowrap shadow-md transition-all duration-150 ${
-                    selectedCategory === cat.id
-                      ? 'bg-[#4a72ff] text-white'
-                      : 'bg-[#1e3b7a] border border-blue-500/20 text-blue-200'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </section>
-            
-            {/* Explore Tasks */}
-            {(selectedCategory === 'All' || selectedCategory === 'cat_explore') && exploreTasks.length > 0 && (
+            {communityTasks.length > 0 && (
               <section className="space-y-3 pt-2">
-                <div className="flex items-center gap-2 mb-3">
-                   <h3 className="font-bold text-[18px] text-white">Explore Tasks</h3>
-                   <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{exploreTasks.length}</span>
-                </div>
+                <h3 className="font-bold text-[16px] text-white mb-2 border-b border-blue-500/20 pb-2">Community Tasks</h3>
                 <div className="space-y-3">
-                  {exploreTasks.map((task) => {
-                    const multipliedReward = Math.round(task.reward_amount * userLevel.earning_multiplier);
-                    const isCompleted = transactions.some(
-                      t => t.type === 'TaskReward' && t.description.includes(task.title) && t.status === 'Success'
-                    );
-
-                    let TaskIcon;
-                    if (task.icon === 'ton_yellow') TaskIcon = <div className="text-[24px] bg-yellow-400 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
-                    else if (task.icon === 'ton_blue') TaskIcon = <div className="text-[24px] bg-blue-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
-                    else if (task.icon === 'star_yellow') TaskIcon = <div className="text-[24px] bg-orange-400 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">⭐</div>;
-                    else if (task.icon === 'tether') TaskIcon = <div className="text-[24px] bg-teal-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🪙</div>;
-                    else if (task.icon === 'globe') TaskIcon = <div className="text-[24px] bg-indigo-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🌐</div>;
-                    else TaskIcon = <div className="text-[24px] bg-gray-800 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">✨</div>;
-
-                    return (
-                      <div 
-                        key={task.id} 
-                        className="bg-[#1e3b7a] border border-blue-500/20 rounded-[20px] p-3 shadow-md flex items-center justify-between cursor-pointer hover:bg-[#24428b] active:scale-95 transition-all"
-                        onClick={(e) => handleOpenExternalTask(task, e)}
-                      >
-                        <div className="flex items-center gap-3">
-                          {TaskIcon}
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[14px] text-white font-bold">{task.title}</span>
-                              {task.badge === 'Sponsored' && (
-                                <span className="bg-yellow-500/20 text-yellow-400 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full border border-yellow-500/30">Premium</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3 mt-1">
-                              <span className="flex items-center text-[#fbbf24] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🪙</span> +{multipliedReward.toLocaleString()}</span>
-                              <span className="flex items-center text-[#f87171] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🗝️</span> +{Math.max(1, Math.floor(multipliedReward / 1000))}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className="material-symbols-outlined text-blue-400 text-[20px]">chevron_right</span>
-                      </div>
-                    );
-                  })}
+                  {communityTasks.map((task) => (
+                    <TaskCard key={task.id} task={task} transactions={transactions} pendingTasks={pendingTasks} expandedTaskId={expandedTaskId} setExpandedTaskId={setExpandedTaskId} handleCompleteTask={handleCompleteTask} />
+                  ))}
                 </div>
               </section>
             )}
 
-            {/* Social Media Tasks */}
-            {(selectedCategory === 'All' || selectedCategory !== 'cat_explore') && otherTasks.length > 0 && (
+            {engagementTasks.length > 0 && (
               <section className="space-y-3 pt-2">
+                <h3 className="font-bold text-[16px] text-white mb-2 border-b border-blue-500/20 pb-2">Engagement Tasks</h3>
                 <div className="space-y-3">
-                  {otherTasks.map((task) => {
-                    const multipliedReward = Math.round(task.reward_amount * userLevel.earning_multiplier);
-                    const category = taskCategories.find(c => c.id === task.category_id);
-                    
-                    const isTelegramClaimed = Boolean(localStorage.getItem('community_bonus_claimed')) || 
-                      transactions.some(t => t.type === 'TaskReward' && (t.description.includes('Telegram Community') || t.description.includes('Join Our Telegram Community')) && t.status === 'Success');
-
-                    return (
-                      <div 
-                        key={task.id} 
-                        className="bg-[#24428b] border border-blue-500/10 rounded-2xl p-4 shadow-lg"
-                      >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-[18px] flex items-center justify-center bg-[#4a72ff]/20 text-[#4a72ff] border border-[#4a72ff]/30">
-                              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                                {category?.icon || 'send'}
-                              </span>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-[13px] text-blue-100 line-clamp-1">{task.title}</h4>
-                              <p className="text-[11px] text-blue-300 mt-0.5 line-clamp-1">
-                                {task.description}
-                              </p>
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#4a72ff]/20 text-[#4a72ff] text-[10px] font-extrabold rounded mt-1 border border-[#4a72ff]/30">
-                                +{multipliedReward} SB
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <button 
-                            disabled={isTelegramClaimed}
-                            onClick={() => {
-                              triggerHaptic('light');
-                              if (!isTelegramClaimed) {
-                                if (!isVerifyingCommunity) {
-                                  window.open(task.link || 'https://t.me/swagbucks_official', '_blank');
-                                  setIsVerifyingCommunity(true);
-                                } else {
-                                  claimCommunityBonus();
-                                  setIsVerifyingCommunity(false);
-                                }
-                              }
-                            }}
-                            className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-bold text-[13px] shadow-md active:scale-95 transition-all flex items-center gap-1.5 ${
-                              isTelegramClaimed
-                                ? 'bg-black/20 text-gray-400 cursor-not-allowed shadow-none'
-                                : 'bg-[#4a72ff] text-white hover:bg-blue-600'
-                            }`}
-                          >
-                            <span>{isTelegramClaimed ? 'Claimed' : (isVerifyingCommunity ? 'Verify' : 'Join')}</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {engagementTasks.map((task) => (
+                    <TaskCard key={task.id} task={task} transactions={transactions} pendingTasks={pendingTasks} expandedTaskId={expandedTaskId} setExpandedTaskId={setExpandedTaskId} handleCompleteTask={handleCompleteTask} />
+                  ))}
                 </div>
               </section>
             )}
@@ -415,6 +311,73 @@ export const TaskCenter: React.FC = () => {
                 {isSubmitting ? 'Submitting...' : 'Submit Proof'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Extracted Task Card Component
+const TaskCard = ({ task, transactions, pendingTasks, expandedTaskId, setExpandedTaskId, handleCompleteTask }: any) => {
+  const isCompleted = transactions.some(
+    (t: any) => t.type === 'TaskReward' && t.description.includes(task.title) && t.status === 'Success'
+  );
+  const isPending = pendingTasks[task.id] || false;
+  const isExpanded = expandedTaskId === task.id;
+
+  let TaskIcon;
+  if (task.icon === 'ton_yellow') TaskIcon = <div className="text-[24px] bg-yellow-400 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
+  else if (task.icon === 'ton_blue') TaskIcon = <div className="text-[24px] bg-blue-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
+  else if (task.icon === 'star_yellow') TaskIcon = <div className="text-[24px] bg-orange-400 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">⭐</div>;
+  else if (task.icon === 'tether') TaskIcon = <div className="text-[24px] bg-teal-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🪙</div>;
+  else if (task.icon === 'globe') TaskIcon = <div className="text-[24px] bg-indigo-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🌐</div>;
+  else if (task.icon === 'explore') TaskIcon = <div className="text-[24px] bg-purple-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🧭</div>;
+  else TaskIcon = <div className="text-[24px] bg-gray-800 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">✨</div>;
+
+  return (
+    <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg overflow-hidden">
+      <div 
+        className="flex items-start justify-between cursor-pointer"
+        onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+      >
+        <div className="flex items-start gap-3 w-full">
+          {TaskIcon}
+          <div className="flex flex-col flex-1">
+            <h4 className="font-bold text-[14px] text-white line-clamp-1">{task.title}</h4>
+            <div className="text-[12px] text-blue-200 line-clamp-1 mt-0.5">{task.description}</div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[12px] font-extrabold text-[#fbbf24]">
+                Reward: {task.reward_amount.toLocaleString()} {task.reward_type}
+              </span>
+              {!isExpanded && (
+                <span className="material-symbols-outlined text-blue-400 text-[20px]">expand_more</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Expandable Instructions & Button */}
+      {isExpanded && (
+        <div className="mt-4 pt-3 border-t border-blue-500/20 animate-fade-in">
+          <p className="text-[11px] text-blue-300 mb-4 whitespace-pre-line leading-relaxed">
+            {task.instructions || `Instructions: \n1. Click "Complete Task"\n2. Perform the required action.\n3. Return and submit your proof.`}
+          </p>
+          <div className="flex justify-end w-full">
+            {isCompleted ? (
+              <button disabled className="px-5 py-2.5 bg-green-500/20 text-green-400 rounded-xl text-[12px] font-bold border border-green-500/30 flex items-center gap-1 w-full justify-center">
+                Completed <span className="material-symbols-outlined text-[14px]">check_circle</span>
+              </button>
+            ) : isPending ? (
+              <button disabled className="px-5 py-2.5 bg-amber-500/20 text-amber-400 rounded-xl text-[12px] font-bold border border-amber-500/30 flex items-center gap-1 w-full justify-center">
+                Pending Verification <span className="material-symbols-outlined text-[14px]">hourglass_empty</span>
+              </button>
+            ) : (
+              <button onClick={(e) => handleCompleteTask(task, e)} className="px-5 py-2.5 bg-[#4a72ff] text-white rounded-xl text-[13px] font-bold shadow-lg hover:bg-blue-600 active:scale-95 transition-all w-full">
+                {task.button_text || 'Complete Task'}
+              </button>
+            )}
           </div>
         </div>
       )}

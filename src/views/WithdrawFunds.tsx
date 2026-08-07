@@ -1,29 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export const WithdrawFunds: React.FC = () => {
-  const { mainWallet, banks, user, levels, requestWithdrawal, setTab, referrals } = useApp();
+  const { mainWallet, banks, user, levels, requestWithdrawal, setTab } = useApp();
 
   const userLevel = levels?.find(l => l.id === user?.level_id) || levels?.[0] || {} as any;
-  const minWithdraw = userLevel?.min_withdrawal_sb || 0;
+  const minWithdrawSB = 30000;
+  const minWithdrawUSDT = 20;
 
+  const [walletTab, setWalletTab] = useState<'SB' | 'USDT'>('SB');
+
+  // SB Wallet Form
   const [selectedBank, setSelectedBank] = useState('');
   const [accountNum, setAccountNum] = useState('');
   const [accountName, setAccountName] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amountSB, setAmountSB] = useState('');
+
+  // USDT Wallet Form
+  const [amountUSDT, setAmountUSDT] = useState('');
+  const [trcAddress, setTrcAddress] = useState('');
+  const [trcError, setTrcError] = useState('');
+
   const [isSubmittingState, setIsSubmitting] = useState(false);
 
-  const hasMinBalance = (mainWallet?.balance_sb || 0) >= minWithdraw;
-  
-  const isEligible = hasMinBalance;
+  // Eligibility Checklist State
+  const [showEligibility, setShowEligibility] = useState(false);
+  const [eligibilitySteps, setEligibilitySteps] = useState([
+    { id: 'age', label: 'Account Age', resolved: false, success: true },
+    { id: 'streak', label: 'Login Streak', resolved: false, success: true },
+    { id: 'telegram', label: 'Telegram Joined', resolved: false, success: true },
+    { id: 'whatsapp', label: 'WhatsApp Joined', resolved: false, success: true },
+    { id: 'tasks', label: 'Completed Tasks', resolved: false, success: true },
+    { id: 'videos', label: 'Videos Watched', resolved: false, success: true },
+    { id: 'referrals', label: 'Referrals (Not counted for threshold)', resolved: false, success: true },
+  ]);
 
-  const handleWithdraw = async (e: React.FormEvent) => {
+  const sbBalance = mainWallet?.balance_sb || 0;
+  const usdtBalance = mainWallet?.balance_usdt || 0;
+  const isEligibleSB = sbBalance >= minWithdrawSB;
+  const isEligibleUSDT = usdtBalance >= minWithdrawUSDT;
+
+  const handleCheckEligibility = () => {
+    setShowEligibility(true);
+    let stepIndex = 0;
+    
+    // Reset steps first
+    setEligibilitySteps(steps => steps.map(s => ({ ...s, resolved: false })));
+
+    const interval = setInterval(() => {
+      setEligibilitySteps(steps => {
+        const newSteps = [...steps];
+        if (stepIndex < newSteps.length) {
+          newSteps[stepIndex].resolved = true;
+          // Here we would normally set success based on actual backend data
+          // For now, assume success for UI purposes.
+        }
+        return newSteps;
+      });
+      stepIndex++;
+      if (stepIndex >= eligibilitySteps.length) {
+        clearInterval(interval);
+      }
+    }, 500); // Stagger 500ms
+  };
+
+  const handleWithdrawSB = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBank || !accountNum || !accountName || !amount) return;
+    if (!selectedBank || !accountNum || !accountName || !amountSB) return;
 
-    const withdrawAmount = parseFloat(amount);
-    if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
-      alert('Please enter a valid amount.');
+    const withdrawAmount = parseFloat(amountSB);
+    if (isNaN(withdrawAmount) || withdrawAmount < minWithdrawSB) {
+      alert(`Minimum withdrawal is ${minWithdrawSB.toLocaleString()} SB.`);
+      return;
+    }
+    if (withdrawAmount > sbBalance) {
+      alert('Insufficient SB balance.');
       return;
     }
 
@@ -39,153 +90,302 @@ export const WithdrawFunds: React.FC = () => {
     }
   };
 
+  const validateTRC20 = (address: string) => {
+    if (address.startsWith('0x')) {
+      return 'ERC20 (0x) addresses are explicitly blocked. Please use a valid TRC20 address.';
+    }
+    const trc20Regex = /^T[1-9A-HJ-NP-Za-km-z]{33}$/;
+    if (!trc20Regex.test(address)) {
+      return 'Invalid TRC20 address format.';
+    }
+    return '';
+  };
+
+  const handleWithdrawUSDT = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amountUSDT || !trcAddress) return;
+
+    const withdrawAmount = parseFloat(amountUSDT);
+    if (isNaN(withdrawAmount) || withdrawAmount < minWithdrawUSDT) {
+      alert(`Minimum withdrawal is ${minWithdrawUSDT} USDT.`);
+      return;
+    }
+    if (withdrawAmount > usdtBalance) {
+      alert('Insufficient USDT balance.');
+      return;
+    }
+
+    const error = validateTRC20(trcAddress);
+    if (error) {
+      setTrcError(error);
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await requestWithdrawal('Main', 'USDT', undefined, undefined, undefined, trcAddress, withdrawAmount);
+    setIsSubmitting(false);
+
+    if (result.success) {
+      alert(result.message);
+      setTab('History');
+    } else {
+      alert(result.message);
+    }
+  };
+
+  const computeNaira = (sb: string) => {
+    const val = parseFloat(sb);
+    if (isNaN(val)) return 0;
+    // 30,000 SB = 20,000 NGN. 
+    return (val * (20000 / 30000)).toLocaleString(undefined, { maximumFractionDigits: 0 });
+  };
+
   return (
     <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
       <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex justify-between items-center px-container-padding py-4 w-full">
           <div className="flex items-center gap-stack-md">
-            <button onClick={() => setTab('Profile')} className="ripple-active p-1 text-[#2563eb]">
+            <button onClick={() => setTab('Profile')} className="ripple-active p-1 text-white">
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
-            <h1 className="font-bold text-lg text-[#2563eb]">Withdraw</h1>
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">
-            <span className="material-symbols-outlined text-[#2563eb] text-[16px] font-fill">account_balance_wallet</span>
-            <span className="text-xs font-bold text-[#2563eb]">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</span>
+            <h1 className="font-extrabold text-[22px] text-white">Withdraw</h1>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="px-container-padding pt-4 space-y-6">
+      <div className="px-container-padding pt-2 space-y-5">
         
-        {/* Balance Status */}
-        <section className="bg-gradient-to-br from-[#121212] to-[#1c1c1e] border border-zinc-800 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#2563eb]/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <p className="text-[10px] font-bold uppercase tracking-wider opacity-85 mb-1 relative z-10">Withdrawable Balance</p>
-          <h2 className="text-3xl font-extrabold tracking-tight text-[#2563eb] relative z-10">
-            {(mainWallet?.balance_sb || 0).toLocaleString('en-US')} <span className="text-lg text-white">SB</span>
-          </h2>
-          <div className="flex justify-between items-center border-t border-white/10 pt-4 mt-4 text-xs opacity-90 relative z-10">
-            <span>Minimum Limit ({userLevel.name})</span>
-            <span className="font-bold text-[#2563eb]">{minWithdraw.toLocaleString()} SB</span>
-          </div>
-        </section>
+        {/* Toggle Sub Tabs */}
+        <div className="bg-[#1c336b] rounded-2xl p-1 flex shadow-inner">
+          <button
+            onClick={() => setWalletTab('SB')}
+            className={`flex-1 py-3 text-center rounded-xl font-bold text-[13px] transition-all flex justify-center items-center gap-2 ${
+              walletTab === 'SB' ? 'bg-[#4a72ff] text-white shadow-md' : 'text-blue-200 hover:text-white'
+            }`}
+          >
+            <span>SB Wallet</span>
+          </button>
+          <button
+            onClick={() => setWalletTab('USDT')}
+            className={`flex-1 py-3 text-center rounded-xl font-bold text-[13px] transition-all flex justify-center items-center gap-2 ${
+              walletTab === 'USDT' ? 'bg-[#4a72ff] text-white shadow-md' : 'text-blue-200 hover:text-white'
+            }`}
+          >
+            <span>USDT Wallet</span>
+          </button>
+        </div>
 
+        {/* Eligibility Check Button */}
+        <button 
+          onClick={handleCheckEligibility}
+          className="w-full py-3 bg-[#1e3b7a] border border-blue-500/30 rounded-2xl text-blue-200 font-bold text-[13px] shadow-sm hover:bg-[#24428b] flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-[18px]">verified_user</span>
+          Check Withdrawal Eligibility
+        </button>
 
-
-        {/* Withdrawal Form */}
-        <section className={`bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg transition-opacity ${!isEligible ? 'opacity-50 pointer-events-none' : ''}`}>
-          <form onSubmit={handleWithdraw} className="space-y-4">
-            
-            {/* Bank Select */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
-                Select Bank Method
-              </label>
-              <select
-                required
-                value={selectedBank}
-                onChange={(e) => setSelectedBank(e.target.value)}
-                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400"
-              >
-                <option value="">Choose bank...</option>
-                {banks.map((bank) => (
-                  <option key={bank.id} value={bank.id}>{bank.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Account Number */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
-                Account Number
-              </label>
-              <input
-                required
-                type="text"
-                pattern="[0-9]{10}"
-                maxLength={10}
-                value={accountNum}
-                onChange={(e) => setAccountNum(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder="10-digit Nuban number"
-                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
-              />
-            </div>
-
-            {/* Account Name */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
-                Account Name
-              </label>
-              <input
-                required
-                type="text"
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                placeholder="e.g. Willie Obi"
-                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
-              />
-            </div>
-
-            {/* Amount */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
-                  Withdrawal Amount (SB)
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setAmount((mainWallet?.balance_sb || 0).toString())}
-                  className="text-[10px] font-bold text-[#4a72ff] uppercase"
-                >
-                  Withdraw All
-                </button>
+        {/* Animated Eligibility Checklist */}
+        {showEligibility && (
+          <div className="bg-[#1c336b]/80 border border-blue-500/20 rounded-2xl p-5 shadow-inner space-y-3 animate-fade-in">
+            <h3 className="font-bold text-[14px] text-white mb-2">Eligibility Status</h3>
+            {eligibilitySteps.map((step, idx) => (
+              <div key={step.id} className="flex justify-between items-center h-6">
+                <span className={`text-[12px] font-bold ${step.resolved ? 'text-blue-100' : 'text-blue-300/40'}`}>
+                  {step.label}
+                </span>
+                {step.resolved ? (
+                  <span className="animate-fade-in material-symbols-outlined text-green-400 text-[16px]">check_circle</span>
+                ) : (
+                  <span className="w-4 h-4 border-2 border-blue-500/20 rounded-full"></span>
+                )}
               </div>
-              <input
-                required
-                type="number"
-                min={minWithdraw}
-                max={mainWallet?.balance_sb || 0}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={`Minimum ${minWithdraw} SB`}
-                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
-              />
+            ))}
+            <div className="pt-2 border-t border-blue-500/10 mt-2">
+               <p className="text-[10px] text-blue-300 italic">* Referral earnings sit in a separate wallet and do not count toward this withdrawal eligibility threshold.</p>
             </div>
-
-            {/* Warning if insufficient */}
-            {amount && mainWallet && parseFloat(amount) > mainWallet.balance_sb && (
-              <p className="text-red-400 font-semibold text-[10px] italic">
-                ⚠️ Insufficient Active Balance. Please enter an amount below {(mainWallet.balance_sb).toLocaleString()} SB.
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={!isEligible || isSubmittingState || (mainWallet && amount && parseFloat(amount) > mainWallet.balance_sb) ? true : false}
-              className="w-full py-4 bg-[#4a72ff] text-white font-bold text-xs rounded-[16px] shadow-lg hover:bg-blue-600 active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none"
-            >
-              <span className="material-symbols-outlined text-[18px]">payments</span>
-              {isSubmittingState ? 'Processing payout...' : 'Submit Cash-out Request'}
-            </button>
-          </form>
-        </section>
-
-        {/* Informational Warning Alert */}
-        <section className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-5 text-amber-800 dark:text-amber-300 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] font-fill">warning</span>
-            <h4 className="font-bold text-xs">Payout Information</h4>
           </div>
-          <p className="text-[10px] leading-relaxed">
-            All bank withdrawal requests are routed to the system administrator queue for anti-fraud auditing. Payouts are usually verified and settled to your bank account within 24 hours. Level 3 & 4 users enjoy instant priority billing.
-          </p>
-        </section>
+        )}
 
+        {walletTab === 'SB' ? (
+          /* SB Wallet Section */
+          <div className="space-y-5 animate-fade-in">
+            <section className="bg-gradient-to-br from-[#24428b] to-[#1e3b7a] border border-blue-500/20 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#4a72ff]/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200 mb-1 relative z-10">Withdrawable Balance</p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white relative z-10 flex items-center gap-2">
+                {sbBalance.toLocaleString('en-US')} <span className="text-lg text-blue-300">SB</span>
+              </h2>
+              <div className="flex justify-between items-center border-t border-blue-500/20 pt-4 mt-4 text-xs relative z-10">
+                <span className="text-blue-200">Minimum: <strong className="text-white">30,000 SB</strong></span>
+                <span className="font-bold text-[#4a72ff] bg-blue-500/10 px-2 py-1 rounded-md">30,000 SB ≈ ₦20,000</span>
+              </div>
+            </section>
+
+            <section className={`bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg transition-opacity ${!isEligibleSB ? 'opacity-50 pointer-events-none' : ''}`}>
+              <form onSubmit={handleWithdrawSB} className="space-y-4">
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Select Bank Method</label>
+                  <select
+                    required
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400"
+                  >
+                    <option value="">Choose bank...</option>
+                    {banks.map((bank) => (
+                      <option key={bank.id} value={bank.id}>{bank.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Account Number</label>
+                  <input
+                    required
+                    type="text"
+                    maxLength={10}
+                    value={accountNum}
+                    onChange={(e) => setAccountNum(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="10-digit Nuban number"
+                    className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Account Name</label>
+                  <input
+                    required
+                    type="text"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                    placeholder="e.g. Willie Obi"
+                    className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Withdrawal Amount (SB)</label>
+                    <button
+                      type="button"
+                      onClick={() => setAmountSB(sbBalance.toString())}
+                      className="text-[10px] font-bold text-[#4a72ff] uppercase"
+                    >
+                      Withdraw All
+                    </button>
+                  </div>
+                  <input
+                    required
+                    type="number"
+                    step="1"
+                    min={minWithdrawSB}
+                    max={sbBalance}
+                    value={amountSB}
+                    onChange={(e) => setAmountSB(e.target.value)}
+                    placeholder={`Min ${minWithdrawSB.toLocaleString()} SB`}
+                    className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
+                  />
+                </div>
+
+                {amountSB && parseFloat(amountSB) >= minWithdrawSB && (
+                   <div className="bg-[#1c336b] p-3 rounded-xl border border-blue-500/20 flex justify-between items-center text-[13px] font-bold">
+                     <span className="text-blue-200">Computed Payout:</span>
+                     <span className="text-green-400">₦ {computeNaira(amountSB)}</span>
+                   </div>
+                )}
+
+                {amountSB && parseFloat(amountSB) > sbBalance && (
+                  <p className="text-red-400 font-semibold text-[10px] italic">
+                    ⚠️ Insufficient Active Balance.
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!isEligibleSB || isSubmittingState || (amountSB ? parseFloat(amountSB) > sbBalance : false)}
+                  className="w-full py-4 bg-[#4a72ff] text-white font-bold text-[14px] rounded-[16px] shadow-lg hover:bg-blue-600 active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none mt-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">payments</span>
+                  {isSubmittingState ? 'Processing...' : 'Submit Cash-out'}
+                </button>
+              </form>
+            </section>
+          </div>
+        ) : (
+          /* USDT Wallet Section */
+          <div className="space-y-5 animate-fade-in">
+            <section className="bg-gradient-to-br from-[#1e3b7a] to-[#0f2350] border border-blue-500/20 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200 mb-1 relative z-10">Withdrawable Balance</p>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white relative z-10 flex items-center gap-2">
+                {usdtBalance.toLocaleString('en-US')} <span className="text-lg text-teal-300">USDT</span>
+              </h2>
+              <div className="flex justify-between items-center border-t border-blue-500/20 pt-4 mt-4 text-xs relative z-10">
+                <span className="text-blue-200">Minimum: <strong className="text-white">20 USDT</strong></span>
+              </div>
+            </section>
+
+            <section className={`bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg transition-opacity ${!isEligibleUSDT ? 'opacity-50 pointer-events-none' : ''}`}>
+              <form onSubmit={handleWithdrawUSDT} className="space-y-4">
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Withdrawal Amount (USDT)</label>
+                    <button
+                      type="button"
+                      onClick={() => setAmountUSDT(usdtBalance.toString())}
+                      className="text-[10px] font-bold text-teal-400 uppercase"
+                    >
+                      Withdraw All
+                    </button>
+                  </div>
+                  <input
+                    required
+                    type="number"
+                    step="0.01"
+                    min={minWithdrawUSDT}
+                    max={usdtBalance}
+                    value={amountUSDT}
+                    onChange={(e) => setAmountUSDT(e.target.value)}
+                    placeholder={`Min ${minWithdrawUSDT} USDT`}
+                    className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">TRC20 Wallet Address</label>
+                  <input
+                    required
+                    type="text"
+                    value={trcAddress}
+                    onChange={(e) => {
+                       setTrcAddress(e.target.value);
+                       setTrcError('');
+                    }}
+                    placeholder="Starts with T..."
+                    className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
+                  />
+                  {trcError && <p className="text-red-400 text-[10px] font-bold italic mt-1">{trcError}</p>}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!isEligibleUSDT || isSubmittingState || (amountUSDT ? parseFloat(amountUSDT) > usdtBalance : false)}
+                  className="w-full py-4 bg-teal-500 text-white font-bold text-[14px] rounded-[16px] shadow-lg hover:bg-teal-600 active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none mt-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">payments</span>
+                  {isSubmittingState ? 'Processing...' : 'Submit USDT Cash-out'}
+                </button>
+              </form>
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
 export default WithdrawFunds;
