@@ -132,7 +132,8 @@ export const TaskCenter: React.FC = () => {
 
       <div className="px-container-padding pt-6 space-y-5">
         {taskTab === 'watch' ? (
-          <section className="space-y-4 animate-fade-in">
+          <section className="space-y-3 animate-fade-in">
+            <h3 className="font-bold text-[18px] text-white mb-3">Official</h3>
             {rewardedAds.filter((ad) => {
               const enabledSetting = systemSettings.find(s => s.key === `enabled_cat_${ad.category}`)?.value;
               return enabledSetting !== 'false';
@@ -153,26 +154,31 @@ export const TaskCenter: React.FC = () => {
 
               const limitReached = catLimit > 0 && catWatched >= catLimit;
 
+              let AdIcon;
+              if (ad.type === 'wallet') AdIcon = <div className="text-[24px] bg-blue-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
+              else if (ad.type === 'monetag') AdIcon = <div className="bg-white rounded-[14px] w-12 h-12 flex items-center justify-center p-1 shadow-inner"><img src="/monetag-logo.png" className="w-full h-full object-contain" /></div>;
+              else if (ad.type === 'giga') AdIcon = <div className="text-[24px] bg-[#ccff00] rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">⚡</div>;
+              else if (ad.type === 'video') AdIcon = <div className="text-[24px] bg-gray-200 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">📺</div>;
+              else AdIcon = <div className="text-[24px] bg-gray-800 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">▶️</div>;
+
               return (
                 <div 
                   key={ad.id} 
-                  className="bg-[#24428b] border border-blue-500/10 rounded-2xl p-4 shadow-lg flex items-center justify-between gap-4 cursor-pointer hover:bg-[#2a4e9e] transition-colors"
+                  className={`bg-[#1e3b7a] border border-blue-500/20 rounded-[20px] p-3 shadow-md flex items-center justify-between cursor-pointer transition-all ${limitReached ? 'opacity-50' : 'hover:bg-[#24428b] active:scale-95'}`}
                   onClick={() => !limitReached && playAd(ad)}
                 >
-                  <div className="flex flex-col gap-1">
-                    <h4 className="font-bold text-[15px] text-blue-100">
-                      Watch video & earn {multipliedReward} SB
-                    </h4>
-                    {limitReached && <span className="text-[11px] text-blue-300">Daily limit reached for this category</span>}
+                  <div className="flex items-center gap-3">
+                    {AdIcon}
+                    <div className="flex flex-col">
+                      <span className="text-[14px] text-white font-bold">{ad.name}</span>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center text-[#fbbf24] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🪙</span> +{multipliedReward.toLocaleString()}</span>
+                        {!limitReached && <span className="flex items-center text-[#f87171] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🗝️</span> +1</span>}
+                        {limitReached && <span className="text-[10px] text-blue-300 ml-2">Done</span>}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-[13px] font-bold text-white">
-                      {catWatched}/{catLimit}
-                    </span>
-                    <span className="material-symbols-outlined text-[#4a72ff] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      play_circle
-                    </span>
-                  </div>
+                  <span className="material-symbols-outlined text-blue-400 text-[20px]">chevron_right</span>
                 </div>
               );
             })}
@@ -216,71 +222,51 @@ export const TaskCenter: React.FC = () => {
                 </button>
               ))}
             </section>
-
+            
             {/* Explore Tasks */}
             {(selectedCategory === 'All' || selectedCategory === 'cat_explore') && exploreTasks.length > 0 && (
               <section className="space-y-3 pt-2">
-                <div className="space-y-3.5">
+                <div className="flex items-center gap-2 mb-3">
+                   <h3 className="font-bold text-[18px] text-white">Explore Tasks</h3>
+                   <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{exploreTasks.length}</span>
+                </div>
+                <div className="space-y-3">
                   {exploreTasks.map((task) => {
                     const multipliedReward = Math.round(task.reward_amount * userLevel.earning_multiplier);
                     const isCompleted = transactions.some(
                       t => t.type === 'TaskReward' && t.description.includes(task.title) && t.status === 'Success'
                     );
-                    const isLoading = loadingTaskId === task.id;
+
+                    let TaskIcon;
+                    if (task.icon === 'ton_yellow') TaskIcon = <div className="text-[24px] bg-yellow-400 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
+                    else if (task.icon === 'ton_blue') TaskIcon = <div className="text-[24px] bg-blue-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">💎</div>;
+                    else if (task.icon === 'star_yellow') TaskIcon = <div className="text-[24px] bg-orange-400 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">⭐</div>;
+                    else if (task.icon === 'tether') TaskIcon = <div className="text-[24px] bg-teal-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🪙</div>;
+                    else if (task.icon === 'globe') TaskIcon = <div className="text-[24px] bg-indigo-500 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">🌐</div>;
+                    else TaskIcon = <div className="text-[24px] bg-gray-800 rounded-[14px] w-12 h-12 flex items-center justify-center shadow-inner">✨</div>;
 
                     return (
                       <div 
                         key={task.id} 
-                        className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg space-y-4"
+                        className="bg-[#1e3b7a] border border-blue-500/20 rounded-[20px] p-3 shadow-md flex items-center justify-between cursor-pointer hover:bg-[#24428b] active:scale-95 transition-all"
+                        onClick={(e) => handleOpenExternalTask(task, e)}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-4">
-                            <div className="flex-shrink-0 w-12 h-12 rounded-[18px] flex items-center justify-center bg-[#4a72ff]/20 text-[#4a72ff] font-bold border border-[#4a72ff]/30 shadow-inner">
-                              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                                {task.icon || 'explore'}
-                              </span>
+                        <div className="flex items-center gap-3">
+                          {TaskIcon}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[14px] text-white font-bold">{task.title}</span>
+                              {task.badge === 'Sponsored' && (
+                                <span className="bg-yellow-500/20 text-yellow-400 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full border border-yellow-500/30">Premium</span>
+                              )}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-[15px] text-blue-100">{task.title}</h4>
-                              </div>
-                              <p className="text-[11px] text-blue-300 mt-1 leading-snug">
-                                {task.description}
-                              </p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="flex items-center text-[#fbbf24] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🪙</span> +{multipliedReward.toLocaleString()}</span>
+                              <span className="flex items-center text-[#f87171] text-[12px] font-extrabold"><span className="text-[12px] mr-1">🗝️</span> +{Math.max(1, Math.floor(multipliedReward / 1000))}</span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-blue-500/10">
-                          <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#4a72ff]/20 text-[#4a72ff] text-[11px] font-extrabold rounded-lg border border-[#4a72ff]/30">
-                            <span className="material-symbols-outlined text-[14px]">payments</span>
-                            +{multipliedReward} SB
-                          </span>
-
-                          <button 
-                            disabled={isCompleted || isLoading}
-                            onClick={(e) => handleOpenExternalTask(task, e)}
-                            className={`px-5 py-2.5 rounded-xl font-bold text-[13px] shadow-md active:scale-95 transition-all flex items-center gap-1.5 ${
-                              isCompleted
-                                ? 'bg-black/20 text-gray-400 cursor-not-allowed shadow-none'
-                                : 'bg-[#4a72ff] text-white hover:bg-blue-600'
-                            }`}
-                          >
-                            {isLoading ? (
-                              <>
-                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                                <span>Opening...</span>
-                              </>
-                            ) : isCompleted ? (
-                              <span>Completed</span>
-                            ) : (
-                              <>
-                                <span>{task.button_text || 'Explore'}</span>
-                                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
+                        <span className="material-symbols-outlined text-blue-400 text-[20px]">chevron_right</span>
                       </div>
                     );
                   })}

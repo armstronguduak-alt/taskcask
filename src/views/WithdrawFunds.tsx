@@ -13,24 +13,9 @@ export const WithdrawFunds: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [isSubmittingState, setIsSubmitting] = useState(false);
 
-  const isEmailVerified = user?.email_verified || false;
-  const isPhoneVerified = user?.phone_verified || false;
   const hasMinBalance = (mainWallet?.balance_sb || 0) >= minWithdraw;
   
-  const accountAgeDays = Math.floor((new Date().getTime() - new Date(user?.registered_at || new Date()).getTime()) / (1000 * 3600 * 24));
-  const hasAccountAge = accountAgeDays >= (userLevel?.req_account_age || 0);
-  
-  const hasStreak = (user?.login_streak || 0) >= (userLevel?.req_streak || 0);
-  const hasTasks = (user?.total_tasks_completed || 0) >= (userLevel?.req_tasks || 0);
-  const hasAds = (user?.total_ads_watched || 0) >= (userLevel?.req_ads || 0);
-  
-  // Actually, we need to check active referrals.
-  const activeReferralsCount = referrals?.filter(
-    r => r.referral_status === 'Active' || r.referral_status === 'Qualified'
-  ).length || 0;
-  const hasReferrals = activeReferralsCount >= (userLevel?.req_referrals || 0);
-
-  const isEligible = isEmailVerified && isPhoneVerified && hasMinBalance && hasAccountAge && hasStreak && hasTasks && hasAds && hasReferrals;
+  const isEligible = hasMinBalance;
 
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,95 +73,22 @@ export const WithdrawFunds: React.FC = () => {
           </div>
         </section>
 
-        {/* Requirements Checklist */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Eligibility Checklist</h3>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Account Age</span>
-              {hasAccountAge ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {accountAgeDays}/{userLevel.req_account_age} days</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Login Streak</span>
-              {hasStreak ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {user?.login_streak || 0}/{userLevel.req_streak} days</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Completed Tasks</span>
-              {hasTasks ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {user?.total_tasks_completed || 0}/{userLevel.req_tasks}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Rewarded Videos</span>
-              {hasAds ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {user?.total_ads_watched || 0}/{userLevel.req_ads}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Active Referrals</span>
-              {hasReferrals ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Met</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> {activeReferralsCount}/{userLevel.req_referrals}</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold border-t border-gray-100 dark:border-zinc-800 pt-2">
-              <span className="text-on-surface dark:text-gray-200">Email Verified</span>
-              {isEmailVerified ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> No</span>
-              )}
-            </div>
-            <div className="flex justify-between items-center text-xs font-bold">
-              <span className="text-on-surface dark:text-gray-200">Phone Verified</span>
-              {isPhoneVerified ? (
-                <span className="text-[#2563eb] flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">check_circle</span> Yes</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">cancel</span> No</span>
-              )}
-            </div>
-          </div>
-          
-          {!isEligible && (
-            <div className="pt-2">
-              <p className="text-[10px] text-red-500 italic">You must meet all requirements to unlock cash-outs.</p>
-              {(!isEmailVerified || !isPhoneVerified) && (
-                <button onClick={() => setTab('Profile')} className="mt-2 w-full py-2 bg-gray-100 dark:bg-zinc-800 text-xs font-bold rounded-xl text-[#2563eb]">
-                  Go to Profile to Verify
-                </button>
-              )}
-            </div>
-          )}
-        </section>
+
 
         {/* Withdrawal Form */}
-        <section className={`bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm transition-opacity ${!isEligible ? 'opacity-50 pointer-events-none' : ''}`}>
+        <section className={`bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg transition-opacity ${!isEligible ? 'opacity-50 pointer-events-none' : ''}`}>
           <form onSubmit={handleWithdraw} className="space-y-4">
             
             {/* Bank Select */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wide">
+              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
                 Select Bank Method
               </label>
               <select
                 required
                 value={selectedBank}
                 onChange={(e) => setSelectedBank(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-on-surface dark:text-gray-200"
+                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400"
               >
                 <option value="">Choose bank...</option>
                 {banks.map((bank) => (
@@ -187,7 +99,7 @@ export const WithdrawFunds: React.FC = () => {
 
             {/* Account Number */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wide">
+              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
                 Account Number
               </label>
               <input
@@ -198,13 +110,13 @@ export const WithdrawFunds: React.FC = () => {
                 value={accountNum}
                 onChange={(e) => setAccountNum(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder="10-digit Nuban number"
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-on-surface dark:text-gray-200"
+                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
               />
             </div>
 
             {/* Account Name */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wide">
+              <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
                 Account Name
               </label>
               <input
@@ -213,20 +125,20 @@ export const WithdrawFunds: React.FC = () => {
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
                 placeholder="e.g. Willie Obi"
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-on-surface dark:text-gray-200"
+                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
               />
             </div>
 
             {/* Amount */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-on-surface-variant dark:text-gray-400 uppercase tracking-wide">
+                <label className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">
                   Withdrawal Amount (SB)
                 </label>
                 <button
                   type="button"
                   onClick={() => setAmount((mainWallet?.balance_sb || 0).toString())}
-                  className="text-[10px] font-bold text-[#2563eb] uppercase"
+                  className="text-[10px] font-bold text-[#4a72ff] uppercase"
                 >
                   Withdraw All
                 </button>
@@ -239,13 +151,13 @@ export const WithdrawFunds: React.FC = () => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={`Minimum ${minWithdraw} SB`}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-on-surface dark:text-gray-200"
+                className="w-full px-4 py-3 bg-[#1e3b7a] border border-blue-500/20 rounded-[16px] text-xs font-semibold text-white outline-none focus:border-blue-400 placeholder-blue-300/40"
               />
             </div>
 
             {/* Warning if insufficient */}
             {amount && mainWallet && parseFloat(amount) > mainWallet.balance_sb && (
-              <p className="text-red-500 font-semibold text-[10px] italic">
+              <p className="text-red-400 font-semibold text-[10px] italic">
                 ⚠️ Insufficient Active Balance. Please enter an amount below {(mainWallet.balance_sb).toLocaleString()} SB.
               </p>
             )}
@@ -253,7 +165,7 @@ export const WithdrawFunds: React.FC = () => {
             <button
               type="submit"
               disabled={!isEligible || isSubmittingState || (mainWallet && amount && parseFloat(amount) > mainWallet.balance_sb) ? true : false}
-              className="w-full py-4 bg-[#2563eb] text-zinc-900 font-bold text-xs rounded-2xl shadow-lg shadow-[#2563eb]/25 active:scale-98 transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none"
+              className="w-full py-4 bg-[#4a72ff] text-white font-bold text-xs rounded-[16px] shadow-lg hover:bg-blue-600 active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:shadow-none"
             >
               <span className="material-symbols-outlined text-[18px]">payments</span>
               {isSubmittingState ? 'Processing payout...' : 'Submit Cash-out Request'}

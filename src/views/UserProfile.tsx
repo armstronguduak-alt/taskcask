@@ -67,33 +67,7 @@ export const UserProfile: React.FC = () => {
           </div>
         </section>
 
-        {/* Verification Status */}
-        <section className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg space-y-3">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-blue-300">Verifications</h3>
 
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-blue-200">phone_iphone</span>
-              <span className="text-[13px] font-bold text-blue-100">Phone Number</span>
-            </div>
-            {user?.phone_verified ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-green-400 bg-green-400/10 px-3 py-1.5 rounded-full border border-green-400/20">
-                <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                Verified
-              </span>
-            ) : (
-              <button 
-                onClick={() => {
-                  triggerHaptic('medium');
-                  verifyPhone();
-                }} 
-                className="text-[11px] font-extrabold text-[#4a72ff] bg-[#4a72ff]/10 px-4 py-2 rounded-full hover:bg-[#4a72ff]/20 border border-[#4a72ff]/20 active:scale-95 transition-all"
-              >
-                Verify Now
-              </button>
-            )}
-          </div>
-        </section>
 
         {/* Settings options list */}
         <section className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg space-y-2">
@@ -105,7 +79,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-green-400">payments</span>
+              <span className="text-[20px]">💳</span>
               <span className="text-[13px] font-bold text-blue-100">Withdraw Funds</span>
             </div>
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
@@ -118,7 +92,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-purple-400">history</span>
+              <span className="text-[20px]">🕒</span>
               <span className="text-[13px] font-bold text-blue-100">Transaction History</span>
             </div>
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
@@ -130,7 +104,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-amber-400">help</span>
+              <span className="text-[20px]">❓</span>
               <span className="text-[13px] font-bold text-blue-100">Frequently Asked Questions (FAQs)</span>
             </div>
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
@@ -142,7 +116,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-blue-400">policy</span>
+              <span className="text-[20px]">🔒</span>
               <span className="text-[13px] font-bold text-blue-100">Privacy Policy</span>
             </div>
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
@@ -154,7 +128,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-red-400">gavel</span>
+              <span className="text-[20px]">📝</span>
               <span className="text-[13px] font-bold text-blue-100">Terms of Service</span>
             </div>
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
@@ -166,7 +140,7 @@ export const UserProfile: React.FC = () => {
             className="w-full flex justify-between items-center py-3 text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-[#4a72ff]">info</span>
+              <span className="text-[20px]">ℹ️</span>
               <span className="text-[13px] font-bold text-blue-100">About SwagBucks</span>
             </div>
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>

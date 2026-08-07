@@ -36,7 +36,7 @@ const AppContent: React.FC = () => {
 
   if (vpnDetected) {
     return (
-      <div className="min-h-screen bg-[#0b1437] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#1e46a3] via-[#132252] to-[#050914] flex flex-col items-center justify-center p-6 text-center text-white">
         <span className="material-symbols-outlined text-6xl text-red-500 mb-4">vpn_lock</span>
         <h1 className="text-2xl font-bold text-white mb-2">VPN Detected</h1>
         <p className="text-blue-200">
@@ -69,7 +69,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="tma-container min-h-screen bg-[#0b1437] flex flex-col justify-between relative overflow-hidden">
+    <div className="tma-container min-h-screen bg-gradient-to-b from-[#1e46a3] via-[#132252] to-[#050914] flex flex-col justify-between relative overflow-hidden text-white">
       {/* Active Screen View */}
       <div className="flex-grow flex flex-col">
         {renderActiveView()}

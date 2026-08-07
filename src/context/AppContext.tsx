@@ -153,6 +153,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (adsData) setRewardedAds(adsData as RewardedAd[]);
         if (settingsData) setSystemSettings(settingsData as SystemSetting[]);
         if (banksData) setBanks(banksData as Bank[]);
+      } else {
+        // Mock data for UI development
+        setTaskCategories([
+          { id: 'cat_official', name: 'Official', icon: 'verified' },
+          { id: 'cat_extra', name: 'Extra Tasks', icon: 'stars' }
+        ]);
+        
+        setRewardedAds([
+          { id: 'ad_connect', name: 'Connect wallet', type: 'wallet', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 0, remaining_views: 1 },
+          { id: 'ad_monetag1', name: 'Click on the Ad after viewing', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
+          { id: 'ad_monetag2', name: 'Watch and click on ads', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
+          { id: 'ad_giga', name: 'Watch the Giga AD', type: 'giga', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
+          { id: 'ad_video', name: 'View video, then tap the AD', type: 'video', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 }
+        ]);
+
+        setTasks([
+          { id: 't_ton1', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 9000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'ton_yellow' },
+          { id: 't_star1', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 4000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'star_yellow' },
+          { id: 't_star2', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 320000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'star_yellow' },
+          { id: 't_ton2', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 320000, description: '', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Go', icon: 'ton_blue' },
+          { id: 't_tether', title: 'Watch and click on ads', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 10000, description: '', link: '#', status: 'Active', badge: 'Standard', button_text: 'Go', icon: 'tether' },
+          { id: 't_social', title: 'Social Media Tasks', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 5000, description: '', link: '#', status: 'Active', badge: 'Standard', button_text: 'Go', icon: 'globe' }
+        ]);
       }
 
       // Initialize Telegram
