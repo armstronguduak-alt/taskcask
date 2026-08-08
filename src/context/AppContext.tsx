@@ -173,8 +173,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           { id: 't_star1', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 4000, description: 'Donate stars on Telegram', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'star_yellow' },
           { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 1500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
           { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
-          { id: 't_visit', title: 'Visit partner website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 10000, description: 'Visit and stay for 60 seconds', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'explore' },
-          { id: 't_read', title: 'Read content', category_id: 'cat_engagement', reward_type: 'USDT', reward_amount: 0.05, description: 'Read the latest blog post', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'explore' }
+          { id: 't_visit', title: 'Visit partner website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 10000, description: 'Open the partner page and interact with the content for the required amount of time.', link: 'https://www.effectivecpmnetwork.com/h0cq93109?key=c4b5e80c407ee733eb7a534c655bf22b', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' },
+          { id: 't_read', title: 'Read content', category_id: 'cat_engagement', reward_type: 'USDT', reward_amount: 0.05, description: 'Open the partner page and interact with the content for the required amount of time.', link: 'https://link.gigapub.tech/l/cynz40gvg', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' }
         ]);
 
         setBanks([
@@ -191,8 +191,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Initialize Telegram
       initGlobalHapticListener();
-      // AdService.initInAppInterstitial();
-
       const tg = (window as any).Telegram?.WebApp;
       if (tg) {
         tg.ready();
@@ -286,9 +284,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const playAd = async (ad: RewardedAd) => {
-    // Disabled for now based on user request
-    alert('Ads are temporarily disabled.');
-    return;
+    const success = await AdService.executeWatchAndEarnAd();
+    if (success) {
+      await completeAd(ad);
+    }
   };
 
   const completeAd = async (ad: RewardedAd) => {
