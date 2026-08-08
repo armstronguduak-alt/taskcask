@@ -226,7 +226,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               first_name: 'Mock',
               last_name: 'User',
               username: 'mock_user',
-              registered_at: new Date().toISOString(),
+              registered_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
               status: 'Active',
               level_id: 'lvl_1',
               is_premium: false,
