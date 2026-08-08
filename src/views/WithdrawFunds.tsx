@@ -36,8 +36,20 @@ export const WithdrawFunds: React.FC = () => {
   const eligiblePersonalSB = Math.max(0, (mainWallet?.lifetime_sb || 0) - 1000);
   const eligiblePersonalUSDT = mainWallet?.lifetime_usdt || 0;
 
-  const isEligibleSB = accountAgeInDays >= 30 && eligiblePersonalSB >= minWithdrawSB;
-  const isEligibleUSDT = accountAgeInDays >= 35 && eligiblePersonalUSDT >= minWithdrawUSDT;
+  const mockRefs = 2; // For demo
+  const isEligibleSB = 
+    accountAgeInDays >= 30 && 
+    (user?.login_streak || 0) >= 30 && 
+    (user?.total_tasks_completed || 0) >= 15 && 
+    (user?.total_ads_watched || 0) >= 50 && 
+    mockRefs >= 5;
+    
+  const isEligibleUSDT = 
+    accountAgeInDays >= 35 && 
+    (user?.login_streak || 0) >= 30 && 
+    (user?.total_tasks_completed || 0) >= 15 && 
+    (user?.total_ads_watched || 0) >= 50 && 
+    mockRefs >= 5;
 
   // Eligibility Checklist State
   const [showEligibility, setShowEligibility] = useState(false);
@@ -54,18 +66,24 @@ export const WithdrawFunds: React.FC = () => {
     setShowEligibility(true);
     setEligibilityStatus(null);
     
+    // Define criteria targets based on wallet type (simulated goals for the demo)
+    const targetAge = walletTab === 'SB' ? 30 : 35;
+    const targetStreak = 30;
+    const targetTasks = 15;
+    const targetVideos = 50;
+    const targetRefs = 5;
+
+
     // Set steps dynamically based on current tab
-    const stepsToRun = walletTab === 'SB' 
-      ? [
-          { id: 'time', label: `30-Day Activity Period (${accountAgeInDays}/30 days)`, resolved: false, success: accountAgeInDays >= 30 },
-          { id: 'points', label: `Personal Earnings (${eligiblePersonalSB.toLocaleString()} / 30,000 SB)`, resolved: false, success: eligiblePersonalSB >= minWithdrawSB },
-          { id: 'exclude', label: `Exclude Welcome Bonus & Referrals`, resolved: false, success: true }
-        ]
-      : [
-          { id: 'time', label: `35-Day Activity Period (${accountAgeInDays}/35 days)`, resolved: false, success: accountAgeInDays >= 35 },
-          { id: 'points', label: `Personal Earnings (${eligiblePersonalUSDT.toLocaleString()} / 20 USDT)`, resolved: false, success: eligiblePersonalUSDT >= minWithdrawUSDT },
-          { id: 'exclude', label: `Exclude Welcome Bonus & Referrals`, resolved: false, success: true }
-        ];
+    const stepsToRun = [
+      { id: 'age', label: `Account Age (${accountAgeInDays}/${targetAge} days)`, resolved: false, success: accountAgeInDays >= targetAge },
+      { id: 'streak', label: `Login Streak (${user?.login_streak || 0}/${targetStreak} days)`, resolved: false, success: (user?.login_streak || 0) >= targetStreak },
+      { id: 'tg', label: `Telegram Joined`, resolved: false, success: true },
+      { id: 'wa', label: `WhatsApp Joined`, resolved: false, success: true },
+      { id: 'tasks', label: `Completed Tasks (${user?.total_tasks_completed || 0}/${targetTasks})`, resolved: false, success: (user?.total_tasks_completed || 0) >= targetTasks },
+      { id: 'videos', label: `Videos Watched (${user?.total_ads_watched || 0}/${targetVideos})`, resolved: false, success: (user?.total_ads_watched || 0) >= targetVideos },
+      { id: 'referrals', label: `Referrals (${mockRefs}/${targetRefs})`, resolved: false, success: mockRefs >= targetRefs }
+    ];
 
     setEligibilitySteps(stepsToRun);
 
