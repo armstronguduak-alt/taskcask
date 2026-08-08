@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationCenterModal } from '../components/NotificationCenterModal';
-import { LiveWithdrawalToast } from '../components/LiveWithdrawalToast';
 
 export const Dashboard: React.FC = () => {
   const { 
@@ -302,7 +301,6 @@ export const Dashboard: React.FC = () => {
       )}
 
       {showNotificationsModal && <NotificationCenterModal onClose={() => setShowNotificationsModal(false)} />}
-      <LiveWithdrawalToast />
     </div>
   );
 };

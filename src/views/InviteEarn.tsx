@@ -70,91 +70,89 @@ export const InviteEarn: React.FC = () => {
     <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
       <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
-        <div className="flex justify-between items-center px-container-padding py-4 w-full">
-          <h1 className="font-bold text-lg text-[#2563eb] dark:text-[#2563eb]">Invite & Earn</h1>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">
-            <span className="material-symbols-outlined text-[#2563eb] text-[16px] font-fill">account_balance_wallet</span>
-            <span className="text-xs font-bold text-[#2563eb]">{(affiliateWallet?.balance_sb || 0).toLocaleString()} SB</span>
+        <div className="flex justify-between items-center px-container-padding w-full">
+          <h1 className="font-extrabold text-[22px] tracking-tight text-white">Invite & Earn</h1>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#132252] border border-blue-500/30 rounded-full shadow-inner">
+            <span className="material-symbols-outlined text-purple-400 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
+            <span className="text-[13px] font-extrabold tracking-tight text-white">{(affiliateWallet?.balance_sb || 0).toLocaleString()} SB</span>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="px-container-padding pt-4 space-y-6">
+      <div className="px-container-padding pt-6 space-y-6">
         
         {/* Referral Hero Card */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#2563eb] to-[#4caf50] p-6 shadow-xl text-zinc-900">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+        <section className="relative overflow-hidden rounded-[24px] bg-[#1e3b7a] p-6 shadow-xl text-white border border-blue-500/20">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div className="relative z-10 space-y-5">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider opacity-85 mb-1 text-zinc-800">Referral Rewards</p>
-              <h2 className="text-2xl font-extrabold tracking-tight">Earn 500 SB Per Friend</h2>
-              <p className="text-[11px] opacity-80 mt-1 leading-relaxed text-zinc-800">
-                Invite your friends using your unique referral code. You earn 500 SB instantly when they join and complete tasks!
-              </p>
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-[20px] bg-[#132252] border border-blue-500/30 flex items-center justify-center shadow-inner flex-shrink-0">
+                <span className="material-symbols-outlined text-[32px] text-purple-400" style={{ fontVariationSettings: "'FILL' 1" }}>group_add</span>
+              </div>
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-blue-200 mb-1">Referral Rewards</p>
+                <h2 className="text-[22px] font-extrabold tracking-tight text-white leading-tight">Earn 500 SB<br/>Per Friend</h2>
+              </div>
             </div>
+            <p className="text-[13px] font-bold text-blue-100 leading-relaxed tracking-wide">
+              Invite your friends using your unique referral code. You earn 500 SB instantly when they join and complete tasks!
+            </p>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
-                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Total Invited</p>
-                <p className="font-bold text-[18px] mt-0.5">{referralItems.length}</p>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="bg-[#132252] p-4 rounded-[16px] border border-blue-500/20 shadow-inner">
+                <p className="text-[10px] font-extrabold text-blue-300 uppercase tracking-wide">Total Invited</p>
+                <p className="font-extrabold text-[22px] text-white tracking-tight mt-1">{referralItems.length}</p>
               </div>
-              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
-                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Referral Income</p>
-                <p className="font-bold text-[18px] mt-0.5">{totalReferralEarnings.toLocaleString()} SB</p>
+              <div className="bg-[#132252] p-4 rounded-[16px] border border-blue-500/20 shadow-inner">
+                <p className="text-[10px] font-extrabold text-blue-300 uppercase tracking-wide">Income</p>
+                <p className="font-extrabold text-[22px] text-[#fbbf24] tracking-tight mt-1">{totalReferralEarnings.toLocaleString()}</p>
               </div>
-              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
-                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Active Referrals</p>
-                <p className="font-bold text-[18px] mt-0.5">{activeReferrals.length}</p>
+              <div className="bg-[#132252] p-4 rounded-[16px] border border-blue-500/20 shadow-inner">
+                <p className="text-[10px] font-extrabold text-blue-300 uppercase tracking-wide">Active</p>
+                <p className="font-extrabold text-[22px] text-green-400 tracking-tight mt-1">{activeReferrals.length}</p>
               </div>
-              <div className="bg-black/10 p-3 rounded-2xl border border-black/5">
-                <p className="text-[9px] font-bold opacity-75 uppercase tracking-wide">Pending Referrals</p>
-                <p className="font-bold text-[18px] mt-0.5">{pendingReferrals.length}</p>
+              <div className="bg-[#132252] p-4 rounded-[16px] border border-blue-500/20 shadow-inner">
+                <p className="text-[10px] font-extrabold text-blue-300 uppercase tracking-wide">Pending</p>
+                <p className="font-extrabold text-[22px] text-amber-400 tracking-tight mt-1">{pendingReferrals.length}</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Unique Referral Code & Link Section */}
-        <section className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
+        <section className="bg-[#1e3b7a] border border-blue-500/20 rounded-[24px] p-5 shadow-lg space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="font-bold text-xs text-on-surface dark:text-gray-200">Your Referral Code</h3>
-            <span className="px-3 py-1 bg-[#2563eb]/10 text-[#2563eb] dark:text-[#2563eb] font-extrabold text-xs rounded-full border border-[#2563eb]/20">
+            <h3 className="font-extrabold text-[15px] text-white tracking-tight">Your Referral Code</h3>
+            <span className="px-3.5 py-1.5 bg-[#132252] text-white font-extrabold text-[13px] rounded-full border border-blue-500/30 tracking-wider shadow-inner">
               {refCode}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 p-3.5 rounded-2xl border border-gray-100 dark:border-zinc-800/80">
-            <span className="material-symbols-outlined text-[#2563eb] text-[20px]">link</span>
-            <span className="flex-1 text-xs font-semibold text-on-surface dark:text-gray-300 truncate text-left">{refLink}</span>
+          <div className="flex items-center gap-3 bg-[#132252] p-4 rounded-[16px] border border-blue-500/30 shadow-inner">
+            <span className="material-symbols-outlined text-[#4a72ff] text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>link</span>
+            <span className="flex-1 text-[13px] font-extrabold text-blue-100 truncate text-left tracking-wide">{refLink}</span>
             <button 
               onClick={handleCopyLink}
-              className="text-xs font-bold text-[#2563eb] hover:opacity-85"
+              className="w-10 h-10 bg-[#4a72ff] rounded-xl flex items-center justify-center text-white active:scale-95 transition-all shadow-md"
             >
-              Copy
+              <span className="material-symbols-outlined text-[18px]">content_copy</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-3 pt-2">
             <button 
               onClick={handleCopyCode}
-              className="py-3 bg-gray-100 dark:bg-zinc-800 text-on-surface dark:text-gray-300 font-bold text-xs rounded-xl active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5"
+              className="py-4 bg-[#132252] border border-blue-500/30 text-white font-extrabold text-[14px] rounded-[16px] active:scale-95 transition-all shadow-inner flex items-center justify-center gap-2 tracking-wide"
             >
-              <span className="material-symbols-outlined text-[15px]">tag</span>
-              Code
-            </button>
-            <button 
-              onClick={handleCopyLink}
-              className="py-3 bg-gray-100 dark:bg-zinc-800 text-on-surface dark:text-gray-300 font-bold text-xs rounded-xl active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5"
-            >
-              <span className="material-symbols-outlined text-[15px]">content_copy</span>
-              Link
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>tag</span>
+              Copy Code
             </button>
             <button 
               onClick={handleShareTelegram}
-              className="py-3 bg-[#316bf3] text-white font-bold text-xs rounded-xl active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 shadow-md shadow-[#316bf3]/25"
+              className="py-4 bg-[#4a72ff] text-white font-extrabold text-[14px] rounded-[16px] active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 tracking-wide"
             >
-              <span className="material-symbols-outlined text-[15px]">send</span>
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
               Share
             </button>
           </div>
@@ -162,30 +160,36 @@ export const InviteEarn: React.FC = () => {
 
         {/* Referred Friends list with Avatar component */}
         <section className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-on-surface-variant dark:text-gray-400">Referred Friends</h3>
+          <h3 className="text-[15px] font-extrabold tracking-tight text-white text-center border-b border-blue-500/20 pb-3">Referred Friends</h3>
           
           <div className="space-y-4">
             {/* Active Referrals */}
-            <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-              <h4 className="font-bold text-xs text-[#2563eb]">Active ({activeReferrals.length})</h4>
+            <div className="bg-[#1e3b7a] border border-blue-500/20 rounded-[24px] p-5 shadow-lg space-y-4">
+              <h4 className="font-extrabold text-[14px] text-green-400 tracking-wide flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                Active ({activeReferrals.length})
+              </h4>
               {activeReferrals.length === 0 ? (
-                <div className="text-center py-6 text-xs text-gray-400 font-semibold space-y-1">
+                <div className="text-center py-6 text-[13px] text-blue-200 font-bold space-y-1">
                   <p>No active referrals yet.</p>
-                  <p className="text-[10px] text-gray-400 font-normal">Share your link to start earning 500 SB per friend!</p>
+                  <p className="text-[11px] text-blue-300">Share your link to start earning 500 SB per friend!</p>
                 </div>
               ) : (
                 activeReferrals.map((ref) => (
-                  <div key={ref.id} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
-                    <div className="flex items-center gap-3">
-                      <Avatar src={ref.photo} name={ref.name} size="md" />
+                  <div key={ref.id} className="flex justify-between items-center border-b border-blue-500/10 pb-4 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-4">
+                      <div className="border-2 border-green-500/30 rounded-full p-0.5">
+                        <Avatar src={ref.photo} name={ref.name} size="md" />
+                      </div>
                       <div>
-                        <p className="font-bold text-xs text-on-surface dark:text-gray-200">{ref.name}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{ref.username} • Joined {ref.registered}</p>
+                        <p className="font-extrabold text-[14px] text-white tracking-tight">{ref.name}</p>
+                        <p className="text-[11px] font-bold text-blue-300 mt-0.5">{ref.username} • Joined {ref.registered}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-xs text-[#2563eb] dark:text-[#2563eb]">+{ref.earned || 500} SB</p>
-                      <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-[#2563eb]/10 text-[#2563eb]">
+                      <p className="font-extrabold text-[14px] text-[#fbbf24] tracking-tight">+{ref.earned || 500} SB</p>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase mt-1.5 bg-green-500/20 text-green-400 border border-green-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
                         Active
                       </span>
                     </div>
@@ -196,20 +200,26 @@ export const InviteEarn: React.FC = () => {
 
             {/* Pending Referrals */}
             {pendingReferrals.length > 0 && (
-              <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl p-5 shadow-sm space-y-4">
-                <h4 className="font-bold text-xs text-amber-500">Pending ({pendingReferrals.length})</h4>
+              <div className="bg-[#1e3b7a] border border-blue-500/20 rounded-[24px] p-5 shadow-lg space-y-4">
+                <h4 className="font-extrabold text-[14px] text-amber-400 tracking-wide flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>pending</span>
+                  Pending ({pendingReferrals.length})
+                </h4>
                 {pendingReferrals.map((ref) => (
-                  <div key={ref.id} className="flex justify-between items-center border-b border-gray-50 dark:border-zinc-800/50 pb-3 last:border-b-0 last:pb-0">
-                    <div className="flex items-center gap-3">
-                      <Avatar src={ref.photo} name={ref.name} size="md" />
+                  <div key={ref.id} className="flex justify-between items-center border-b border-blue-500/10 pb-4 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-4">
+                      <div className="border-2 border-amber-500/30 rounded-full p-0.5">
+                        <Avatar src={ref.photo} name={ref.name} size="md" />
+                      </div>
                       <div>
-                        <p className="font-bold text-xs text-on-surface dark:text-gray-200">{ref.name}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{ref.username} • Joined {ref.registered}</p>
+                        <p className="font-extrabold text-[14px] text-white tracking-tight">{ref.name}</p>
+                        <p className="text-[11px] font-bold text-blue-300 mt-0.5">{ref.username} • Joined {ref.registered}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-xs text-gray-400">Pending</p>
-                      <span className="inline-block text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase mt-1 bg-amber-500/10 text-amber-600">
+                    <div className="text-right flex flex-col items-end">
+                      <p className="font-extrabold text-[14px] text-blue-300/50 tracking-tight">Pending</p>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase mt-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                         Pending
                       </span>
                     </div>
