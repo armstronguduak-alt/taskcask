@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { NotificationCenterModal } from '../components/NotificationCenterModal';
+import { Avatar } from '../components/Avatar';
 
 export const Dashboard: React.FC = () => {
   const { 
@@ -67,16 +68,12 @@ export const Dashboard: React.FC = () => {
       <header className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex justify-between items-center px-container-padding w-full">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-[18px] border-2 border-blue-500/30 overflow-hidden bg-[#223b73] shadow-lg">
-              <img 
-                className="w-full h-full object-cover" 
-                alt="Avatar" 
-                src={user?.avatar || user?.photo_url || ''} 
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=" + (user?.first_name || 'U') + "&background=2563eb&color=fff";
-                }}
-              />
-            </div>
+            <Avatar 
+              src={user?.avatar || user?.photo_url || ''} 
+              name={user?.first_name || 'User'} 
+              size="md" 
+              className="!w-12 !h-12 !rounded-[18px] border-2 border-blue-500/30 shadow-lg"
+            />
             <div>
               <p className="text-[10px] text-blue-200 leading-tight">Welcome back,</p>
               <h1 className="font-bold text-[15px] text-white leading-tight truncate max-w-[120px]">

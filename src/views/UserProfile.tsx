@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { triggerHaptic } from '../utils/haptic';
+import { Avatar } from '../components/Avatar';
 
 export const UserProfile: React.FC = () => {
   const { 
@@ -33,16 +34,12 @@ export const UserProfile: React.FC = () => {
         
         {/* User Card */}
         <section className="bg-[#24428b] border border-blue-500/10 rounded-[24px] p-5 shadow-lg flex flex-col items-center text-center space-y-4">
-          <div className="w-20 h-20 rounded-full border-4 border-[#4a72ff]/30 overflow-hidden bg-[#1e3b7a] relative group">
-            <img 
-              className="w-full h-full object-cover" 
-              alt="Avatar" 
-              src={user?.avatar} 
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "https://lh3.googleusercontent.com/aida-public/AB6AXuCVTKlyggqz5sCXesavqzKPCSJ4KXoCGlgCc8lz_jaPYv_5AQRavF-pvfr6PwucqaXWhwc6Cpw4vfXffqz_cXEk6H0CTtrwG1Kntsj-GR9YG9PNUuq320uFZxButjHsDwLSNPGeUJ2tTsOrGMkV6eDMkbdzqGzC10Ot2XT6vYjQHIJfnbizlg0JjUhc8GgrTm3h3YH68e4e3H_Tr_JAKMrVndxN_nktv37HXYWp6FOKBaHnR5WKMV8q";
-              }}
-            />
-          </div>
+          <Avatar 
+            src={user?.avatar || user?.photo_url || ''} 
+            name={user?.first_name || 'User'} 
+            size="lg" 
+            className="!w-20 !h-20 !rounded-full border-4 border-[#4a72ff]/30 shadow-lg"
+          />
           <div>
             <h2 className="text-[18px] font-bold text-white leading-tight flex items-center justify-center gap-1">
               {user?.first_name} {user?.last_name}

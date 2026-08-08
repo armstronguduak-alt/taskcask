@@ -137,7 +137,7 @@ export const WatchEarn: React.FC = () => {
                         : 'bg-[#2563eb] text-zinc-900 shadow-[#2563eb]/20'
                     }`}
                   >
-                    <span>{limitReached ? 'Completed' : 'Watch'}</span>
+                    <span>{limitReached ? 'Completed' : 'Watch Video'}</span>
                     <span className="material-symbols-outlined text-[14px]">play_arrow</span>
                   </button>
                 </div>

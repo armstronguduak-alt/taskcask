@@ -95,7 +95,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const hasClaimedDailyBonus = false; // Add logic based on daily_rewards table
-  const dailyStreakDay = user?.login_streak || 1;
+  const dailyStreakDay = user?.login_streak ?? 0;
 
   const refreshState = async () => {
     if (!isSupabaseConfigured() || !user) return;
@@ -171,8 +171,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setTasks([
           { id: 't_ton1', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'USDT', reward_amount: 2.5, description: 'Send TON to partner address', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'ton_yellow' },
           { id: 't_star1', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 4000, description: 'Donate stars on Telegram', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'star_yellow' },
-          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 1500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'globe' },
-          { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'globe' },
+          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 1500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
+          { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
           { id: 't_visit', title: 'Visit partner website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 10000, description: 'Visit and stay for 60 seconds', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'explore' },
           { id: 't_read', title: 'Read content', category_id: 'cat_engagement', reward_type: 'USDT', reward_amount: 0.05, description: 'Read the latest blog post', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete Task', icon: 'explore' }
         ]);
@@ -223,16 +223,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
            setUser({
               id: 'usr_mock',
               telegram_id: 123456789,
-              first_name: 'Mock',
-              last_name: 'User',
-              username: 'mock_user',
-              registered_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+              first_name: 'User',
+              last_name: '',
+              username: 'username',
+              registered_at: new Date().toISOString(),
               status: 'Active',
               level_id: 'lvl_1',
               is_premium: false,
               email_verified: false,
               phone_verified: false,
-              login_streak: 1,
+              login_streak: 0,
               total_ads_watched: 0,
               total_tasks_completed: 0
            } as User);
@@ -240,19 +240,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               id: 'wall_main',
               user_id: 'usr_mock',
               wallet_type: 'Main',
-              balance_sb: 30500,
-              balance_usdt: 25.5,
-              lifetime_sb: 30500,
-              lifetime_usdt: 25.5,
+              balance_sb: 0,
+              balance_usdt: 0,
+              lifetime_sb: 0,
+              lifetime_usdt: 0,
               updated_at: new Date().toISOString()
            });
            setAffiliateWallet({
               id: 'wall_aff',
               user_id: 'usr_mock',
               wallet_type: 'Affiliate',
-              balance_sb: 12500,
+              balance_sb: 0,
               balance_usdt: 0,
-              lifetime_sb: 12500,
+              lifetime_sb: 0,
               lifetime_usdt: 0,
               updated_at: new Date().toISOString()
            });
