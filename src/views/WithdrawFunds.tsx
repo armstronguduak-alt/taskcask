@@ -57,12 +57,14 @@ export const WithdrawFunds: React.FC = () => {
     // Set steps dynamically based on current tab
     const stepsToRun = walletTab === 'SB' 
       ? [
-          { id: 'time', label: `Activity Period (${accountAgeInDays} / 30 days)`, resolved: false, success: accountAgeInDays >= 30 },
-          { id: 'points', label: `Eligible Personal Points (${eligiblePersonalSB.toLocaleString()} / 30,000 SB)`, resolved: false, success: eligiblePersonalSB >= minWithdrawSB }
+          { id: 'time', label: `30-Day Activity Period (${accountAgeInDays}/30 days)`, resolved: false, success: accountAgeInDays >= 30 },
+          { id: 'points', label: `Personal Earnings (${eligiblePersonalSB.toLocaleString()} / 30,000 SB)`, resolved: false, success: eligiblePersonalSB >= minWithdrawSB },
+          { id: 'exclude', label: `Exclude Welcome Bonus & Referrals`, resolved: false, success: true }
         ]
       : [
-          { id: 'time', label: `Activity Period (${accountAgeInDays} / 35 days)`, resolved: false, success: accountAgeInDays >= 35 },
-          { id: 'points', label: `Eligible Personal Points (${eligiblePersonalUSDT.toLocaleString()} / 20 USDT)`, resolved: false, success: eligiblePersonalUSDT >= minWithdrawUSDT }
+          { id: 'time', label: `35-Day Activity Period (${accountAgeInDays}/35 days)`, resolved: false, success: accountAgeInDays >= 35 },
+          { id: 'points', label: `Personal Earnings (${eligiblePersonalUSDT.toLocaleString()} / 20 USDT)`, resolved: false, success: eligiblePersonalUSDT >= minWithdrawUSDT },
+          { id: 'exclude', label: `Exclude Welcome Bonus & Referrals`, resolved: false, success: true }
         ];
 
     setEligibilitySteps(stepsToRun);
@@ -201,6 +203,7 @@ export const WithdrawFunds: React.FC = () => {
               walletTab === 'SB' ? 'bg-[#4a72ff] text-white shadow-md' : 'text-blue-200 hover:text-white'
             }`}
           >
+            <img src="/swagbucks coin logo.png" className="w-5 h-5 object-contain drop-shadow-sm" alt="SB" />
             <span>SB Wallet</span>
           </button>
           <button
@@ -209,6 +212,7 @@ export const WithdrawFunds: React.FC = () => {
               walletTab === 'USDT' ? 'bg-[#4a72ff] text-white shadow-md' : 'text-blue-200 hover:text-white'
             }`}
           >
+            <img src="/usdt coin logo.png" className="w-5 h-5 object-contain drop-shadow-sm" alt="USDT" />
             <span>USDT Wallet</span>
           </button>
         </div>
@@ -264,9 +268,12 @@ export const WithdrawFunds: React.FC = () => {
             <section className="bg-gradient-to-br from-[#24428b] to-[#1e3b7a] border border-blue-500/20 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#4a72ff]/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200 mb-1 relative z-10">Active Balance</p>
-              <h2 className="text-3xl font-extrabold tracking-tight text-white relative z-10 flex items-center gap-2">
-                {sbBalance.toLocaleString('en-US')} <span className="text-lg text-blue-300">SB</span>
-              </h2>
+              <div className="flex justify-between items-center relative z-10">
+                <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                  {sbBalance.toLocaleString('en-US')} <span className="text-lg text-blue-300">SB</span>
+                </h2>
+                <img src="/swagbucks coin logo.png" className="w-12 h-12 object-contain drop-shadow-md opacity-90" alt="SB" />
+              </div>
               <div className="flex justify-between items-center border-t border-blue-500/20 pt-4 mt-4 text-xs relative z-10">
                 <span className="text-blue-200">Minimum: <strong className="text-white">30,000 SB</strong></span>
                 <span className="font-bold text-[#4a72ff] bg-blue-500/10 px-2 py-1 rounded-md">30,000 SB ≈ ₦20,000</span>
@@ -375,9 +382,12 @@ export const WithdrawFunds: React.FC = () => {
             <section className="bg-gradient-to-br from-[#1e3b7a] to-[#0f2350] border border-blue-500/20 rounded-3xl p-6 shadow-xl text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-blue-200 mb-1 relative z-10">Active Balance</p>
-              <h2 className="text-3xl font-extrabold tracking-tight text-white relative z-10 flex items-center gap-2">
-                {usdtBalance.toLocaleString('en-US')} <span className="text-lg text-teal-300">USDT</span>
-              </h2>
+              <div className="flex justify-between items-center relative z-10">
+                <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                  {usdtBalance.toLocaleString('en-US')} <span className="text-lg text-teal-300">USDT</span>
+                </h2>
+                <img src="/usdt coin logo.png" className="w-12 h-12 object-contain drop-shadow-md opacity-90" alt="USDT" />
+              </div>
               <div className="flex justify-between items-center border-t border-blue-500/20 pt-4 mt-4 text-xs relative z-10">
                 <span className="text-blue-200">Minimum: <strong className="text-white">20 USDT</strong></span>
               </div>

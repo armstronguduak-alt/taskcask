@@ -58,8 +58,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   }
 
   return (
-    <div className={`relative flex-shrink-0 rounded-2xl bg-gradient-to-br ${gradients[gradientIndex]} text-white flex items-center justify-center shadow-sm uppercase tracking-wider ${sizeClasses[size]} ${className}`}>
-      {initials}
+    <div className={`relative flex-shrink-0 rounded-2xl bg-gradient-to-br ${gradients[gradientIndex]} text-white flex items-center justify-center shadow-sm ${sizeClasses[size]} ${className}`}>
+      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", fontSize: size === 'sm' ? '18px' : size === 'md' ? '24px' : '32px' }}>person</span>
     </div>
   );
 };

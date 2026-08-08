@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 interface NotificationCenterModalProps {
@@ -8,19 +8,36 @@ interface NotificationCenterModalProps {
 type NotificationTab = 'personal' | 'live_payouts';
 
 const RECENT_PAYOUTS = [
-  { id: 1, name: "David M.", country: "USA", amount: 1500, timeAgo: "2 mins ago" },
-  { id: 2, name: "Sarah K.", country: "UK", amount: 3200, timeAgo: "5 mins ago" },
-  { id: 3, name: "Michael T.", country: "Canada", amount: 800, timeAgo: "12 mins ago" },
-  { id: 4, name: "Elena R.", country: "Spain", amount: 5000, timeAgo: "18 mins ago" },
-  { id: 5, name: "James L.", country: "Australia", amount: 2100, timeAgo: "24 mins ago" },
-  { id: 6, name: "Anna S.", country: "Germany", amount: 1100, timeAgo: "30 mins ago" },
-  { id: 7, name: "Carlos F.", country: "Brazil", amount: 4500, timeAgo: "45 mins ago" },
-  { id: 8, name: "Yuki M.", country: "Japan", amount: 6200, timeAgo: "1 hour ago" },
+  { id: 1, name: "David M.", country: "USA", amount: 1500, timeAgo: "Just now" },
+  { id: 2, name: "Sarah K.", country: "UK", amount: 3200, timeAgo: "Just now" },
+  { id: 3, name: "Michael T.", country: "Canada", amount: 800, timeAgo: "Just now" },
+  { id: 4, name: "Elena R.", country: "Spain", amount: 5000, timeAgo: "Just now" },
+  { id: 5, name: "James L.", country: "Australia", amount: 2100, timeAgo: "Just now" },
+  { id: 6, name: "Anna S.", country: "Germany", amount: 1100, timeAgo: "Just now" },
+  { id: 7, name: "Carlos F.", country: "Brazil", amount: 4500, timeAgo: "Just now" },
+  { id: 8, name: "Yuki M.", country: "Japan", amount: 6200, timeAgo: "Just now" },
 ];
 
 export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = ({ onClose }) => {
   const { notifications } = useApp();
   const [activeTab, setActiveTab] = useState<NotificationTab>('live_payouts');
+
+  const [feedItems, setFeedItems] = useState(() => RECENT_PAYOUTS.slice(0, 3).map((item, i) => ({ ...item, uniqueId: `init-${i}` })));
+  const [nextIndex, setNextIndex] = useState(3);
+
+  useEffect(() => {
+    if (activeTab === 'live_payouts') {
+      const timer = setInterval(() => {
+        setFeedItems(prev => {
+          const baseItem = RECENT_PAYOUTS[nextIndex % RECENT_PAYOUTS.length];
+          const newItem = { ...baseItem, uniqueId: `live-${Date.now()}` };
+          return [newItem, ...prev].slice(0, 15);
+        });
+        setNextIndex(prev => prev + 1);
+      }, 4000);
+      return () => clearInterval(timer);
+    }
+  }, [activeTab, nextIndex]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -98,10 +115,10 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
 
             {/* Withdrawals List Feed */}
             <div className="space-y-2.5">
-              {RECENT_PAYOUTS.map((wdr) => (
+              {feedItems.map((wdr) => (
                 <div 
-                  key={wdr.id} 
-                  className="bg-gray-50/70 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 hover:border-[#2563eb]/30 transition-all shadow-xs"
+                  key={wdr.uniqueId} 
+                  className="bg-gray-50/70 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 hover:border-[#2563eb]/30 transition-all shadow-xs animate-fade-in"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[#2563eb]/10 text-[#2563eb] flex items-center justify-center font-black text-sm border border-[#2563eb]/20">
@@ -138,24 +155,23 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
             {notifications.length === 0 ? (
               <div className="text-center py-12 space-y-2">
                 <span className="material-symbols-outlined text-4xl text-gray-300">notifications_off</span>
-                <p className="text-xs text-gray-400 font-bold">You have no personal notifications yet.</p>
+                <p className="text-gray-500 font-medium text-sm">No new notifications</p>
               </div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} className="bg-gray-50 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800 p-3.5 rounded-2xl space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-xs text-on-surface dark:text-white">{n.title}</span>
-                    <span className="text-[9px] text-gray-400">{new Date(n.created_at).toLocaleTimeString()}</span>
+                <div key={n.id} className="bg-blue-50/50 dark:bg-[#2563eb]/5 border border-blue-100 dark:border-[#2563eb]/20 p-4 rounded-2xl">
+                  <div className="flex justify-between items-start gap-2">
+                    <h4 className="font-bold text-sm text-on-surface dark:text-white">{n.title}</h4>
+                    <span className="text-[10px] text-gray-400 whitespace-nowrap">{n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Just now'}</span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{n.message}</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{n.message}</p>
                 </div>
               ))
             )}
           </div>
         )}
+
       </div>
     </div>
   );
 };
-
-export default NotificationCenterModal;
