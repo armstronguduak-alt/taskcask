@@ -47,14 +47,15 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // NGN conversion logic (mock: 1 SB = 3 NGN)
+  // NGN conversion logic (mock: 30000 SB = 20000 NGN)
   const balanceSB = mainWallet?.balance_sb || 0;
-  const balanceNGN = balanceSB * 3;
+  const balanceNGN = balanceSB * (20000/30000);
   const balanceUSDT = mainWallet?.balance_usdt || 0;
 
   const getPartnerLogo = (name: string) => {
     switch(name) {
       case 'Clickworker': return '/clickworker-logo.png';
+      case 'Swagbucks': return '/swagbucks-logo.png';
       case 'Adsterra': return '/adsterra.png';
       case 'Monetag': return '/monetag-logo.png';
       default: return '';
@@ -101,45 +102,60 @@ export const Dashboard: React.FC = () => {
         <section className="relative overflow-hidden rounded-[24px] bg-[#1e3b7a] shadow-xl p-6 mx-container-padding text-white border border-blue-500/20">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           
-          <div className="relative z-10 space-y-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[11px] text-blue-200 uppercase tracking-wide font-semibold mb-1">Active Balance</p>
-                <div className="flex items-baseline gap-2">
-                  <h2 className="text-3xl font-extrabold">₦{balanceNGN.toLocaleString()}</h2>
-                </div>
-                <p className="text-[11px] text-blue-200 mt-1">= SB {balanceSB.toLocaleString()}</p>
+          <div className="relative z-10 flex flex-col">
+            
+            {/* Top Balances Row (SB & USDT using Real Logos) */}
+            <div className="flex justify-center items-center gap-3">
+              <div className="flex items-center gap-2 bg-[#132252] border border-blue-500/30 px-4 py-2 rounded-2xl shadow-inner">
+                <img src="/swagbucks coin logo.png" className="w-6 h-6 object-contain" alt="SB" />
+                <span className="text-[18px] font-extrabold tracking-tight text-white">{balanceSB.toLocaleString('en-US')}</span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#132252] border border-blue-500/30 px-3 py-2 rounded-2xl shadow-inner">
+                <img src="/usdt coin logo.png" className="w-5 h-5 object-contain" alt="USDT" />
+                <span className="text-[14px] font-bold text-white">${balanceUSDT.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2.5 py-1.5 rounded-full bg-black/20 text-blue-100 text-[10px] font-bold border border-white/5">
-                USDT {balanceUSDT.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-              <span className="inline-flex items-center px-2.5 py-1.5 rounded-full bg-black/20 text-blue-100 text-[10px] font-bold border border-white/5">
-                Level {userLevel?.name || '1'}
-              </span>
+            {/* Active Balance Label & Conversion */}
+            <div className="text-center mt-5 mb-6">
+              <h3 className="text-[15px] text-blue-200 font-bold mb-1" style={{ fontFamily: 'cursive' }}>Active Balance</h3>
+              <div className="text-[28px] font-extrabold tracking-tight text-white drop-shadow-md">
+                ₦{balanceNGN.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+              </div>
+              <div className="text-[14px] font-bold text-blue-200 mt-1">
+                ≈ {balanceSB.toLocaleString('en-US')} SB
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            {/* Bottom Actions and Level Tag */}
+            <div className="flex justify-between items-end">
+              {/* Withdraw Button (Left) */}
               <button 
                 onClick={() => setTab('Withdraw')}
-                className="py-3 bg-[#4a72ff] hover:bg-blue-500 font-bold text-[13px] text-white rounded-xl shadow-md active:scale-95 transition-transform text-center"
+                className="py-4 px-8 bg-transparent border-2 border-white hover:bg-white/10 font-bold text-[15px] text-white rounded-[20px] active:scale-95 transition-all shadow-md"
               >
                 Withdraw
               </button>
-              <button 
-                onClick={() => setTab('Task')}
-                className="py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-[13px] rounded-xl shadow-md active:scale-95 transition-transform text-center border border-white/10"
-              >
-                Earn
-              </button>
+              
+              {/* Level & Earn Button (Right) */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="inline-flex items-center px-5 py-1.5 rounded-[12px] bg-black/30 text-amber-400 text-[12px] font-bold border border-white/5 shadow-inner">
+                  Level {userLevel?.name || 'Silver'}
+                </span>
+                <button 
+                  onClick={() => setTab('Task')}
+                  className="py-3 px-8 bg-transparent border-2 border-white hover:bg-white/10 text-white font-bold text-[14px] rounded-[16px] shadow-md active:scale-95 transition-all"
+                >
+                  Earn
+                </button>
+              </div>
             </div>
+
           </div>
         </section>
 
         {/* Quick Actions Grid */}
-        <section className="grid grid-cols-4 gap-3 px-container-padding mt-6">
+        <section className="grid grid-cols-4 gap-3 px-container-padding mt-8">
           <button onClick={() => setTab('Task')} className="flex flex-col items-center gap-2 group">
             <div className="w-14 h-14 rounded-[20px] bg-[#223b73] border border-blue-500/20 flex items-center justify-center shadow-md group-active:scale-95 transition-all">
               <span className="material-symbols-outlined text-[26px] text-[#4a72ff]" style={{ fontVariationSettings: "'FILL' 1" }}>play_circle</span>
@@ -160,29 +176,30 @@ export const Dashboard: React.FC = () => {
           </button>
           <button onClick={() => setTab('Records')} className="flex flex-col items-center gap-2 group">
             <div className="w-14 h-14 rounded-[20px] bg-[#223b73] border border-blue-500/20 flex items-center justify-center shadow-md group-active:scale-95 transition-all">
-              <span className="material-symbols-outlined text-[26px] text-orange-400" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
+              <span className="material-symbols-outlined text-[26px] text-orange-400" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
             </div>
-            <span className="text-[11px] font-bold text-blue-100">Records</span>
+            <span className="text-[11px] font-bold text-blue-100">History</span>
           </button>
         </section>
 
-        {/* Lists (Daily Login & Community) */}
-        <section className="px-container-padding mt-6 space-y-3">
+        {/* Action Cards (Daily Login & Community) */}
+        <section className="px-container-padding mt-8 space-y-4">
+          
           {/* Daily Login streak */}
           <div className="bg-[#24428b] rounded-2xl p-4 flex items-center justify-between shadow-lg border border-blue-500/10">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 flex items-center justify-center text-4xl">
                 📅
               </div>
-              <div>
+              <div className="flex flex-col justify-center">
                 <h3 className="font-bold text-[15px] text-blue-100">Daily Login streak</h3>
-                <p className="text-[11px] text-blue-300">Day {dailyStreakDay}/7</p>
+                <p className="text-[11px] text-blue-300">chain daily reward streak bonus.</p>
               </div>
             </div>
             <button 
               disabled={hasClaimedDailyBonus}
               onClick={() => setShowDailyModal(true)}
-              className={`px-4 py-2 font-bold text-xs rounded-xl shadow-sm transition-all ${
+              className={`px-4 py-2 font-bold text-xs rounded-xl shadow-sm transition-all flex-shrink-0 ${
                 hasClaimedDailyBonus ? 'bg-black/20 text-gray-400 cursor-not-allowed' : 'bg-[#4a72ff] text-white hover:bg-blue-600 active:scale-95'
               }`}
             >
@@ -196,15 +213,15 @@ export const Dashboard: React.FC = () => {
               <div className="w-12 h-12 flex items-center justify-center text-4xl">
                 ✈️
               </div>
-              <div>
+              <div className="flex flex-col justify-center">
                 <h3 className="font-bold text-[15px] text-blue-100">Join our Community</h3>
-                <p className="text-[11px] text-blue-300">+500 SB</p>
+                <p className="text-[11px] text-blue-300">Earn SB 500</p>
               </div>
             </div>
             <button 
               disabled={isCommunityJoined}
               onClick={handleJoinCommunity}
-              className={`px-4 py-2 font-bold text-xs rounded-xl shadow-sm transition-all ${
+              className={`px-4 py-2 font-bold text-xs rounded-xl shadow-sm transition-all flex-shrink-0 ${
                 isCommunityJoined ? 'bg-black/20 text-gray-400 cursor-not-allowed' : 'bg-[#4a72ff] text-white hover:bg-blue-600 active:scale-95'
               }`}
             >
@@ -214,11 +231,11 @@ export const Dashboard: React.FC = () => {
         </section>
 
         {/* Verified Partners */}
-        <section className="px-container-padding mt-6 space-y-3 pb-8">
-          <h3 className="text-white font-extrabold text-[15px]">Verified Partners</h3>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-            {['Clickworker', 'Adsterra', 'Monetag'].map(partner => (
-              <div key={partner} className="flex-shrink-0 bg-[#223b73] border border-blue-500/20 rounded-2xl p-3 w-28 flex flex-col items-center justify-center h-20 shadow-md">
+        <section className="px-container-padding mt-8 space-y-4 pb-8">
+          <h3 className="text-white font-extrabold text-[15px] text-center">Verified Partners</h3>
+          <div className="flex flex-wrap justify-center gap-3">
+            {['Clickworker', 'Swagbucks', 'Adsterra', 'Monetag'].map(partner => (
+              <div key={partner} className="bg-[#223b73] border border-blue-500/20 rounded-2xl p-3 w-24 flex flex-col items-center justify-center h-20 shadow-md">
                 <img 
                   src={getPartnerLogo(partner)} 
                   alt={partner} 
@@ -228,7 +245,7 @@ export const Dashboard: React.FC = () => {
                     (e.target as HTMLElement).nextElementSibling!.classList.remove('hidden');
                   }}
                 />
-                <span className="hidden text-[11px] font-bold text-blue-200">{partner}</span>
+                <span className="hidden text-[10px] font-bold text-blue-200 uppercase tracking-wider">{partner}</span>
               </div>
             ))}
           </div>
@@ -251,59 +268,43 @@ export const Dashboard: React.FC = () => {
             </div>
             <button 
               onClick={handleClaimWelcome}
-              className="w-full py-3.5 bg-primary text-white font-bold text-sm rounded-2xl shadow-lg active:scale-95 transition-all"
+              className="w-full py-4 bg-[#4a72ff] hover:bg-blue-600 text-white font-bold text-[16px] rounded-[16px] shadow-lg active:scale-95 transition-all"
             >
-              Claim 500 SB Bonus
+              Claim Bonus
             </button>
           </div>
         </div>
       )}
 
       {showDailyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#1e3b7a] border border-blue-500/20 rounded-[24px] w-full max-w-sm overflow-hidden shadow-2xl animate-slide-up relative p-6">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#1e3b7a] border border-blue-500/30 w-full max-w-sm rounded-[32px] p-8 text-center space-y-6 shadow-2xl">
+            <div className="w-24 h-24 mx-auto bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center border-4 border-[#1e3b7a] shadow-lg">
+              <span className="material-symbols-outlined text-[48px]">auto_awesome</span>
+            </div>
+            <div>
+              <h2 className="text-[22px] font-black text-white">Daily Bonus!</h2>
+              <p className="text-[14px] text-blue-200 mt-3">
+                You received <strong className="text-white">200 SB</strong> for logging in today. Keep your streak alive!
+              </p>
+            </div>
             <button 
-              onClick={() => setShowDailyModal(false)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 transition-all"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span>
-            </button>
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center mb-3">
-                <span className="material-symbols-outlined text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
-              </div>
-              <h2 className="text-xl font-bold text-white">Daily Login Streak</h2>
-            </div>
-            
-            <div className="grid grid-cols-4 gap-2 mb-6">
-              {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                <div key={day} className={`flex flex-col items-center p-2 rounded-xl border ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'bg-orange-500/20 border-orange-500/50' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'bg-blue-500/20 border-blue-500/30' : 'bg-[#152a5c] border-white/5'}`}>
-                  <span className={`text-[10px] font-bold ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'text-orange-300' : 'text-blue-300/60'}`}>Day {day}</span>
-                  <span className={`text-xs font-bold mt-1 ${dailyStreakDay === day && !hasClaimedDailyBonus ? 'text-orange-400' : (dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus)) ? 'text-blue-400' : 'text-gray-500'}`}>
-                    {day * 50}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <button
-              disabled={hasClaimedDailyBonus}
               onClick={() => {
                 claimDailyBonus();
                 setShowDailyModal(false);
               }}
-              className={`w-full py-3 rounded-2xl font-bold transition-all ${hasClaimedDailyBonus ? 'bg-black/20 text-gray-400 cursor-not-allowed' : 'bg-[#4a72ff] text-white hover:bg-blue-600 active:scale-95 shadow-lg'}`}
+              className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[16px] rounded-[16px] shadow-lg active:scale-95 transition-all"
             >
-              {hasClaimedDailyBonus ? 'Come back tomorrow' : 'Claim Reward'}
+              Collect
             </button>
           </div>
         </div>
       )}
 
-      {showNotificationsModal && (
-        <NotificationCenterModal onClose={() => setShowNotificationsModal(false)} />
-      )}
+      {showNotificationsModal && <NotificationCenterModal onClose={() => setShowNotificationsModal(false)} />}
+      <LiveWithdrawalToast />
     </div>
   );
 };
+
 export default Dashboard;

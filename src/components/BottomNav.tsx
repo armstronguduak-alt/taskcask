@@ -15,7 +15,7 @@ export const BottomNav: React.FC = () => {
     { tab: 'Home', label: 'Home', icon: 'home' },
     { tab: 'Task', label: 'Task', icon: 'assignment' },
     { tab: 'Leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
-    { tab: 'Records', label: 'Records', icon: 'history' },
+    { tab: 'Invite', label: 'Invite', icon: 'group_add' },
     { tab: 'Profile', label: 'Profile', icon: 'person' }
   ];
 
@@ -29,7 +29,7 @@ export const BottomNav: React.FC = () => {
           
           if (isActive) {
             return (
-              <button
+               <button
                 key={item.tab}
                 className="flex-1 flex flex-col items-center justify-center relative z-10 -mt-5"
               >
