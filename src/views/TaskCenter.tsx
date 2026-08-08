@@ -89,7 +89,7 @@ export const TaskCenter: React.FC = () => {
     }
   };
 
-  const handleCompleteTask = (task: Task, e: React.MouseEvent) => {
+  const handleCompleteTask = async (task: Task, e: React.MouseEvent) => {
     e.stopPropagation();
     triggerHaptic('light');
     
@@ -100,7 +100,16 @@ export const TaskCenter: React.FC = () => {
       else window.open(task.link, '_blank', 'noopener,noreferrer');
     }
     
-    // Open verification modal
+    // Auto-verify community tasks without screenshots
+    if (task.category_id === 'cat_community') {
+      const result = await submitTaskProof(task.id, 'auto_verified');
+      if (result.success) {
+        setPendingTasks(prev => ({ ...prev, [task.id]: true }));
+      }
+      return;
+    }
+
+    // Open verification modal for other tasks
     setActiveTaskDetail(task);
   };
 

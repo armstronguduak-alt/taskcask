@@ -234,7 +234,7 @@ export const Dashboard: React.FC = () => {
           <h3 className="text-white font-extrabold text-[15px] text-center">Verified Partners</h3>
           <div className="flex flex-wrap justify-center gap-3">
             {['Clickworker', 'Swagbucks', 'Adsterra', 'Monetag'].map(partner => (
-              <div key={partner} className="bg-[#223b73] border border-blue-500/20 rounded-2xl p-3 w-24 flex flex-col items-center justify-center h-20 shadow-md">
+              <div key={partner} className="bg-[#304878] rounded-[24px] p-3 w-[88px] flex flex-col items-center justify-center h-[88px] shadow-md">
                 <img 
                   src={getPartnerLogo(partner)} 
                   alt={partner} 
@@ -274,20 +274,53 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
-
       {showDailyModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-[#1e3b7a] border border-blue-500/30 w-full max-w-sm rounded-[32px] p-8 text-center space-y-6 shadow-2xl">
-            <div className="w-24 h-24 mx-auto bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center border-4 border-[#1e3b7a] shadow-lg">
-              <span className="material-symbols-outlined text-[48px]">auto_awesome</span>
-            </div>
-            <div>
-              <h2 className="text-[22px] font-black text-white">Daily Bonus!</h2>
-              <p className="text-[14px] text-blue-200 mt-3">
-                You received <strong className="text-white">200 SB</strong> for logging in today. Keep your streak alive!
+          <div className="bg-[#1e3b7a] border border-blue-500/30 w-full max-w-sm rounded-[32px] p-6 text-center shadow-2xl relative">
+            <button 
+              onClick={() => setShowDailyModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 transition-all"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+            <div className="text-center mb-4 mt-2">
+              <div className="w-16 h-16 mx-auto bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center border-4 border-[#1e3b7a] shadow-lg mb-2">
+                <span className="material-symbols-outlined text-[36px]">auto_awesome</span>
+              </div>
+              <h2 className="text-[20px] font-black text-white">30-Day Streak</h2>
+              <p className="text-[12px] text-blue-200 mt-1">
+                Log in daily to earn bigger rewards!
               </p>
             </div>
+            
+            <div className="grid grid-cols-5 gap-1.5 mb-6 max-h-[220px] overflow-y-auto no-scrollbar p-1">
+              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
+                const isClaimed = dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus);
+                const isToday = dailyStreakDay === day && !hasClaimedDailyBonus;
+                
+                return (
+                  <div key={day} className={`flex flex-col items-center justify-center p-1.5 rounded-[12px] border ${
+                    isToday ? 'bg-orange-500/20 border-orange-500/50 shadow-inner' : 
+                    isClaimed ? 'bg-[#4a72ff]/20 border-[#4a72ff]/30' : 
+                    'bg-[#132252] border-white/5'
+                  }`}>
+                    <span className={`text-[9px] font-extrabold tracking-tight ${
+                      isToday ? 'text-orange-300' : isClaimed ? 'text-[#4a72ff]' : 'text-blue-300/40'
+                    }`}>
+                      D{day}
+                    </span>
+                    <span className={`text-[10px] font-extrabold mt-0.5 ${
+                      isToday ? 'text-orange-400' : isClaimed ? 'text-blue-200' : 'text-gray-500'
+                    }`}>
+                      {day % 5 === 0 ? day * 100 : day * 50}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
             <button 
+              disabled={hasClaimedDailyBonus}
               onClick={() => {
                 claimDailyBonus();
                 setShowDailyModal(false);
