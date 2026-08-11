@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useReward } from '../components/RewardCelebration';
 import { NotificationCenterModal } from '../components/NotificationCenterModal';
 import { Avatar } from '../components/Avatar';
 
@@ -14,8 +15,10 @@ export const Dashboard: React.FC = () => {
     claimWelcomeBonus,
     claimCommunityBonus,
     hasClaimedDailyBonus,
-    dailyStreakDay
+    dailyStreakDay,
+    refreshState
   } = useApp();
+  const { triggerReward } = useReward();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0];
 
@@ -31,17 +34,35 @@ export const Dashboard: React.FC = () => {
     if (!localStorage.getItem('welcome_bonus_claimed')) setShowWelcomeModal(true);
   }, [user]);
 
-  const handleClaimWelcome = () => {
-    claimWelcomeBonus();
+  const handleClaimWelcome = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const res = await claimWelcomeBonus();
+    if (res.success) {
+      triggerReward({
+        amount: res.amount!,
+        currency: res.currency!,
+        source: e.currentTarget,
+        destinationId: `wallet-${res.currency!.toLowerCase()}`,
+        onComplete: refreshState
+      });
+    }
     setShowWelcomeModal(false);
   };
 
-  const handleJoinCommunity = () => {
+  const handleJoinCommunity = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isCommunityJoined && !isVerifyingCommunity) {
       window.open('https://t.me/swagbucks_official', '_blank');
       setIsVerifyingCommunity(true);
     } else if (isVerifyingCommunity) {
-      claimCommunityBonus();
+      const res = await claimCommunityBonus();
+      if (res.success) {
+        triggerReward({
+          amount: res.amount!,
+          currency: res.currency!,
+          source: e.currentTarget,
+          destinationId: `wallet-${res.currency!.toLowerCase()}`,
+          onComplete: refreshState
+        });
+      }
       setIsVerifyingCommunity(false);
       setIsCommunityJoined(true);
     }
@@ -102,11 +123,11 @@ export const Dashboard: React.FC = () => {
             
             {/* Top Balances Row (SB & USDT using Real Logos) */}
             <div className="flex justify-center items-center gap-3">
-              <div className="flex items-center gap-2 bg-[#132252] border border-blue-500/30 px-4 py-2 rounded-2xl shadow-inner">
+              <div id="wallet-sb" className="flex items-center gap-2 bg-[#132252] border border-blue-500/30 px-4 py-2 rounded-2xl shadow-inner">
                 <img src="/swagbucks coin logo.png" className="w-6 h-6 object-contain" alt="SB" />
                 <span className="text-[18px] font-extrabold tracking-tight text-white">{balanceSB.toLocaleString('en-US')}</span>
               </div>
-              <div className="flex items-center gap-2 bg-[#132252] border border-blue-500/30 px-3 py-2 rounded-2xl shadow-inner">
+              <div id="wallet-usdt" className="flex items-center gap-2 bg-[#132252] border border-blue-500/30 px-3 py-2 rounded-2xl shadow-inner">
                 <img src="/usdt coin logo.png" className="w-5 h-5 object-contain" alt="USDT" />
                 <span className="text-[14px] font-bold text-white">${balanceUSDT.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
@@ -231,7 +252,7 @@ export const Dashboard: React.FC = () => {
           <h3 className="text-white font-extrabold text-[15px] text-center">Verified Partners</h3>
           <div className="flex flex-wrap justify-center gap-3">
             {['Clickworker', 'Swagbucks', 'Adsterra', 'Monetag'].map(partner => (
-              <div key={partner} className="bg-[#304878] rounded-[24px] p-3 w-[88px] flex flex-col items-center justify-center h-[88px] shadow-md">
+              <div key={partner} className="bg-transparent p-3 w-[88px] flex flex-col items-center justify-center h-[88px]">
                 <img 
                   src={getPartnerLogo(partner)} 
                   alt={partner} 
@@ -284,42 +305,70 @@ export const Dashboard: React.FC = () => {
               <div className="w-16 h-16 mx-auto bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center border-4 border-[#1e3b7a] shadow-lg mb-2">
                 <span className="material-symbols-outlined text-[36px]">auto_awesome</span>
               </div>
-              <h2 className="text-[20px] font-black text-white">30-Day Streak</h2>
+              <h2 className="text-[20px] font-black text-white">28-Day Streak</h2>
               <p className="text-[12px] text-blue-200 mt-1">
                 Log in daily to earn bigger rewards!
               </p>
             </div>
             
-            <div className="grid grid-cols-5 gap-1.5 mb-6 max-h-[220px] overflow-y-auto no-scrollbar p-1">
-              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
-                const isClaimed = dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus);
-                const isToday = dailyStreakDay === day && !hasClaimedDailyBonus;
-                
-                return (
-                  <div key={day} className={`flex flex-col items-center justify-center p-1.5 rounded-[12px] border ${
-                    isToday ? 'bg-orange-500/20 border-orange-500/50 shadow-inner' : 
-                    isClaimed ? 'bg-[#4a72ff]/20 border-[#4a72ff]/30' : 
-                    'bg-[#132252] border-white/5'
-                  }`}>
-                    <span className={`text-[9px] font-extrabold tracking-tight ${
-                      isToday ? 'text-orange-300' : isClaimed ? 'text-[#4a72ff]' : 'text-blue-300/40'
-                    }`}>
-                      D{day}
-                    </span>
-                    <span className={`text-[10px] font-extrabold mt-0.5 ${
-                      isToday ? 'text-orange-400' : isClaimed ? 'text-blue-200' : 'text-gray-500'
-                    }`}>
-                      {day % 5 === 0 ? day * 100 : day * 50}
-                    </span>
+            <div className="flex flex-col gap-3 mb-6 max-h-[300px] overflow-y-auto no-scrollbar p-1">
+              {[1, 2, 3, 4].map(week => (
+                <div key={week} className="bg-[#132252]/50 rounded-2xl p-2 border border-white/5">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-blue-300/80 mb-2 ml-1 text-left">Week {week}</h3>
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {Array.from({ length: 7 }, (_, i) => (week - 1) * 7 + i + 1).map(day => {
+                      const isClaimed = dailyStreakDay > day || (dailyStreakDay === day && hasClaimedDailyBonus);
+                      const isToday = dailyStreakDay === day && !hasClaimedDailyBonus;
+                      
+                      const dayInWeek = ((day - 1) % 7) + 1;
+                      let rewardStr = "100";
+                      let currencyStr = "SB";
+                      if (dayInWeek === 3) { rewardStr = "0.05"; currencyStr = "USDT"; }
+                      else if (dayInWeek === 5) { rewardStr = "0.25"; currencyStr = "USDT"; }
+                      else if (dayInWeek === 7) { rewardStr = "150"; currencyStr = "SB"; }
+                      
+                      return (
+                        <div key={day} className={`flex flex-col items-center justify-center py-2 px-1 rounded-[10px] border ${
+                          isToday ? 'bg-orange-500/20 border-orange-500/50 shadow-inner scale-105' : 
+                          isClaimed ? 'bg-[#4a72ff]/20 border-[#4a72ff]/30' : 
+                          'bg-[#132252] border-white/5'
+                        }`}>
+                          <span className={`text-[8px] font-extrabold tracking-tight ${
+                            isToday ? 'text-orange-300' : isClaimed ? 'text-[#4a72ff]' : 'text-blue-300/40'
+                          }`}>
+                            D{day}
+                          </span>
+                          <span className={`text-[10px] font-black mt-1 leading-none ${
+                            isToday ? 'text-orange-400' : isClaimed ? 'text-blue-200' : 'text-gray-500'
+                          }`}>
+                            {rewardStr}
+                          </span>
+                          <span className={`text-[7px] font-bold mt-0.5 ${
+                             currencyStr === 'USDT' ? 'text-[#00ffa3]' : (isClaimed ? 'text-blue-300/80' : 'text-gray-600')
+                          }`}>
+                            {currencyStr}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
 
             <button 
               disabled={hasClaimedDailyBonus}
-              onClick={() => {
-                claimDailyBonus();
+              onClick={async (e) => {
+                const res = await claimDailyBonus();
+                if (res.success) {
+                  triggerReward({
+                    amount: res.amount!,
+                    currency: res.currency!,
+                    source: e.currentTarget,
+                    destinationId: `wallet-${res.currency!.toLowerCase()}`,
+                    onComplete: refreshState
+                  });
+                }
                 setShowDailyModal(false);
               }}
               className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[16px] rounded-[16px] shadow-lg active:scale-95 transition-all"

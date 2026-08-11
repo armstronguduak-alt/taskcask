@@ -29,7 +29,7 @@ export const WatchEarn: React.FC = () => {
           <div className="flex items-center gap-2">
             <h1 className="font-bold text-lg text-[#2563eb]">Watch & Earn</h1>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">
+          <div id="wallet-sb" className="flex items-center gap-1.5 px-3 py-1 bg-[#2563eb]/10 rounded-full">
             <span className="material-symbols-outlined text-[#2563eb] text-[16px] font-fill">account_balance_wallet</span>
             <span className="text-xs font-bold text-[#2563eb]">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</span>
           </div>

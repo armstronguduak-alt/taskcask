@@ -5,7 +5,7 @@ import { triggerHaptic } from '../utils/haptic';
 interface VideoAdModalProps {
   ad: RewardedAd | null;
   onClose: () => void;
-  onComplete: (ad: RewardedAd) => void;
+  onComplete: (ad: RewardedAd, sourceEl: HTMLElement) => void;
   rewardAmount: number;
 }
 
@@ -41,11 +41,6 @@ export const VideoAdModal: React.FC<VideoAdModalProps> = ({
   }, [isPlaying, isCompleted]);
 
   const progressPercent = Math.min(100, Math.round(((totalTime - timeLeft) / totalTime) * 100));
-
-  const handleClaimReward = () => {
-    onComplete(ad);
-    onClose();
-  };
 
   const sampleVideos = [
     "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
@@ -133,7 +128,10 @@ export const VideoAdModal: React.FC<VideoAdModalProps> = ({
               </p>
             </div>
             <button
-              onClick={handleClaimReward}
+              onClick={(e) => {
+                onComplete(ad, e.currentTarget);
+                onClose();
+              }}
               className="px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-zinc-900 font-extrabold text-xs rounded-2xl shadow-lg shadow-[#2563eb]/30 active:scale-95 transition-all"
             >
               Collect {rewardAmount} SB & Close

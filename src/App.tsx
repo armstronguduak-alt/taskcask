@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
+import { RewardProvider } from './components/RewardCelebration';
 import BottomNav from './components/BottomNav';
 import Dashboard from './views/Dashboard';
 import WatchEarn from './views/WatchEarn';
@@ -12,9 +13,11 @@ import Leaderboard from './views/Leaderboard';
 
 
 import VideoAdModal from './components/VideoAdModal';
+import { useReward } from './components/RewardCelebration';
 
 const AppContent: React.FC = () => {
-  const { activeTab, activeAd, setActiveAd, completeAd, levels, user, systemSettings } = useApp();
+  const { activeTab, activeAd, setActiveAd, completeAd, levels, user, systemSettings, refreshState } = useApp();
+  const { triggerReward } = useReward();
   const [vpnDetected, setVpnDetected] = useState<boolean>(false);
 
   useEffect(() => {
@@ -83,7 +86,18 @@ const AppContent: React.FC = () => {
         <VideoAdModal
           ad={activeAd}
           onClose={() => setActiveAd(null)}
-          onComplete={(ad) => completeAd(ad)}
+          onComplete={async (ad, sourceEl) => {
+            const res = await completeAd(ad);
+            if (res.success) {
+               triggerReward({
+                 amount: res.amount!,
+                 currency: res.currency!,
+                 source: sourceEl,
+                 destinationId: `wallet-${res.currency!.toLowerCase()}`,
+                 onComplete: refreshState
+               });
+            }
+          }}
           rewardAmount={rewardAmount}
         />
       )}
@@ -94,7 +108,9 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <RewardProvider>
+        <AppContent />
+      </RewardProvider>
     </AppProvider>
   );
 }

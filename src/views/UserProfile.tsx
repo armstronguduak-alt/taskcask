@@ -47,20 +47,26 @@ export const UserProfile: React.FC = () => {
             </h2>
             <p className="text-[13px] text-blue-200 mt-0.5">@{user?.username}</p>
             <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#4a72ff]/20 text-[#4a72ff] text-[10px] font-extrabold uppercase tracking-wider mt-2.5 border border-[#4a72ff]/30">
-              {userLevel?.name || 'Starter'}
+              {userLevel?.name || 'Silver'}
             </span>
           </div>
         </section>
 
         {/* Earning Stats Grid */}
         <section className="grid grid-cols-2 gap-4">
-          <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg space-y-1">
-            <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-wide">Active Balance</p>
+          <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg space-y-2">
+            <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-wide flex items-center gap-1.5">
+              <img src="/swagbucks coin logo.png" className="w-3.5 h-3.5 object-contain" alt="SB" />
+              Swagbucks Balance
+            </p>
             <p className="font-extrabold text-[16px] text-white">{(mainWallet?.balance_sb || 0).toLocaleString()} SB</p>
           </div>
-          <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg space-y-1">
-            <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-wide">Cumulative Earnings</p>
-            <p className="font-extrabold text-[16px] text-white">{(mainWallet?.lifetime_sb || 0).toLocaleString()} SB</p>
+          <div className="bg-[#24428b] border border-blue-500/10 rounded-[20px] p-4 shadow-lg space-y-2">
+            <p className="text-[10px] font-bold text-blue-300/80 uppercase tracking-wide flex items-center gap-1.5">
+              <img src="/usdt coin logo.png" className="w-3.5 h-3.5 object-contain" alt="USDT" />
+              USDT Balance
+            </p>
+            <p className="font-extrabold text-[16px] text-white">${(mainWallet?.balance_usdt || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</p>
           </div>
         </section>
 

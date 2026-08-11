@@ -15,10 +15,11 @@ import type {
   TabName
 } from '../types';
 
-import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
-import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
+import { isSupabaseConfigured, supabase } from '../services/supabaseClient';
 import { SupabaseService } from '../services/supabaseService';
 import { TelegramAuthService } from '../services/telegramAuthService';
+import { AdService } from '../services/AdService';
+import { triggerHaptic, initGlobalHapticListener } from '../utils/haptic';
 
 interface AppContextProps {
   user: User | null;
@@ -52,7 +53,7 @@ interface AppContextProps {
   setTab: (tab: TabName) => void;
   skipOnboarding: () => void;
   playAd: (ad: RewardedAd) => void;
-  completeAd: (ad: RewardedAd) => Promise<void>;
+  completeAd: (ad: RewardedAd) => Promise<{ success: boolean; amount?: number; currency?: 'SB' | 'USDT' }>;
   setActiveAd: (ad: RewardedAd | null) => void;
   triggerInAppAd: (onComplete: () => void) => void;
   submitTaskProof: (taskId: string, username: string) => Promise<{ success: boolean; message: string }>;
@@ -161,20 +162,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ]);
         
         setRewardedAds([
-          { id: 'ad_connect', name: 'Connect wallet', type: 'wallet', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 0, remaining_views: 1 },
-          { id: 'ad_monetag1', name: 'Click on the Ad after viewing', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 15, remaining_views: 1 },
+          { id: 'ad_monetag1', name: 'Click on the Ad after viewing', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 50, watch_time_sec: 15, remaining_views: 1 },
           { id: 'ad_monetag2', name: 'Watch and click on ads', type: 'monetag', category: 'Official', reward_type: 'USDT', reward_amount: 0.05, watch_time_sec: 30, remaining_views: 1 },
-          { id: 'ad_giga', name: 'Watch the Giga AD', type: 'giga', category: 'Official', reward_type: 'SB', reward_amount: 30000, watch_time_sec: 45, remaining_views: 1 },
+          { id: 'ad_giga', name: 'Watch the Giga AD', type: 'giga', category: 'Official', reward_type: 'SB', reward_amount: 50, watch_time_sec: 45, remaining_views: 1 },
           { id: 'ad_video', name: 'View video, then tap the AD', type: 'video', category: 'Official', reward_type: 'USDT', reward_amount: 0.10, watch_time_sec: 60, remaining_views: 1 }
         ]);
 
         setTasks([
-          { id: 't_ton1', title: 'Make TON transaction', category_id: 'cat_extra', reward_type: 'USDT', reward_amount: 2.5, description: 'Send TON to partner address', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'ton_yellow' },
-          { id: 't_star1', title: 'Donate Stars', category_id: 'cat_extra', reward_type: 'SB', reward_amount: 4000, description: 'Donate stars on Telegram', link: '#', status: 'Active', badge: 'Sponsored', button_text: 'Complete Task', icon: 'star_yellow' },
-          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 1500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
+          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
           { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
-          { id: 't_visit', title: 'Visit partner website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 10000, description: 'Open the partner page and interact with the content for the required amount of time.', link: 'https://www.effectivecpmnetwork.com/h0cq93109?key=c4b5e80c407ee733eb7a534c655bf22b', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' },
-          { id: 't_read', title: 'Read content', category_id: 'cat_engagement', reward_type: 'USDT', reward_amount: 0.05, description: 'Open the partner page and interact with the content for the required amount of time.', link: 'https://link.gigapub.tech/l/cynz40gvg', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' }
+          { id: 't_visit', title: 'Visit Website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 100, description: 'Open the partner page and interact with the content.', link: 'https://www.effectivecpmnetwork.com/h0cq93109?key=c4b5e80c407ee733eb7a534c655bf22b', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' },
+          { id: 't_read', title: 'Explore Content', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 150, description: 'Explore premium content.', link: 'https://link.gigapub.tech/l/cynz40gvg', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' },
+          { id: 't_stay', title: 'Stay 30 Seconds', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 200, description: 'Stay on the page for 30 seconds.', link: '#', status: 'Active', badge: 'Standard', button_text: 'Start', icon: 'explore' },
+          { id: 't_partner', title: 'Partner Task', category_id: 'cat_engagement', reward_type: 'USDT', reward_amount: 0.20, description: 'Complete the partner task.', link: '#', status: 'Active', badge: 'Standard', button_text: 'Complete', icon: 'explore' }
         ]);
 
         setBanks([
@@ -280,7 +280,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const skipOnboarding = () => {
     localStorage.setItem('swagbucks_onboarding_done', 'true');
     setOnboardingCompleted(true);
-    setActiveTab('Dashboard');
+    setActiveTab('Home');
   };
 
   const playAd = async (ad: RewardedAd) => {
@@ -294,9 +294,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Call RPC to credit reward
     if (user && isSupabaseConfigured()) {
        await SupabaseService.creditWalletRPC(user.id, 'WatchReward', ad.reward_amount, `Watched Ad: ${ad.name}`);
-       refreshState();
+       setActiveAd(null);
+       return { success: true, amount: ad.reward_amount, currency: 'SB' as const };
     }
     setActiveAd(null);
+    return { success: false };
   };
 
   const triggerInAppAd = (onComplete: () => void) => {
@@ -311,33 +313,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     await SupabaseService.submitTaskProofDB(user.id, taskId, username);
     await SupabaseService.creditWalletRPC(user.id, 'TaskReward', task.reward_amount, `Completed Task: ${task.title}`);
-    refreshState();
-    return { success: true, message: `Task submitted! Reward added to balance.` };
+    return { success: true, message: `Task submitted! Reward added to balance.`, amount: task.reward_amount, currency: (task.reward_type || 'SB') as 'SB' | 'USDT' };
   };
 
-  const claimDailyBonus = () => {
+  const claimDailyBonus = async () => {
      if (user && isSupabaseConfigured()) {
-       SupabaseService.creditWalletRPC(user.id, 'DailyReward', 50, 'Daily Login Reward');
-       refreshState();
+       const currentDay = dailyStreakDay || 1;
+       const dayInWeek = ((currentDay - 1) % 7) + 1;
+
+       let amount = 100;
+       let currency: 'SB' | 'USDT' = 'SB';
+
+       if (dayInWeek === 3) { amount = 0.05; currency = 'USDT'; }
+       else if (dayInWeek === 5) { amount = 0.25; currency = 'USDT'; }
+       else if (dayInWeek === 7) { amount = 150; currency = 'SB'; }
+
+       await SupabaseService.creditWalletRPC(user.id, 'DailyReward', amount, `Daily Login Reward - Day ${currentDay}`);
+       return { success: true, amount, currency };
      }
+     return { success: false };
   };
 
-  const claimWelcomeBonus = () => {
-    if (localStorage.getItem('welcome_bonus_claimed')) return;
+  const claimWelcomeBonus = async () => {
+    if (localStorage.getItem('welcome_bonus_claimed')) return { success: false };
     localStorage.setItem('welcome_bonus_claimed', 'true');
     if (user && isSupabaseConfigured()) {
-       SupabaseService.creditWalletRPC(user.id, 'DailyReward', 500, 'Welcome Bonus');
-       refreshState();
+       await SupabaseService.creditWalletRPC(user.id, 'DailyReward', 500, 'Welcome Bonus');
+       return { success: true, amount: 500, currency: 'SB' as const };
     }
+    return { success: false };
   };
 
-  const claimCommunityBonus = () => {
-    if (localStorage.getItem('community_bonus_claimed')) return;
+  const claimCommunityBonus = async () => {
+    if (localStorage.getItem('community_bonus_claimed')) return { success: false };
     localStorage.setItem('community_bonus_claimed', 'true');
     if (user && isSupabaseConfigured()) {
-       SupabaseService.creditWalletRPC(user.id, 'TaskReward', 500, 'Join Our Community');
-       refreshState();
+       await SupabaseService.creditWalletRPC(user.id, 'TaskReward', 500, 'Join Our Community');
+       return { success: true, amount: 500, currency: 'SB' as const };
     }
+    return { success: false };
   };
 
   const verifyEmail = () => {
