@@ -35,6 +35,8 @@ export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
         return 'from-cyan-400 to-blue-600 text-cyan-950 border-cyan-300/40';
       case 'diamond':
         return 'from-indigo-400 to-purple-600 text-purple-100 border-purple-300/40';
+      case 'ruby':
+        return 'from-red-500 to-rose-700 text-rose-100 border-rose-300/40';
       default:
         return 'from-[#2563eb] to-blue-600 text-zinc-900 border-[#2563eb]/30';
     }

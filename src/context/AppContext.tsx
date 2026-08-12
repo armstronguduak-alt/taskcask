@@ -156,6 +156,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (banksData) setBanks(banksData as Bank[]);
       } else {
         // Mock data for UI development
+        setLevels([
+          { id: 'lvl_1', name: 'Silver', cost: 0, earning_multiplier: 1.0, max_daily_ads_cat_a: 5, max_daily_ads_cat_b: 5, max_daily_ads_cat_c: 5, max_daily_tasks: 5, min_withdrawal_sb: 30000, min_withdrawal_usdt: 20, req_account_age: 0, req_streak: 0, req_ads: 0, req_tasks: 0, req_referrals: 0, benefits: ['Basic Tasks'] },
+          { id: 'lvl_2', name: 'Gold', cost: 1000, earning_multiplier: 1.5, max_daily_ads_cat_a: 10, max_daily_ads_cat_b: 10, max_daily_ads_cat_c: 10, max_daily_tasks: 10, min_withdrawal_sb: 20000, min_withdrawal_usdt: 15, req_account_age: 7, req_streak: 7, req_ads: 20, req_tasks: 10, req_referrals: 2, benefits: ['Premium Tasks', 'Lower Withdrawal limit'] },
+          { id: 'lvl_3', name: 'Diamond', cost: 5000, earning_multiplier: 2.0, max_daily_ads_cat_a: 20, max_daily_ads_cat_b: 20, max_daily_ads_cat_c: 20, max_daily_tasks: 20, min_withdrawal_sb: 10000, min_withdrawal_usdt: 10, req_account_age: 30, req_streak: 30, req_ads: 100, req_tasks: 50, req_referrals: 10, benefits: ['All Tasks', 'Priority Support', 'Lowest Withdrawal'] },
+          { id: 'lvl_4', name: 'Ruby', cost: 10000, earning_multiplier: 3.0, max_daily_ads_cat_a: 30, max_daily_ads_cat_b: 30, max_daily_ads_cat_c: 30, max_daily_tasks: 30, min_withdrawal_sb: 5000, min_withdrawal_usdt: 5, req_account_age: 60, req_streak: 60, req_ads: 200, req_tasks: 100, req_referrals: 20, benefits: ['VIP Exclusive Tasks', 'Instant Withdrawals'] }
+        ]);
         setTaskCategories([
           { id: 'cat_official', name: 'Official', icon: 'verified' },
           { id: 'cat_extra', name: 'Extra Tasks', icon: 'stars' }

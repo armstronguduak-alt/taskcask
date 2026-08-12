@@ -230,7 +230,7 @@ export const Dashboard: React.FC = () => {
                 ✈️
               </div>
               <div className="flex flex-col justify-center">
-                <h3 className="font-bold text-[15px] text-blue-100">Join our Community</h3>
+                <h3 className="font-bold text-[15px] text-blue-100">Join our Telegram community</h3>
                 <p className="text-[11px] text-blue-300">Earn SB 500</p>
               </div>
             </div>
