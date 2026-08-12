@@ -1,12 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Avatar } from '../components/Avatar';
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 export const Leaderboard: React.FC = () => {
   useApp();
 
-  // Start with empty leaderboard until connected to DB
-  const topEarners: any[] = [];
+  const [topEarners, setTopEarners] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+
+    const fetchLeaderboard = async () => {
+      // In a real app, this should query a view combining users and wallets
+      // For now, we sort by total_ads_watched as a proxy for earning points
+      const { data } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, total_ads_watched, total_tasks_completed')
+        .order('total_ads_watched', { ascending: false })
+        .limit(20);
+      
+      if (data) {
+        setTopEarners(data.map((u, i) => ({
+          id: u.id,
+          name: u.first_name + (u.last_name ? ' ' + u.last_name : ''),
+          rank: i + 1,
+          points: (u.total_ads_watched * 15) + (u.total_tasks_completed * 50) // Mock calculation
+        })));
+      }
+    };
+
+    fetchLeaderboard();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('leaderboard_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, fetchLeaderboard)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const formatName = (name: string) => {
     if (!name) return 'User';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 interface NotificationCenterModalProps {
   onClose: () => void;
@@ -22,20 +23,45 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
   const { notifications } = useApp();
   const [activeTab, setActiveTab] = useState<NotificationTab>('live_payouts');
 
-  const [feedItems, setFeedItems] = useState(() => RECENT_PAYOUTS.slice(0, 3).map((item, i) => ({ ...item, uniqueId: `init-${i}` })));
+  const [feedItems, setFeedItems] = useState<any[]>(() => 
+    RECENT_PAYOUTS.slice(0, 3).map((item, i) => ({ ...item, uniqueId: `init-${i}` }))
+  );
   const [nextIndex, setNextIndex] = useState(3);
 
   useEffect(() => {
     if (activeTab === 'live_payouts') {
-      const timer = setInterval(() => {
-        setFeedItems(prev => {
-          const baseItem = RECENT_PAYOUTS[nextIndex % RECENT_PAYOUTS.length];
-          const newItem = { ...baseItem, uniqueId: `live-${Date.now()}` };
-          return [newItem, ...prev].slice(0, 15);
-        });
-        setNextIndex(prev => prev + 1);
-      }, 4000);
-      return () => clearInterval(timer);
+      if (isSupabaseConfigured()) {
+        const channel = supabase
+          .channel('public:transactions')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions', filter: 'type=eq.Withdrawal' }, payload => {
+            const newTx = payload.new;
+            const newItem = {
+              id: newTx.id,
+              name: 'User', // We would normally join users here
+              country: 'Global',
+              amount: newTx.amount,
+              currency: newTx.currency,
+              timeAgo: 'Just now',
+              uniqueId: `live-${Date.now()}`
+            };
+            setFeedItems(prev => [newItem, ...prev].slice(0, 15));
+          })
+          .subscribe();
+        
+        return () => {
+          supabase.removeChannel(channel);
+        };
+      } else {
+        const timer = setInterval(() => {
+          setFeedItems(prev => {
+            const baseItem = RECENT_PAYOUTS[nextIndex % RECENT_PAYOUTS.length];
+            const newItem = { ...baseItem, uniqueId: `live-${Date.now()}` };
+            return [newItem, ...prev].slice(0, 15);
+          });
+          setNextIndex(prev => prev + 1);
+        }, 4000);
+        return () => clearInterval(timer);
+      }
     }
   }, [activeTab, nextIndex]);
 

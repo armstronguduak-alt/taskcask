@@ -175,8 +175,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ]);
 
         setTasks([
-          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 500, description: 'Join our official community', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
-          { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: '#', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
+          { id: 't_tg_join', title: 'Join Telegram channel', category_id: 'cat_community', reward_type: 'SB', reward_amount: 500, description: 'Join our official community', link: 'https://t.me/taskcash_official', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
+          { id: 't_wa_join', title: 'Join WhatsApp group', category_id: 'cat_community', reward_type: 'USDT', reward_amount: 0.2, description: 'Join WhatsApp for alerts', link: 'https://whatsapp.com/channel/0029Vb8KUjXEquiYaU8JqQ45', status: 'Active', badge: 'Standard', button_text: 'Join', icon: 'globe' },
           { id: 't_visit', title: 'Visit Website', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 100, description: 'Open the partner page and interact with the content.', link: 'https://www.effectivecpmnetwork.com/h0cq93109?key=c4b5e80c407ee733eb7a534c655bf22b', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' },
           { id: 't_read', title: 'Explore Content', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 150, description: 'Explore premium content.', link: 'https://link.gigapub.tech/l/cynz40gvg', status: 'Active', badge: 'Standard', button_text: 'Explore', icon: 'explore' },
           { id: 't_stay', title: 'Stay 30 Seconds', category_id: 'cat_engagement', reward_type: 'SB', reward_amount: 200, description: 'Stay on the page for 30 seconds.', link: '#', status: 'Active', badge: 'Standard', button_text: 'Start', icon: 'explore' },
