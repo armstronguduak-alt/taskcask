@@ -169,7 +169,109 @@ CREATE POLICY "Public profiles are viewable by everyone." ON public.users FOR SE
 CREATE POLICY "Users can insert their own profile." ON public.users FOR INSERT WITH CHECK (auth.uid()::text = id);
 CREATE POLICY "Users can update own profile." ON public.users FOR UPDATE USING (auth.uid()::text = id);
 
+-- Allow public read access to static data
+CREATE POLICY "Public tasks viewable" ON public.tasks FOR SELECT USING (true);
+CREATE POLICY "Public categories viewable" ON public.task_categories FOR SELECT USING (true);
+CREATE POLICY "Public ads viewable" ON public.rewarded_ads FOR SELECT USING (true);
+CREATE POLICY "Public banks viewable" ON public.banks FOR SELECT USING (true);
+CREATE POLICY "Public levels viewable" ON public.levels FOR SELECT USING (true);
+
+-- Allow users to view their own wallets and transactions
+CREATE POLICY "Users can view own wallets" ON public.wallets FOR SELECT USING (true);
+CREATE POLICY "Users can view own transactions" ON public.transactions FOR SELECT USING (true);
+CREATE POLICY "Users can insert own transactions" ON public.transactions FOR INSERT WITH CHECK (true);
+
 -- Realtime Configuration
 ALTER PUBLICATION supabase_realtime ADD TABLE transactions;
 ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+
+-- 13. RPC Functions for Balance Updates
+CREATE OR REPLACE FUNCTION credit_wallet_transaction(
+    p_user_id TEXT,
+    p_type TEXT,
+    p_amount DECIMAL,
+    p_description TEXT,
+    p_idempotency_key TEXT DEFAULT NULL
+) RETURNS JSONB AS $$
+DECLARE
+    v_wallet_id TEXT;
+    v_currency TEXT;
+BEGIN
+    -- Determine currency based on type or amount (Assuming USDT if fractional, else SB)
+    IF p_amount < 100 THEN
+        v_currency := 'USDT';
+    ELSE
+        v_currency := 'SB';
+    END IF;
+
+    -- Get Main Wallet
+    SELECT id INTO v_wallet_id FROM public.wallets WHERE user_id = p_user_id AND wallet_type = 'Main' LIMIT 1;
+    
+    IF v_wallet_id IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Wallet not found');
+    END IF;
+
+    -- Update Wallet
+    IF v_currency = 'SB' THEN
+        UPDATE public.wallets SET balance_sb = balance_sb + p_amount, lifetime_sb = lifetime_sb + p_amount WHERE id = v_wallet_id;
+    ELSE
+        UPDATE public.wallets SET balance_usdt = balance_usdt + p_amount, lifetime_usdt = lifetime_usdt + p_amount WHERE id = v_wallet_id;
+    END IF;
+
+    -- Insert Transaction
+    INSERT INTO public.transactions (wallet_id, user_id, type, currency, amount, status, description)
+    VALUES (v_wallet_id, p_user_id, p_type, v_currency, p_amount, 'Success', p_description);
+
+    RETURN jsonb_build_object('success', true, 'message', 'Credited successfully');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION request_withdrawal(
+    p_user_id TEXT,
+    p_bank_id TEXT,
+    p_account_number TEXT,
+    p_account_name TEXT,
+    p_amount DECIMAL
+) RETURNS JSONB AS $$
+DECLARE
+    v_wallet_id TEXT;
+    v_balance DECIMAL;
+    v_currency TEXT;
+BEGIN
+    IF p_amount > 1000 THEN
+        v_currency := 'SB';
+    ELSE
+        v_currency := 'USDT';
+    END IF;
+
+    SELECT id INTO v_wallet_id FROM public.wallets WHERE user_id = p_user_id AND wallet_type = 'Main' LIMIT 1;
+    
+    IF v_currency = 'SB' THEN
+        SELECT balance_sb INTO v_balance FROM public.wallets WHERE id = v_wallet_id;
+    ELSE
+        SELECT balance_usdt INTO v_balance FROM public.wallets WHERE id = v_wallet_id;
+    END IF;
+
+    IF v_balance < p_amount THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Insufficient balance');
+    END IF;
+
+    -- Deduct balance
+    IF v_currency = 'SB' THEN
+        UPDATE public.wallets SET balance_sb = balance_sb - p_amount WHERE id = v_wallet_id;
+    ELSE
+        UPDATE public.wallets SET balance_usdt = balance_usdt - p_amount WHERE id = v_wallet_id;
+    END IF;
+
+    -- Insert Withdrawal Request
+    INSERT INTO public.withdrawal_requests (user_id, wallet_type, currency, bank_id, account_number, account_name, amount)
+    VALUES (p_user_id, 'Main', v_currency, p_bank_id, p_account_number, p_account_name, p_amount);
+
+    -- Insert Transaction
+    INSERT INTO public.transactions (wallet_id, user_id, type, currency, amount, status, description)
+    VALUES (v_wallet_id, p_user_id, 'Withdrawal', v_currency, -p_amount, 'Pending', 'Withdrawal Request');
+
+    RETURN jsonb_build_object('success', true, 'message', 'Withdrawal requested successfully');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

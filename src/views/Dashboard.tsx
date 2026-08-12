@@ -49,7 +49,12 @@ export const Dashboard: React.FC = () => {
 
   const handleJoinCommunity = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isCommunityJoined && !isVerifyingCommunity) {
-      window.open('https://t.me/swagbucks_official', '_blank');
+      const link = 'https://t.me/swagbucks_official';
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg && tg.openTelegramLink) tg.openTelegramLink(link);
+      else if (tg && tg.openLink) tg.openLink(link);
+      else window.open(link, '_blank');
+      
       setIsVerifyingCommunity(true);
     } else if (isVerifyingCommunity) {
       const res = await claimCommunityBonus();

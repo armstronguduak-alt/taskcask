@@ -70,11 +70,12 @@ export const UserProfile: React.FC = () => {
         {/* Download App Section */}
         <section>
           <button 
-            onClick={() => alert("SwagBucks App is downloading...")}
-            className="w-full bg-gradient-to-r from-[#2563eb] to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold py-3.5 rounded-2xl shadow-lg border border-blue-400/30 flex items-center justify-center gap-2 transform transition-all active:scale-95"
+            disabled
+            onClick={() => {}}
+            className="w-full bg-gradient-to-r from-gray-500 to-gray-600 cursor-not-allowed text-white/70 font-extrabold py-3.5 rounded-2xl shadow-lg border border-gray-400/30 flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined">download</span>
-            Download SwagBucks App
+            <span className="material-symbols-outlined">hourglass_empty</span>
+            Download SwagBucks App (Coming Soon)
           </button>
         </section>
 
