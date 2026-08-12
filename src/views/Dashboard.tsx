@@ -15,6 +15,7 @@ export const Dashboard: React.FC = () => {
     claimCommunityBonus,
     hasClaimedDailyBonus,
     dailyStreakDay,
+    isCommunityJoined,
     refreshState
   } = useApp();
   const { triggerReward } = useReward();
