@@ -48,6 +48,9 @@ interface AppContextProps {
   hasClaimedDailyBonus: boolean;
   dailyStreakDay: number;
 
+  // Community Task
+  isCommunityJoined: boolean;
+
   // Methods
   refreshState: () => void;
   setTab: (tab: TabName) => void;
@@ -65,6 +68,7 @@ interface AppContextProps {
   saveBankDetails: (bankId: string, accountNum: string, accountName: string) => void;
   requestWithdrawal: (walletType: 'Main' | 'Affiliate', currency: 'SB' | 'USDT', bankId: string | null, accountNum: string | null, accountName: string | null, trc20Address: string | null, amount: number) => Promise<{ success: boolean; message: string }>;
   toggleDarkMode: () => void;
+  handleWebLogin: (userData: any) => void;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -93,6 +97,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeAd, setActiveAd] = useState<RewardedAd | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('swagbucks_theme') === 'dark';
+  });
+
+  const [isCommunityJoined, setIsCommunityJoined] = useState(() => {
+    return localStorage.getItem('swagbucks_community_joined') === 'true';
   });
 
   const hasClaimedDailyBonus = false; // Add logic based on daily_rewards table
@@ -201,72 +209,76 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (tg) {
         tg.ready();
         tg.expand();
-
-        if (tg.initDataUnsafe?.user) {
-          try {
-            const authResponse = await TelegramAuthService.authenticateTelegramUser();
-            if (authResponse.success && authResponse.user) {
-              setUser(authResponse.user as User);
-
-              if (isSupabaseConfigured()) {
-                const { data: walletsData } = await supabase.from('wallets').select('*').eq('user_id', authResponse.user.id);
-                if (walletsData) {
-                  setMainWallet((walletsData.find((w: any) => w.wallet_type === 'Main') as Wallet) || null);
-                  setAffiliateWallet((walletsData.find((w: any) => w.wallet_type === 'Affiliate') as Wallet) || null);
-                }
-                const { data: txData } = await supabase.from('transactions').select('*').eq('user_id', authResponse.user.id).order('timestamp', { ascending: false });
-                if (txData) setTransactions(txData as Transaction[]);
-              }
-            }
-          } catch (e) {
-            console.error("Auth failed", e);
-          }
-        } else {
-          // Mock user for local testing without Telegram
-          console.warn("No Telegram initDataUnsafe found. Using mock user.");
-          setUser({
-            id: 'usr_mock',
-            telegram_id: 123456789,
-            first_name: 'User',
-            last_name: '',
-            username: 'username',
-            registered_at: new Date().toISOString(),
-            status: 'Active',
-            level_id: 'lvl_1',
-            is_premium: false,
-            email_verified: false,
-            phone_verified: false,
-            login_streak: 0,
-            total_ads_watched: 0,
-            total_tasks_completed: 0
-          } as User);
-          setMainWallet({
-            id: 'wall_main',
-            user_id: 'usr_mock',
-            wallet_type: 'Main',
-            balance_sb: 0,
-            balance_usdt: 0,
-            lifetime_sb: 0,
-            lifetime_usdt: 0,
-            updated_at: new Date().toISOString()
-          });
-          setAffiliateWallet({
-            id: 'wall_aff',
-            user_id: 'usr_mock',
-            wallet_type: 'Affiliate',
-            balance_sb: 0,
-            balance_usdt: 0,
-            lifetime_sb: 0,
-            lifetime_usdt: 0,
-            updated_at: new Date().toISOString()
-          });
-        }
       }
+
+      if (tg && tg.initDataUnsafe?.user) {
+        try {
+          const authResponse = await TelegramAuthService.authenticateTelegramUser();
+          if (authResponse.success && authResponse.user) {
+            setUser(authResponse.user as User);
+
+            if (isSupabaseConfigured()) {
+              const { data: walletsData } = await supabase.from('wallets').select('*').eq('user_id', authResponse.user.id);
+              if (walletsData) {
+                setMainWallet((walletsData.find((w: any) => w.wallet_type === 'Main') as Wallet) || null);
+                setAffiliateWallet((walletsData.find((w: any) => w.wallet_type === 'Affiliate') as Wallet) || null);
+              }
+              const { data: txData } = await supabase.from('transactions').select('*').eq('user_id', authResponse.user.id).order('timestamp', { ascending: false });
+              if (txData) setTransactions(txData as Transaction[]);
+            }
+          }
+        } catch (e) {
+          console.error("Auth failed", e);
+        }
+      } else {
+        console.warn("No Telegram user found. Displaying web login.");
+      }
+
       setIsLoading(false);
     };
 
     initApp();
   }, []);
+
+  const handleWebLogin = (userData: any) => {
+    setUser({
+      id: `usr_${userData.id}`,
+      telegram_id: userData.id,
+      first_name: userData.first_name,
+      last_name: userData.last_name || '',
+      username: userData.username || '',
+      registered_at: new Date().toISOString(),
+      status: 'Active',
+      level_id: 'lvl_1',
+      is_premium: false,
+      email_verified: false,
+      phone_verified: false,
+      login_streak: 0,
+      total_ads_watched: 0,
+      total_tasks_completed: 0
+    } as User);
+    
+    setMainWallet({
+      id: 'wall_main_web',
+      user_id: `usr_${userData.id}`,
+      wallet_type: 'Main',
+      balance_sb: 0,
+      balance_usdt: 0,
+      lifetime_sb: 0,
+      lifetime_usdt: 0,
+      updated_at: new Date().toISOString()
+    });
+    setAffiliateWallet({
+      id: 'wall_aff_web',
+      user_id: `usr_${userData.id}`,
+      wallet_type: 'Affiliate',
+      balance_sb: 0,
+      balance_usdt: 0,
+      lifetime_sb: 0,
+      lifetime_usdt: 0,
+      updated_at: new Date().toISOString()
+    });
+  };
 
   useEffect(() => {
     if (darkMode) {
@@ -297,14 +309,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const completeAd = async (ad: RewardedAd) => {
-    // Call RPC to credit reward
-    if (user && isSupabaseConfigured()) {
-      await SupabaseService.creditWalletRPC(user.id, 'WatchReward', ad.reward_amount, `Watched Ad: ${ad.name}`);
+    if (!user) {
       setActiveAd(null);
-      return { success: true, amount: ad.reward_amount, currency: 'SB' as const };
+      return { success: false };
     }
+
+    // Call RPC to credit reward
+    if (isSupabaseConfigured()) {
+      await SupabaseService.creditWalletRPC(user.id, 'WatchReward', ad.reward_amount, `Watched Ad: ${ad.name}`);
+    } else {
+      // Mock local update
+      setMainWallet(prev => prev ? { 
+        ...prev, 
+        [ad.reward_type === 'USDT' ? 'balance_usdt' : 'balance_sb']: prev[ad.reward_type === 'USDT' ? 'balance_usdt' : 'balance_sb'] + ad.reward_amount 
+      } : prev);
+    }
+    
     setActiveAd(null);
-    return { success: false };
+    return { success: true, amount: ad.reward_amount, currency: ad.reward_type as 'SB' | 'USDT' };
   };
 
   const triggerInAppAd = (onComplete: () => void) => {
@@ -313,51 +335,81 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const submitTaskProof = async (taskId: string, username: string) => {
-    if (!user || !isSupabaseConfigured()) return { success: false, message: 'Not connected' };
+    if (!user) return { success: false, message: 'Not connected' };
     const task = tasks.find(t => t.id === taskId);
     if (!task) return { success: false, message: 'Task not found' };
 
-    await SupabaseService.submitTaskProofDB(user.id, taskId, username);
-    await SupabaseService.creditWalletRPC(user.id, 'TaskReward', task.reward_amount, `Completed Task: ${task.title}`);
+    if (isSupabaseConfigured()) {
+      await SupabaseService.submitTaskProofDB(user.id, taskId, username);
+      await SupabaseService.creditWalletRPC(user.id, 'TaskReward', task.reward_amount, `Completed Task: ${task.title}`);
+    } else {
+      // Mock local update
+      setMainWallet(prev => prev ? { 
+        ...prev, 
+        [task.reward_type === 'USDT' ? 'balance_usdt' : 'balance_sb']: prev[task.reward_type === 'USDT' ? 'balance_usdt' : 'balance_sb'] + task.reward_amount 
+      } : prev);
+    }
+
+    if (task.category_id === 'cat_community') {
+      localStorage.setItem('swagbucks_community_joined', 'true');
+      setIsCommunityJoined(true);
+    }
+
     return { success: true, message: `Task submitted! Reward added to balance.`, amount: task.reward_amount, currency: (task.reward_type || 'SB') as 'SB' | 'USDT' };
   };
 
   const claimDailyBonus = async () => {
-    if (user && isSupabaseConfigured()) {
-      const currentDay = dailyStreakDay || 1;
-      const dayInWeek = ((currentDay - 1) % 7) + 1;
+    if (!user) return { success: false };
 
-      let amount = 100;
-      let currency: 'SB' | 'USDT' = 'SB';
+    const currentDay = dailyStreakDay || 1;
+    const dayInWeek = ((currentDay - 1) % 7) + 1;
 
-      if (dayInWeek === 3) { amount = 0.05; currency = 'USDT'; }
-      else if (dayInWeek === 5) { amount = 0.25; currency = 'USDT'; }
-      else if (dayInWeek === 7) { amount = 150; currency = 'SB'; }
+    let amount = 100;
+    let currency: 'SB' | 'USDT' = 'SB';
 
+    if (dayInWeek === 3) { amount = 0.05; currency = 'USDT'; }
+    else if (dayInWeek === 5) { amount = 0.25; currency = 'USDT'; }
+    else if (dayInWeek === 7) { amount = 150; currency = 'SB'; }
+
+    if (isSupabaseConfigured()) {
       await SupabaseService.creditWalletRPC(user.id, 'DailyReward', amount, `Daily Login Reward - Day ${currentDay}`);
-      return { success: true, amount, currency };
+    } else {
+      setMainWallet(prev => prev ? { 
+        ...prev, 
+        [currency === 'USDT' ? 'balance_usdt' : 'balance_sb']: prev[currency === 'USDT' ? 'balance_usdt' : 'balance_sb'] + amount 
+      } : prev);
     }
-    return { success: false };
+    
+    return { success: true, amount, currency };
   };
 
   const claimWelcomeBonus = async () => {
     if (localStorage.getItem('welcome_bonus_claimed')) return { success: false };
+    if (!user) return { success: false };
+    
     localStorage.setItem('welcome_bonus_claimed', 'true');
-    if (user && isSupabaseConfigured()) {
+    
+    if (isSupabaseConfigured()) {
       await SupabaseService.creditWalletRPC(user.id, 'DailyReward', 500, 'Welcome Bonus');
-      return { success: true, amount: 500, currency: 'SB' as const };
+    } else {
+      setMainWallet(prev => prev ? { ...prev, balance_sb: prev.balance_sb + 500 } : prev);
     }
-    return { success: false };
+    return { success: true, amount: 500, currency: 'SB' as const };
   };
 
   const claimCommunityBonus = async () => {
-    if (localStorage.getItem('community_bonus_claimed')) return { success: false };
-    localStorage.setItem('community_bonus_claimed', 'true');
-    if (user && isSupabaseConfigured()) {
+    if (isCommunityJoined) return { success: false };
+    if (!user) return { success: false };
+    
+    if (isSupabaseConfigured()) {
       await SupabaseService.creditWalletRPC(user.id, 'TaskReward', 500, 'Join Our Community');
-      return { success: true, amount: 500, currency: 'SB' as const };
+    } else {
+      setMainWallet(prev => prev ? { ...prev, balance_sb: prev.balance_sb + 500 } : prev);
     }
-    return { success: false };
+
+    localStorage.setItem('swagbucks_community_joined', 'true');
+    setIsCommunityJoined(true);
+    return { success: true, amount: 500, currency: 'SB' as const };
   };
 
   const verifyEmail = () => {
@@ -411,9 +463,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       user, mainWallet, affiliateWallet, transactions, levels, tasks, taskCategories,
       rewardedAds, withdrawalRequests, banks, notifications, referrals, systemSettings,
       isLoading, onboardingCompleted, activeTab, activeAd, darkMode, hasClaimedDailyBonus, dailyStreakDay,
+      isCommunityJoined,
       refreshState, setTab, skipOnboarding, playAd, completeAd, setActiveAd, triggerInAppAd,
       submitTaskProof, claimDailyBonus, claimWelcomeBonus, claimCommunityBonus, verifyEmail, verifyPhone,
-      saveBankDetails, requestWithdrawal, toggleDarkMode
+      saveBankDetails, requestWithdrawal, toggleDarkMode, handleWebLogin
     }}>
       {children}
     </AppContext.Provider>

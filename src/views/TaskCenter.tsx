@@ -30,6 +30,24 @@ export const TaskCenter: React.FC = () => {
   // Other Tasks State
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingTasks, setPendingTasks] = useState<Record<string, boolean>>({});
+  const [verifyingTasks, setVerifyingTasks] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setVerifyingTasks(prev => {
+        let changed = false;
+        const next = { ...prev };
+        for (const id in next) {
+          if (next[id] > 0) {
+            next[id] -= 1;
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let timer: any;
@@ -65,14 +83,21 @@ export const TaskCenter: React.FC = () => {
     e.stopPropagation();
     triggerHaptic('light');
     
-    // Open link
-    if (task.link && task.link !== '#') {
-      const tg = (window as any).Telegram?.WebApp;
-      if (tg && tg.openLink) tg.openLink(task.link);
-      else window.open(task.link, '_blank', 'noopener,noreferrer');
+    // If we haven't started verifying yet
+    if (verifyingTasks[task.id] === undefined) {
+      if (task.link && task.link !== '#') {
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg && tg.openLink) tg.openLink(task.link);
+        else window.open(task.link, '_blank', 'noopener,noreferrer');
+      }
+      setVerifyingTasks(prev => ({ ...prev, [task.id]: 10 })); // 10 seconds delay
+      return;
     }
-    
-    // Auto-verify all tasks without screenshots
+
+    // If it's still verifying
+    if (verifyingTasks[task.id] > 0) return;
+
+    // If verifying is done (0), submit proof
     const btnEl = e.currentTarget as HTMLElement;
     const result = await submitTaskProof(task.id, 'auto_verified');
     if (result.success) {
@@ -208,7 +233,7 @@ export const TaskCenter: React.FC = () => {
                 <h3 className="font-extrabold text-[18px] text-white tracking-tight mb-2 border-b border-blue-500/20 pb-2">Community Tasks</h3>
                 <div className="space-y-4">
                   {communityTasks.map(task => (
-                    <TaskCard key={task.id} task={task} transactions={transactions} pendingTasks={pendingTasks} handleCompleteTask={handleCompleteTask} />
+                    <TaskCard key={task.id} task={task} transactions={transactions} pendingTasks={pendingTasks} verifyingTasks={verifyingTasks} handleCompleteTask={handleCompleteTask} />
                   ))}
                 </div>
               </section>
@@ -219,7 +244,7 @@ export const TaskCenter: React.FC = () => {
                 <h3 className="font-extrabold text-[18px] text-white tracking-tight mb-2 border-b border-blue-500/20 pb-2">Engagement Tasks</h3>
                 <div className="space-y-4">
                   {engagementTasks.map(task => (
-                    <TaskCard key={task.id} task={task} transactions={transactions} pendingTasks={pendingTasks} handleCompleteTask={handleCompleteTask} />
+                    <TaskCard key={task.id} task={task} transactions={transactions} pendingTasks={pendingTasks} verifyingTasks={verifyingTasks} handleCompleteTask={handleCompleteTask} />
                   ))}
                 </div>
               </section>
@@ -241,11 +266,16 @@ export const TaskCenter: React.FC = () => {
 };
 
 // Extracted Task Card Component
-const TaskCard = ({ task, transactions, pendingTasks, handleCompleteTask }: any) => {
+const TaskCard = ({ task, transactions, pendingTasks, verifyingTasks, handleCompleteTask }: any) => {
+  const { isCommunityJoined } = useApp();
+
   const isCompleted = transactions.some(
     (t: any) => t.type === 'TaskReward' && t.description.includes(task.title) && t.status === 'Success'
   );
+  const alreadyCompleted = isCompleted || (task.category_id === 'cat_community' && isCommunityJoined);
   const isPending = pendingTasks[task.id] || false;
+  const isVerifying = verifyingTasks?.[task.id] > 0;
+  const isReadyToClaim = verifyingTasks?.[task.id] === 0;
 
   let TaskIcon;
   if (task.icon === 'ton_yellow') TaskIcon = 'diamond';
@@ -274,18 +304,26 @@ const TaskCard = ({ task, transactions, pendingTasks, handleCompleteTask }: any)
       </div>
       
       <button 
-        disabled={isCompleted || isPending}
+        disabled={alreadyCompleted || isPending || isVerifying}
         onClick={(e) => handleCompleteTask(task, e)}
         className={`w-full sm:w-auto px-6 py-3 rounded-full font-black text-[12px] shadow-[0_4px_15px_rgba(0,255,163,0.3)] active:scale-95 transition-all uppercase tracking-wider flex items-center justify-center gap-1.5 shrink-0 ${
-          isCompleted || isPending
+          alreadyCompleted || isPending
             ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed shadow-none border border-gray-500/30'
+            : isVerifying
+            ? 'bg-amber-500/80 text-white shadow-none'
             : 'bg-[#00ffa3] text-[#132252]'
         }`}
       >
-        <span>{isCompleted ? 'Completed' : (isPending ? 'Verifying...' : (task.button_text || 'Start'))}</span>
-        {isCompleted ? (
+        <span>
+          {alreadyCompleted ? 'Completed' : 
+           isPending ? 'Pending...' : 
+           isVerifying ? `Verifying... (${verifyingTasks[task.id]}s)` : 
+           isReadyToClaim ? 'Claim' : 
+           (task.button_text || 'Start')}
+        </span>
+        {alreadyCompleted ? (
           <span className="material-symbols-outlined text-[16px]">check_circle</span>
-        ) : !isPending && (
+        ) : !isPending && !isVerifying && !isReadyToClaim && (
           <span className="material-symbols-outlined text-[16px]">open_in_new</span>
         )}
       </button>

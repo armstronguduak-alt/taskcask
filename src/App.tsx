@@ -10,13 +10,13 @@ import WithdrawFunds from './views/WithdrawFunds';
 import TransactionHistory from './views/TransactionHistory';
 import UserProfile from './views/UserProfile';
 import Leaderboard from './views/Leaderboard';
-
+import { WebLogin } from './views/WebLogin';
 
 import VideoAdModal from './components/VideoAdModal';
 import { useReward } from './components/RewardCelebration';
 
 const AppContent: React.FC = () => {
-  const { activeTab, activeAd, setActiveAd, completeAd, levels, user, systemSettings, refreshState } = useApp();
+  const { isLoading, activeTab, activeAd, setActiveAd, completeAd, levels, user, systemSettings, refreshState, handleWebLogin } = useApp();
   const { triggerReward } = useReward();
   const [vpnDetected, setVpnDetected] = useState<boolean>(false);
 
@@ -48,6 +48,28 @@ const AppContent: React.FC = () => {
         </p>
       </div>
     );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#1e46a3] via-[#132252] to-[#050914] flex flex-col items-center justify-center p-6 text-center text-white">
+        <span className="material-symbols-outlined text-[48px] text-white/50 animate-spin mb-4">refresh</span>
+        <h2 className="text-xl font-bold animate-pulse">Loading SwagBucks...</h2>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (window.location.pathname !== '/login') {
+      window.location.href = '/login';
+      return null;
+    }
+    return <WebLogin onLogin={(userData) => {
+      handleWebLogin(userData);
+      window.history.pushState({}, '', '/');
+    }} />;
+  } else if (window.location.pathname === '/login') {
+    window.history.pushState({}, '', '/');
   }
 
   const renderActiveView = () => {

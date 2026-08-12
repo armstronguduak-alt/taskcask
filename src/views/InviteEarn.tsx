@@ -7,8 +7,9 @@ export const InviteEarn: React.FC = () => {
   const { affiliateWallet, user, referrals } = useApp();
   const [supabaseReferralProfiles, setSupabaseReferralProfiles] = useState<any[] | null>(null);
 
-  const refCode = user?.referral_code || `SB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-  const refLink = `https://t.me/swagbucks_bot/app?startapp=${refCode}`;
+  const fallbackRefCode = React.useMemo(() => `SB-${Math.random().toString(36).substring(2, 8).toUpperCase()}`, []);
+  const refCode = user?.referral_code || fallbackRefCode;
+  const refLink = `https://t.me/swagbuckss_bot/app?startapp=${refCode}`;
 
   useEffect(() => {
     if (user?.id) {

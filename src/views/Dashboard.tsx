@@ -24,12 +24,10 @@ export const Dashboard: React.FC = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showDailyModal, setShowDailyModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
-  const [isCommunityJoined, setIsCommunityJoined] = useState(false);
   const [isVerifyingCommunity, setIsVerifyingCommunity] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    if (localStorage.getItem('community_bonus_claimed')) setIsCommunityJoined(true);
     if (!localStorage.getItem('welcome_bonus_claimed')) setShowWelcomeModal(true);
   }, [user]);
 
@@ -68,7 +66,6 @@ export const Dashboard: React.FC = () => {
         });
       }
       setIsVerifyingCommunity(false);
-      setIsCommunityJoined(true);
     }
   };
 

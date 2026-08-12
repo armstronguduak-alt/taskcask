@@ -67,18 +67,6 @@ export const UserProfile: React.FC = () => {
           </div>
         </section>
 
-        {/* Download App Section */}
-        <section>
-          <button 
-            disabled
-            onClick={() => {}}
-            className="w-full bg-gradient-to-r from-gray-500 to-gray-600 cursor-not-allowed text-white/70 font-extrabold py-3.5 rounded-2xl shadow-lg border border-gray-400/30 flex items-center justify-center gap-2"
-          >
-            <span className="material-symbols-outlined">hourglass_empty</span>
-            Download SwagBucks App (Coming Soon)
-          </button>
-        </section>
-
 
 
         {/* Settings options list */}
@@ -158,6 +146,7 @@ export const UserProfile: React.FC = () => {
             <span className="material-symbols-outlined text-blue-300 text-[18px]">chevron_right</span>
           </button>
         </section>
+
 
       </div>
 
