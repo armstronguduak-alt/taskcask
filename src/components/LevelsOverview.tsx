@@ -7,7 +7,7 @@ interface LevelsOverviewProps {
 }
 
 export const LevelsOverview: React.FC<LevelsOverviewProps> = ({ onClose }) => {
-  const { user, levels, referrals, systemSettings } = useApp();
+  const { user, levels, referrals } = useApp();
 
   const userLevel = levels.find(l => l.id === user?.level_id) || levels[0] || {} as Level;
   const currentLevelIndex = levels.findIndex(l => l.id === userLevel.id);

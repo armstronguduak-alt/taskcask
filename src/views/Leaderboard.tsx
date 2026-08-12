@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Avatar } from '../components/Avatar';
 
 export const Leaderboard: React.FC = () => {
-  const { users } = useApp() as any; // Temporary cast until we fully define leaderboard logic
+  useApp();
 
   // Start with empty leaderboard until connected to DB
   const topEarners: any[] = [];
@@ -73,7 +73,7 @@ export const Leaderboard: React.FC = () => {
 
             {/* List of others */}
             <div className="bg-[#1e3b7a] rounded-[24px] border border-blue-500/20 p-2 shadow-lg max-h-[400px] overflow-y-auto no-scrollbar">
-              {topEarners.slice(3).map((user, idx) => (
+              {topEarners.slice(3).map((user) => (
                 <div key={user.id} className="flex items-center justify-between p-3 border-b border-blue-500/10 last:border-0">
                   <div className="flex items-center gap-4">
                     <span className="font-extrabold text-blue-300/50 w-4 text-center text-[12px]">{user.rank}</span>

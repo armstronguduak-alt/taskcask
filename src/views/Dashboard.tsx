@@ -8,7 +8,6 @@ export const Dashboard: React.FC = () => {
   const { 
     user, 
     mainWallet,
-    transactions, 
     levels, 
     setTab, 
     claimDailyBonus,

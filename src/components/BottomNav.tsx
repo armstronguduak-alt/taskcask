@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import type { TabName } from '../context/AppContext';
+import type { TabName } from '../types';
 
 interface NavItem {
   tab: TabName;

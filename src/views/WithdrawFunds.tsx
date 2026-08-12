@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export const WithdrawFunds: React.FC = () => {
-  const { mainWallet, banks, user, levels, requestWithdrawal, setTab } = useApp();
+  const { mainWallet, banks, user, requestWithdrawal, setTab } = useApp();
 
-  const userLevel = levels?.find(l => l.id === user?.level_id) || levels?.[0] || {} as any;
+
   const minWithdrawSB = 30000;
   const minWithdrawUSDT = 20;
 
@@ -32,9 +32,7 @@ export const WithdrawFunds: React.FC = () => {
     ? Math.floor((Date.now() - new Date(user.registered_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  // Welcome bonus is 1000 SB, excluded from personal eligibility
-  const eligiblePersonalSB = Math.max(0, (mainWallet?.lifetime_sb || 0) - 1000);
-  const eligiblePersonalUSDT = mainWallet?.lifetime_usdt || 0;
+
 
   const mockRefs = 2; // For demo
   const isEligibleSB = 
@@ -135,7 +133,7 @@ export const WithdrawFunds: React.FC = () => {
 
     if (result.success) {
       alert(result.message);
-      setTab('History');
+      setTab('Records');
     } else {
       alert(result.message);
     }
@@ -178,12 +176,12 @@ export const WithdrawFunds: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    const result = await requestWithdrawal('Main', 'USDT', undefined, undefined, undefined, trcAddress, withdrawAmount);
+    const result = await requestWithdrawal('Main', 'USDT', null, null, null, trcAddress, withdrawAmount);
     setIsSubmitting(false);
 
     if (result.success) {
       alert(result.message);
-      setTab('History');
+      setTab('Records');
     } else {
       alert(result.message);
     }

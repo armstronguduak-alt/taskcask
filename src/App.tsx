@@ -3,7 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { RewardProvider } from './components/RewardCelebration';
 import BottomNav from './components/BottomNav';
 import Dashboard from './views/Dashboard';
-import WatchEarn from './views/WatchEarn';
+
 import TaskCenter from './views/TaskCenter';
 import InviteEarn from './views/InviteEarn';
 import WithdrawFunds from './views/WithdrawFunds';

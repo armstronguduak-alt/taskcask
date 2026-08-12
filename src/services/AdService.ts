@@ -1,4 +1,3 @@
-import type { Task } from '../types';
 
 export interface AdFormatResult {
   success: boolean;

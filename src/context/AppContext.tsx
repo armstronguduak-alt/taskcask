@@ -56,10 +56,10 @@ interface AppContextProps {
   completeAd: (ad: RewardedAd) => Promise<{ success: boolean; amount?: number; currency?: 'SB' | 'USDT' }>;
   setActiveAd: (ad: RewardedAd | null) => void;
   triggerInAppAd: (onComplete: () => void) => void;
-  submitTaskProof: (taskId: string, username: string) => Promise<{ success: boolean; message: string }>;
-  claimDailyBonus: () => void;
-  claimWelcomeBonus: () => void;
-  claimCommunityBonus: () => void;
+  submitTaskProof: (taskId: string, username: string) => Promise<{ success: boolean; message: string; amount?: number; currency?: 'SB' | 'USDT' }>;
+  claimDailyBonus: () => Promise<{ success: boolean; amount?: number; currency?: 'SB' | 'USDT' }>;
+  claimWelcomeBonus: () => Promise<{ success: boolean; amount?: number; currency?: 'SB' | 'USDT' }>;
+  claimCommunityBonus: () => Promise<{ success: boolean; amount?: number; currency?: 'SB' | 'USDT' }>;
   verifyEmail: () => void;
   verifyPhone: () => void;
   saveBankDetails: (bankId: string, accountNum: string, accountName: string) => void;

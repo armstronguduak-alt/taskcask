@@ -16,14 +16,14 @@ export const Avatar: React.FC<AvatarProps> = ({
   const [hasError, setHasError] = useState(false);
 
   // Compute initials (e.g. "John Doe" => "JD", "John" => "J", null => "U")
-  const initials = (name || 'User')
-    .replace(/^@/, '')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase() || '')
-    .join('') || 'U';
+  // const _initials = (name || 'User')
+  //   .replace(/^@/, '')
+  //   .trim()
+  //   .split(' ')
+  //   .filter(Boolean)
+  //   .slice(0, 2)
+  //   .map(part => part[0]?.toUpperCase() || '')
+  //   .join('') || 'U';
 
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs font-bold',

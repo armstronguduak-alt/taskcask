@@ -12,7 +12,6 @@ export const TaskCenter: React.FC = () => {
     levels, 
     user,
     transactions,
-    systemSettings,
     rewardedAds,
     playAd,
     refreshState
@@ -30,11 +29,6 @@ export const TaskCenter: React.FC = () => {
 
   // Other Tasks State
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-  const [activeTaskDetail, setActiveTaskDetail] = useState<Task | null>(null);
-  const [proofUsername, setProofUsername] = useState('');
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingTasks, setPendingTasks] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -66,37 +60,6 @@ export const TaskCenter: React.FC = () => {
 
   const communityTasks = filteredTasks.filter(t => t.category_id === 'cat_community');
   const engagementTasks = filteredTasks.filter(t => t.category_id === 'cat_engagement' || t.category_id === 'cat_extra');
-
-  const requiresScreenshot = Boolean(
-    activeTaskDetail?.requires_screenshot || 
-    systemSettings?.find(s => s.key === 'require_task_screenshot')?.value === 'true'
-  );
-
-  const handleSubmitProof = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeTaskDetail) return;
-
-    setIsSubmitting(true);
-    const identifier = proofUsername.trim() || user?.username || 'user_verified';
-    const result = await submitTaskProof(activeTaskDetail.id, identifier);
-    setIsSubmitting(false);
-
-    if (result.success) {
-      triggerReward({
-        amount: result.amount!,
-        currency: result.currency!,
-        source: e.target as HTMLElement,
-        destinationId: `wallet-${result.currency!.toLowerCase()}`,
-        onComplete: refreshState
-      });
-      setPendingTasks(prev => ({ ...prev, [activeTaskDetail.id]: true }));
-      setActiveTaskDetail(null);
-      setProofUsername('');
-      setScreenshotFile(null);
-    } else {
-      alert(result.message);
-    }
-  };
 
   const handleCompleteTask = async (task: Task, e: React.MouseEvent) => {
     e.stopPropagation();

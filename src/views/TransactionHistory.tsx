@@ -21,7 +21,7 @@ export const TransactionHistory: React.FC = () => {
       {/* Top App Bar */}
       <nav className="sticky top-0 w-full z-30 bg-transparent pt-4">
         <div className="flex items-center gap-stack-md px-container-padding py-4 w-full">
-          <button onClick={() => setTab('Dashboard')} className="ripple-active p-1 text-[#2563eb]">
+          <button onClick={() => setTab('Home')} className="ripple-active p-1 text-[#2563eb]">
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
           <h1 className="font-bold text-lg text-[#2563eb]">Statement logs</h1>

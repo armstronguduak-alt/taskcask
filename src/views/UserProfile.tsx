@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { triggerHaptic } from '../utils/haptic';
+
 import { Avatar } from '../components/Avatar';
 
 export const UserProfile: React.FC = () => {
@@ -8,9 +8,6 @@ export const UserProfile: React.FC = () => {
     user, 
     mainWallet, 
     levels, 
-    darkMode, 
-    toggleDarkMode, 
-    verifyPhone,
     setTab
   } = useApp();
 
@@ -91,7 +88,7 @@ export const UserProfile: React.FC = () => {
 
           {/* History Entry */}
           <button 
-            onClick={() => setTab('History')}
+            onClick={() => setTab('Records')}
             className="w-full flex justify-between items-center py-3 border-b border-blue-500/10 text-left"
           >
             <div className="flex items-center gap-3">
