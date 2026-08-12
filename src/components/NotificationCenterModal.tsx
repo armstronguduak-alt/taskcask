@@ -30,8 +30,9 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
 
   useEffect(() => {
     if (activeTab === 'live_payouts') {
+      let channel: any;
       if (isSupabaseConfigured()) {
-        const channel = supabase
+        channel = supabase
           .channel('public:transactions')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions', filter: 'type=eq.Withdrawal' }, payload => {
             const newTx = payload.new;
@@ -47,21 +48,22 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
             setFeedItems(prev => [newItem, ...prev].slice(0, 15));
           })
           .subscribe();
-        
-        return () => {
-          supabase.removeChannel(channel);
-        };
-      } else {
-        const timer = setInterval(() => {
-          setFeedItems(prev => {
-            const baseItem = RECENT_PAYOUTS[nextIndex % RECENT_PAYOUTS.length];
-            const newItem = { ...baseItem, uniqueId: `live-${Date.now()}` };
-            return [newItem, ...prev].slice(0, 15);
-          });
-          setNextIndex(prev => prev + 1);
-        }, 4000);
-        return () => clearInterval(timer);
       }
+
+      // Always run simulated payouts to keep the app feeling active and alive
+      const timer = setInterval(() => {
+        setFeedItems(prev => {
+          const baseItem = RECENT_PAYOUTS[nextIndex % RECENT_PAYOUTS.length];
+          const newItem = { ...baseItem, uniqueId: `simulated-${Date.now()}` };
+          return [newItem, ...prev].slice(0, 15);
+        });
+        setNextIndex(prev => prev + 1);
+      }, 4000);
+
+      return () => {
+        clearInterval(timer);
+        if (channel) supabase.removeChannel(channel);
+      };
     }
   }, [activeTab, nextIndex]);
 
