@@ -165,20 +165,39 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.users;
 CREATE POLICY "Public profiles are viewable by everyone." ON public.users FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert their own profile." ON public.users;
 CREATE POLICY "Users can insert their own profile." ON public.users FOR INSERT WITH CHECK (auth.uid()::text = id);
+
+DROP POLICY IF EXISTS "Users can update own profile." ON public.users;
 CREATE POLICY "Users can update own profile." ON public.users FOR UPDATE USING (auth.uid()::text = id);
 
 -- Allow public read access to static data
+DROP POLICY IF EXISTS "Public tasks viewable" ON public.tasks;
 CREATE POLICY "Public tasks viewable" ON public.tasks FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public categories viewable" ON public.task_categories;
 CREATE POLICY "Public categories viewable" ON public.task_categories FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public ads viewable" ON public.rewarded_ads;
 CREATE POLICY "Public ads viewable" ON public.rewarded_ads FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public banks viewable" ON public.banks;
 CREATE POLICY "Public banks viewable" ON public.banks FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Public levels viewable" ON public.levels;
 CREATE POLICY "Public levels viewable" ON public.levels FOR SELECT USING (true);
 
 -- Allow users to view their own wallets and transactions
+DROP POLICY IF EXISTS "Users can view own wallets" ON public.wallets;
 CREATE POLICY "Users can view own wallets" ON public.wallets FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can view own transactions" ON public.transactions;
 CREATE POLICY "Users can view own transactions" ON public.transactions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert own transactions" ON public.transactions;
 CREATE POLICY "Users can insert own transactions" ON public.transactions FOR INSERT WITH CHECK (true);
 
 -- Realtime Configuration
