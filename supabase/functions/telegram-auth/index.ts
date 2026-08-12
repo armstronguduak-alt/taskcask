@@ -170,25 +170,38 @@ serve(async (req) => {
         console.error("Error creating user profile:", createError);
       }
 
-      // Create Initial Wallet with N500 Welcome Bonus
-      await supabaseAdmin.from("wallets").insert({
-        id: `wall_${userId}`,
-        user_id: userId,
-        active_balance: 500.00,
-        lifetime_earnings: 500.00,
-        pending_balance: 0.00,
-      });
+      // Create Initial Wallet with 500 SB Welcome Bonus
+      await supabaseAdmin.from("wallets").insert([
+        {
+          id: `wall_${userId}_main`,
+          user_id: userId,
+          wallet_type: "Main",
+          balance_sb: 500,
+          balance_usdt: 0.00,
+          lifetime_sb: 500,
+          lifetime_usdt: 0.00,
+        },
+        {
+          id: `wall_${userId}_affiliate`,
+          user_id: userId,
+          wallet_type: "Affiliate",
+          balance_sb: 0,
+          balance_usdt: 0.00,
+          lifetime_sb: 0,
+          lifetime_usdt: 0.00,
+        }
+      ]);
 
       // Credit Welcome Bonus Transaction
       await supabaseAdmin.from("transactions").insert({
         id: `tx_welcome_${userId}`,
-        wallet_id: `wall_${userId}`,
+        wallet_id: `wall_${userId}_main`,
         user_id: userId,
         type: "DailyReward",
-        amount: 500.00,
+        currency: "SB",
+        amount: 500,
         status: "Success",
         description: "Welcome Bonus",
-        idempotency_key: `welcome_bonus_${userId}`,
       });
     }
 
