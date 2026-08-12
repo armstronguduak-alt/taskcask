@@ -8,14 +8,14 @@ interface NotificationCenterModalProps {
 type NotificationTab = 'personal' | 'live_payouts';
 
 const RECENT_PAYOUTS = [
-  { id: 1, name: "David M.", country: "USA", amount: 1500, timeAgo: "Just now" },
-  { id: 2, name: "Sarah K.", country: "UK", amount: 3200, timeAgo: "Just now" },
-  { id: 3, name: "Michael T.", country: "Canada", amount: 800, timeAgo: "Just now" },
-  { id: 4, name: "Elena R.", country: "Spain", amount: 5000, timeAgo: "Just now" },
-  { id: 5, name: "James L.", country: "Australia", amount: 2100, timeAgo: "Just now" },
-  { id: 6, name: "Anna S.", country: "Germany", amount: 1100, timeAgo: "Just now" },
-  { id: 7, name: "Carlos F.", country: "Brazil", amount: 4500, timeAgo: "Just now" },
-  { id: 8, name: "Yuki M.", country: "Japan", amount: 6200, timeAgo: "Just now" },
+  { id: 1, name: "David M.", country: "USA", amount: 35000, currency: "SB", timeAgo: "Just now" },
+  { id: 2, name: "Sarah K.", country: "UK", amount: 25, currency: "USDT", timeAgo: "Just now" },
+  { id: 3, name: "Michael T.", country: "Canada", amount: 45000, currency: "SB", timeAgo: "Just now" },
+  { id: 4, name: "Elena R.", country: "Spain", amount: 50, currency: "USDT", timeAgo: "Just now" },
+  { id: 5, name: "James L.", country: "Australia", amount: 32000, currency: "SB", timeAgo: "Just now" },
+  { id: 6, name: "Anna S.", country: "Germany", amount: 100, currency: "USDT", timeAgo: "Just now" },
+  { id: 7, name: "Carlos F.", country: "Brazil", amount: 55000, currency: "SB", timeAgo: "Just now" },
+  { id: 8, name: "Yuki M.", country: "Japan", amount: 75, currency: "USDT", timeAgo: "Just now" },
 ];
 
 export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = ({ onClose }) => {
@@ -41,35 +41,35 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-[#132252] border border-blue-500/20 rounded-3xl max-w-xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Header */}
-        <div className="p-5 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-800/40">
+        <div className="p-5 border-b border-blue-500/20 flex justify-between items-center bg-[#1e3b7a]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#2563eb] text-2xl">notifications_active</span>
-              <h2 className="font-black text-lg text-on-surface dark:text-white tracking-tight">Notification Center</h2>
+              <span className="material-symbols-outlined text-blue-300 text-2xl">notifications_active</span>
+              <h2 className="font-black text-lg text-white tracking-tight">Notification Center</h2>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <p className="text-xs text-blue-200 mt-0.5">
               Live updates & global cash-out alerts
             </p>
           </div>
           <button 
             onClick={onClose}
-            className="w-9 h-9 rounded-full bg-gray-200/80 dark:bg-zinc-800 text-gray-500 hover:text-on-surface flex items-center justify-center transition-colors"
+            className="w-9 h-9 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 flex items-center justify-center transition-colors"
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
 
         {/* Tab Selector Switcher */}
-        <div className="px-5 pt-4 flex gap-2 border-b border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="px-5 pt-4 flex gap-2 border-b border-blue-500/20 bg-[#132252]">
           <button
             onClick={() => setActiveTab('live_payouts')}
             className={`pb-3 px-3 text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'live_payouts'
-                ? 'border-[#2563eb] text-[#2563eb]'
-                : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                ? 'border-blue-400 text-blue-400'
+                : 'border-transparent text-blue-200/50 hover:text-blue-200'
             }`}
           >
             <span className="material-symbols-outlined text-base">payments</span>
@@ -79,8 +79,8 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
             onClick={() => setActiveTab('personal')}
             className={`pb-3 px-3 text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'personal'
-                ? 'border-[#2563eb] text-[#2563eb]'
-                : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                ? 'border-blue-400 text-blue-400'
+                : 'border-transparent text-blue-200/50 hover:text-blue-200'
             }`}
           >
             <span className="material-symbols-outlined text-base">person</span>
@@ -118,28 +118,28 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
               {feedItems.map((wdr) => (
                 <div 
                   key={wdr.uniqueId} 
-                  className="bg-gray-50/70 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800/80 p-3.5 rounded-2xl flex items-center justify-between gap-3 hover:border-[#2563eb]/30 transition-all shadow-xs animate-fade-in"
+                  className="bg-[#1e3b7a] border border-blue-500/10 p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xs animate-fade-in"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#2563eb]/10 text-[#2563eb] flex items-center justify-center font-black text-sm border border-[#2563eb]/20">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-300 flex items-center justify-center font-black text-sm border border-blue-500/30">
                       <span className="material-symbols-outlined text-[18px]">public</span>
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h5 className="font-extrabold text-xs text-on-surface dark:text-white">{wdr.name}</h5>
-                        <span className="material-symbols-outlined text-[14px] text-[#2563eb]" title="Verified Payout">check_circle</span>
+                        <h5 className="font-extrabold text-xs text-white">{wdr.name}</h5>
+                        <span className="material-symbols-outlined text-[14px] text-green-400" title="Verified Payout">check_circle</span>
                       </div>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                      <p className="text-[10px] text-blue-200 mt-0.5">
                         {wdr.country}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="font-black text-sm text-[#2563eb] block">
-                      +{wdr.amount.toLocaleString()} SB
+                    <span className="font-black text-sm text-green-400 block">
+                      +{wdr.amount.toLocaleString()} {wdr.currency || 'SB'}
                     </span>
-                    <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">
+                    <span className="text-[9px] text-blue-300 font-semibold block mt-0.5">
                       {wdr.timeAgo}
                     </span>
                   </div>
@@ -154,17 +154,17 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
           <div className="p-5 flex-1 overflow-y-auto space-y-3">
             {notifications.length === 0 ? (
               <div className="text-center py-12 space-y-2">
-                <span className="material-symbols-outlined text-4xl text-gray-300">notifications_off</span>
-                <p className="text-gray-500 font-medium text-sm">No new notifications</p>
+                <span className="material-symbols-outlined text-4xl text-blue-300/30">notifications_off</span>
+                <p className="text-blue-200/50 font-medium text-sm">No new notifications</p>
               </div>
             ) : (
               notifications.map((n) => (
-                <div key={n.id} className="bg-blue-50/50 dark:bg-[#2563eb]/5 border border-blue-100 dark:border-[#2563eb]/20 p-4 rounded-2xl">
+                <div key={n.id} className="bg-[#1e3b7a] border border-blue-500/10 p-4 rounded-2xl">
                   <div className="flex justify-between items-start gap-2">
-                    <h4 className="font-bold text-sm text-on-surface dark:text-white">{n.title}</h4>
-                    <span className="text-[10px] text-gray-400 whitespace-nowrap">{n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Just now'}</span>
+                    <h4 className="font-bold text-sm text-white">{n.title}</h4>
+                    <span className="text-[10px] text-blue-300 whitespace-nowrap">{n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Just now'}</span>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{n.message}</p>
+                  <p className="text-xs text-blue-100/70 mt-1">{n.message}</p>
                 </div>
               ))
             )}

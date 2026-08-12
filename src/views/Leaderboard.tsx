@@ -8,6 +8,18 @@ export const Leaderboard: React.FC = () => {
   // Start with empty leaderboard until connected to DB
   const topEarners: any[] = [];
 
+  const formatName = (name: string) => {
+    if (!name) return 'User';
+    // Check if the name resembles a phone number (mostly digits, optional plus)
+    const cleanNum = name.replace(/[\s-]/g, '');
+    if (/^\+?\d{8,15}$/.test(cleanNum)) {
+      const firstPart = cleanNum.slice(0, 5);
+      const lastPart = cleanNum.slice(-3);
+      return `${firstPart}***${lastPart}`;
+    }
+    return name;
+  };
+
   return (
     <div className="flex-grow pb-32 bg-transparent">
       {/* Top App Bar */}
@@ -36,7 +48,7 @@ export const Leaderboard: React.FC = () => {
                   <Avatar name={topEarners[1]?.name || 'User'} size="md" className="border-4 border-gray-300 shadow-md" />
                   <div className="absolute -bottom-2 -right-2 bg-gray-300 text-gray-800 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">2</div>
                 </div>
-                <p className="text-[11px] font-extrabold text-white truncate w-16 text-center tracking-tight">{topEarners[1]?.name}</p>
+                <p className="text-[11px] font-extrabold text-white truncate w-16 text-center tracking-tight">{formatName(topEarners[1]?.name)}</p>
                 <p className="text-[10px] font-bold text-blue-300 mt-0.5 tracking-tight">{topEarners[1]?.points?.toLocaleString()} SB</p>
                 <div className="w-16 h-20 bg-gray-300/20 rounded-t-[16px] mt-2 flex justify-center items-end pb-3 border border-gray-300/30 border-b-0 shadow-inner">
                   <span className="text-gray-300 font-extrabold text-[16px]">2</span>
@@ -50,7 +62,7 @@ export const Leaderboard: React.FC = () => {
                   <Avatar name={topEarners[0]?.name || 'User'} size="lg" className="border-4 border-yellow-400 w-16 h-16 shadow-lg" />
                   <div className="absolute -bottom-2 -right-1 bg-yellow-400 text-yellow-900 text-[11px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-[#1e3b7a] shadow-sm">1</div>
                 </div>
-                <p className="text-[12px] font-extrabold text-white truncate w-20 text-center tracking-tight">{topEarners[0]?.name}</p>
+                <p className="text-[12px] font-extrabold text-white truncate w-20 text-center tracking-tight">{formatName(topEarners[0]?.name)}</p>
                 <p className="text-[10px] font-extrabold text-yellow-400 mt-0.5 tracking-tight">{topEarners[0]?.points?.toLocaleString()} SB</p>
                 <div className="w-20 h-28 bg-yellow-400/20 rounded-t-[20px] mt-2 flex justify-center items-end pb-4 border border-yellow-400/30 border-b-0 shadow-inner">
                   <span className="text-yellow-400 font-black text-[24px]">1</span>
@@ -63,7 +75,7 @@ export const Leaderboard: React.FC = () => {
                   <Avatar name={topEarners[2]?.name || 'User'} size="md" className="border-4 border-orange-400 shadow-md" />
                   <div className="absolute -bottom-2 -right-2 bg-orange-400 text-orange-900 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">3</div>
                 </div>
-                <p className="text-[11px] font-extrabold text-white truncate w-16 text-center tracking-tight">{topEarners[2]?.name}</p>
+                <p className="text-[11px] font-extrabold text-white truncate w-16 text-center tracking-tight">{formatName(topEarners[2]?.name)}</p>
                 <p className="text-[10px] font-bold text-blue-300 mt-0.5 tracking-tight">{topEarners[2]?.points?.toLocaleString()} SB</p>
                 <div className="w-16 h-16 bg-orange-400/20 rounded-t-[16px] mt-2 flex justify-center items-end pb-2 border border-orange-400/30 border-b-0 shadow-inner">
                   <span className="text-orange-400 font-extrabold text-[16px]">3</span>
@@ -78,7 +90,7 @@ export const Leaderboard: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <span className="font-extrabold text-blue-300/50 w-4 text-center text-[12px]">{user.rank}</span>
                     <Avatar name={user.name} size="sm" />
-                    <span className="font-extrabold text-[13px] text-white tracking-tight">{user.name}</span>
+                    <span className="font-extrabold text-[13px] text-white tracking-tight">{formatName(user.name)}</span>
                   </div>
                   <span className="font-extrabold text-[12px] text-green-400 tracking-tight">{user.points?.toLocaleString()} SB</span>
                 </div>
