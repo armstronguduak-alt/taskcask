@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type {
-  User, 
-  Wallet, 
-  Transaction, 
-  Level, 
-  Task, 
-  RewardedAd, 
-  WithdrawalRequest, 
-  Bank, 
-  Notification, 
-  Referral, 
+  User,
+  Wallet,
+  Transaction,
+  Level,
+  Task,
+  RewardedAd,
+  WithdrawalRequest,
+  Bank,
+  Notification,
+  Referral,
   TaskCategory,
   SystemSetting,
   TabName
@@ -35,19 +35,19 @@ interface AppContextProps {
   notifications: Notification[];
   referrals: Referral[];
   systemSettings: SystemSetting[];
-  
+
   isLoading: boolean;
   onboardingCompleted: boolean;
   activeTab: TabName;
   activeAd: RewardedAd | null;
-  
+
   // Settings
   darkMode: boolean;
-  
+
   // Daily Bonus
   hasClaimedDailyBonus: boolean;
   dailyStreakDay: number;
-  
+
   // Methods
   refreshState: () => void;
   setTab: (tab: TabName) => void;
@@ -84,12 +84,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [referrals, _setReferrals] = useState<Referral[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSetting[]>([]);
-  
+
   const [activeTab, setActiveTab] = useState<TabName>('Home');
   const [onboardingCompleted, setOnboardingCompleted] = useState(() => {
     return localStorage.getItem('swagbucks_onboarding_done') === 'true';
   });
-  
+
   const [activeAd, setActiveAd] = useState<RewardedAd | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('swagbucks_theme') === 'dark';
@@ -100,7 +100,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshState = async () => {
     if (!isSupabaseConfigured() || !user) return;
-    
+
     try {
       const [
         { data: userData },
@@ -129,7 +129,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const initApp = async () => {
       setIsLoading(true);
-      
+
       // Load static data
       if (isSupabaseConfigured()) {
         const [
@@ -147,7 +147,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           supabase.from('system_settings').select('*'),
           supabase.from('banks').select('*')
         ]);
-        
+
         if (levelsData) setLevels(levelsData as Level[]);
         if (tasksData) setTasks(tasksData as Task[]);
         if (categoriesData) setTaskCategories(categoriesData as TaskCategory[]);
@@ -160,7 +160,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           { id: 'cat_official', name: 'Official', icon: 'verified' },
           { id: 'cat_extra', name: 'Extra Tasks', icon: 'stars' }
         ]);
-        
+
         setRewardedAds([
           { id: 'ad_monetag1', name: 'Click on the Ad after viewing', type: 'monetag', category: 'Official', reward_type: 'SB', reward_amount: 50, watch_time_sec: 15, remaining_views: 1 },
           { id: 'ad_monetag2', name: 'Watch and click on ads', type: 'monetag', category: 'Official', reward_type: 'USDT', reward_amount: 0.05, watch_time_sec: 30, remaining_views: 1 },
@@ -195,13 +195,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (tg) {
         tg.ready();
         tg.expand();
-        
+
         if (tg.initDataUnsafe?.user) {
           try {
             const authResponse = await TelegramAuthService.authenticateTelegramUser();
             if (authResponse.success && authResponse.user) {
               setUser(authResponse.user as User);
-              
+
               if (isSupabaseConfigured()) {
                 const { data: walletsData } = await supabase.from('wallets').select('*').eq('user_id', authResponse.user.id);
                 if (walletsData) {
@@ -216,44 +216,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             console.error("Auth failed", e);
           }
         } else {
-           // Mock user for local testing without Telegram
-           console.warn("No Telegram initDataUnsafe found. Using mock user.");
-           setUser({
-              id: 'usr_mock',
-              telegram_id: 123456789,
-              first_name: 'User',
-              last_name: '',
-              username: 'username',
-              registered_at: new Date().toISOString(),
-              status: 'Active',
-              level_id: 'lvl_1',
-              is_premium: false,
-              email_verified: false,
-              phone_verified: false,
-              login_streak: 0,
-              total_ads_watched: 0,
-              total_tasks_completed: 0
-           } as User);
-           setMainWallet({
-              id: 'wall_main',
-              user_id: 'usr_mock',
-              wallet_type: 'Main',
-              balance_sb: 0,
-              balance_usdt: 0,
-              lifetime_sb: 0,
-              lifetime_usdt: 0,
-              updated_at: new Date().toISOString()
-           });
-           setAffiliateWallet({
-              id: 'wall_aff',
-              user_id: 'usr_mock',
-              wallet_type: 'Affiliate',
-              balance_sb: 0,
-              balance_usdt: 0,
-              lifetime_sb: 0,
-              lifetime_usdt: 0,
-              updated_at: new Date().toISOString()
-           });
+          // Mock user for local testing without Telegram
+          console.warn("No Telegram initDataUnsafe found. Using mock user.");
+          setUser({
+            id: 'usr_mock',
+            telegram_id: 123456789,
+            first_name: 'User',
+            last_name: '',
+            username: 'username',
+            registered_at: new Date().toISOString(),
+            status: 'Active',
+            level_id: 'lvl_1',
+            is_premium: false,
+            email_verified: false,
+            phone_verified: false,
+            login_streak: 0,
+            total_ads_watched: 0,
+            total_tasks_completed: 0
+          } as User);
+          setMainWallet({
+            id: 'wall_main',
+            user_id: 'usr_mock',
+            wallet_type: 'Main',
+            balance_sb: 0,
+            balance_usdt: 0,
+            lifetime_sb: 0,
+            lifetime_usdt: 0,
+            updated_at: new Date().toISOString()
+          });
+          setAffiliateWallet({
+            id: 'wall_aff',
+            user_id: 'usr_mock',
+            wallet_type: 'Affiliate',
+            balance_sb: 0,
+            balance_usdt: 0,
+            lifetime_sb: 0,
+            lifetime_usdt: 0,
+            updated_at: new Date().toISOString()
+          });
         }
       }
       setIsLoading(false);
@@ -293,9 +293,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const completeAd = async (ad: RewardedAd) => {
     // Call RPC to credit reward
     if (user && isSupabaseConfigured()) {
-       await SupabaseService.creditWalletRPC(user.id, 'WatchReward', ad.reward_amount, `Watched Ad: ${ad.name}`);
-       setActiveAd(null);
-       return { success: true, amount: ad.reward_amount, currency: 'SB' as const };
+      await SupabaseService.creditWalletRPC(user.id, 'WatchReward', ad.reward_amount, `Watched Ad: ${ad.name}`);
+      setActiveAd(null);
+      return { success: true, amount: ad.reward_amount, currency: 'SB' as const };
     }
     setActiveAd(null);
     return { success: false };
@@ -317,29 +317,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const claimDailyBonus = async () => {
-     if (user && isSupabaseConfigured()) {
-       const currentDay = dailyStreakDay || 1;
-       const dayInWeek = ((currentDay - 1) % 7) + 1;
+    if (user && isSupabaseConfigured()) {
+      const currentDay = dailyStreakDay || 1;
+      const dayInWeek = ((currentDay - 1) % 7) + 1;
 
-       let amount = 100;
-       let currency: 'SB' | 'USDT' = 'SB';
+      let amount = 100;
+      let currency: 'SB' | 'USDT' = 'SB';
 
-       if (dayInWeek === 3) { amount = 0.05; currency = 'USDT'; }
-       else if (dayInWeek === 5) { amount = 0.25; currency = 'USDT'; }
-       else if (dayInWeek === 7) { amount = 150; currency = 'SB'; }
+      if (dayInWeek === 3) { amount = 0.05; currency = 'USDT'; }
+      else if (dayInWeek === 5) { amount = 0.25; currency = 'USDT'; }
+      else if (dayInWeek === 7) { amount = 150; currency = 'SB'; }
 
-       await SupabaseService.creditWalletRPC(user.id, 'DailyReward', amount, `Daily Login Reward - Day ${currentDay}`);
-       return { success: true, amount, currency };
-     }
-     return { success: false };
+      await SupabaseService.creditWalletRPC(user.id, 'DailyReward', amount, `Daily Login Reward - Day ${currentDay}`);
+      return { success: true, amount, currency };
+    }
+    return { success: false };
   };
 
   const claimWelcomeBonus = async () => {
     if (localStorage.getItem('welcome_bonus_claimed')) return { success: false };
     localStorage.setItem('welcome_bonus_claimed', 'true');
     if (user && isSupabaseConfigured()) {
-       await SupabaseService.creditWalletRPC(user.id, 'DailyReward', 500, 'Welcome Bonus');
-       return { success: true, amount: 500, currency: 'SB' as const };
+      await SupabaseService.creditWalletRPC(user.id, 'DailyReward', 500, 'Welcome Bonus');
+      return { success: true, amount: 500, currency: 'SB' as const };
     }
     return { success: false };
   };
@@ -348,8 +348,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (localStorage.getItem('community_bonus_claimed')) return { success: false };
     localStorage.setItem('community_bonus_claimed', 'true');
     if (user && isSupabaseConfigured()) {
-       await SupabaseService.creditWalletRPC(user.id, 'TaskReward', 500, 'Join Our Community');
-       return { success: true, amount: 500, currency: 'SB' as const };
+      await SupabaseService.creditWalletRPC(user.id, 'TaskReward', 500, 'Join Our Community');
+      return { success: true, amount: 500, currency: 'SB' as const };
     }
     return { success: false };
   };
@@ -376,14 +376,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     amount: number
   ) => {
     if (!user || !isSupabaseConfigured()) return { success: false, message: 'Not configured' };
-    
+
     // Check balances locally
     const wallet = walletType === 'Main' ? mainWallet : affiliateWallet;
     if (!wallet) return { success: false, message: 'Wallet not found' };
-    
+
     const balance = currency === 'SB' ? wallet.balance_sb : wallet.balance_usdt;
     if (balance < amount) return { success: false, message: 'Insufficient balance' };
-    
+
     const res = await SupabaseService.requestWithdrawalRPC(
       user.id,
       bankId || '',
@@ -392,7 +392,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       amount
     );
     refreshState();
-    
+
     return { success: res.success, message: res.message || 'Withdrawal requested' };
   };
 
@@ -402,7 +402,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      user, mainWallet, affiliateWallet, transactions, levels, tasks, taskCategories, 
+      user, mainWallet, affiliateWallet, transactions, levels, tasks, taskCategories,
       rewardedAds, withdrawalRequests, banks, notifications, referrals, systemSettings,
       isLoading, onboardingCompleted, activeTab, activeAd, darkMode, hasClaimedDailyBonus, dailyStreakDay,
       refreshState, setTab, skipOnboarding, playAd, completeAd, setActiveAd, triggerInAppAd,

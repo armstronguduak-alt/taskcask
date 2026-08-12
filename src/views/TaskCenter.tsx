@@ -272,8 +272,7 @@ export const TaskCenter: React.FC = () => {
         )}
       </div>
 
-      {/* Task Proof Submission Modal */}
-      {activeTaskDetail && (
+      {/* Task Proof Submission Modal (TODO: Implement if needed) */}
     </div>
   );
 };
@@ -330,22 +329,4 @@ const TaskCard = ({ task, transactions, pendingTasks, handleCompleteTask }: any)
     </div>
   );
 };
-              </button>
-            ) : isPending ? (
-              <button disabled className="px-6 py-3.5 bg-amber-500/20 text-amber-400 rounded-[16px] text-[14px] font-extrabold border border-amber-500/30 flex items-center gap-2 w-full justify-center tracking-wide">
-                Pending Verification <span className="material-symbols-outlined text-[18px]">hourglass_empty</span>
-              </button>
-            ) : (
-              <button onClick={(e) => handleCompleteTask(task, e)} className="px-6 py-3.5 bg-[#4a72ff] text-white rounded-[16px] text-[14px] font-extrabold shadow-lg hover:bg-blue-600 active:scale-95 transition-all w-full tracking-wide flex items-center justify-center gap-2">
-                {task.button_text || 'Complete Task'}
-                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>open_in_new</span>
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export default TaskCenter;
