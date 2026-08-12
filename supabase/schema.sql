@@ -200,10 +200,10 @@ CREATE POLICY "Users can view own transactions" ON public.transactions FOR SELEC
 DROP POLICY IF EXISTS "Users can insert own transactions" ON public.transactions;
 CREATE POLICY "Users can insert own transactions" ON public.transactions FOR INSERT WITH CHECK (true);
 
--- Realtime Configuration
-ALTER PUBLICATION supabase_realtime ADD TABLE transactions;
-ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+-- Realtime Configuration (Commented out because they were already executed previously and would throw an error on re-run)
+-- ALTER PUBLICATION supabase_realtime ADD TABLE transactions;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 
 -- 13. RPC Functions for Balance Updates
 CREATE OR REPLACE FUNCTION credit_wallet_transaction(
